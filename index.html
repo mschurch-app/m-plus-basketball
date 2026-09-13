@@ -23,7 +23,7 @@
     .auth-tab-btn { flex: 1; padding: 11px; font-size: 14px; font-weight: bold; border-radius: 8px; border: none; background: transparent; color: #94A3B8; cursor: pointer; text-align: center; }
     .auth-tab-btn.active { background: #F59E0B; color: #0F172A; }
 
-    /* 大字體、大觸控面積的平鋪網格選單 */
+    /* 大字體、平鋪網格選單 */
     .nav-grid { 
       display: grid; 
       grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); 
@@ -150,7 +150,14 @@
 
         <div class="grid-2">
           <div class="form-group"><label>聯絡電話</label><input type="tel" id="newPhone" placeholder="09xx-xxx-xxx"></div>
-          <div class="form-group" id="groupNewTeam"><label>志願梯隊</label><select id="newTeam"><option value="大隊">🔥 大隊 (一軍)</option><option value="小隊">⚡ 小隊 (二軍)</option></select></div>
+          <!-- 梯隊純化為：大隊、小隊 -->
+          <div class="form-group" id="groupNewTeam">
+            <label>志願梯隊</label>
+            <select id="newTeam">
+              <option value="大隊">大隊</option>
+              <option value="小隊">小隊</option>
+            </select>
+          </div>
         </div>
 
         <div id="regPlayerExtra">
@@ -166,24 +173,38 @@
           </div>
 
           <div class="grid-3" style="margin-top: 10px;">
-            <div class="form-group"><label>背號</label><input type="number" id="newNumber" value="7"></div>
-            <!-- 位置全面改為中文 -->
+            <!-- 嚴格排重：1-99 背號下拉選單 -->
+            <div class="form-group">
+              <label>背號 (1-99)</label>
+              <select id="newNumber">
+                <option value="">請選背號</option>
+              </select>
+            </div>
+            <!-- 純中文位置 -->
             <div class="form-group">
               <label>守備位置</label>
               <select id="newPosition">
-                <option value="控球後衛">控球後衛 (PG)</option>
-                <option value="得分後衛">得分後衛 (SG)</option>
-                <option value="小前鋒">小前鋒 (SF)</option>
-                <option value="大前鋒">大前鋒 (PF)</option>
-                <option value="中鋒">中鋒 (C)</option>
+                <option value="控球後衛">控球後衛</option>
+                <option value="得分後衛">得分後衛</option>
+                <option value="小前鋒">小前鋒</option>
+                <option value="大前鋒">大前鋒</option>
+                <option value="中鋒">中鋒</option>
               </select>
             </div>
             <div class="form-group"><label>慣用手</label><select id="newDominantHand"><option value="右手">右手</option><option value="左手">左手</option></select></div>
           </div>
+
+          <!-- 新增出生年月日 -->
+          <div class="form-group">
+            <label>出生年月日</label>
+            <input type="date" id="newBirthday">
+          </div>
+
+          <!-- 取消所有欄位預設數字 -->
           <div class="grid-3">
-            <div class="form-group"><label>身高 (cm)</label><input type="number" step="0.1" id="newHeight" value="175"></div>
-            <div class="form-group"><label>體重 (kg)</label><input type="number" step="0.1" id="newWeight" value="65"></div>
-            <div class="form-group"><label>折返跑 (秒)</label><input type="number" step="0.01" id="newShuttle" value="14.2"></div>
+            <div class="form-group"><label>身高 (cm)</label><input type="number" step="0.1" id="newHeight" placeholder="例如: 178"></div>
+            <div class="form-group"><label>體重 (kg)</label><input type="number" step="0.1" id="newWeight" placeholder="例如: 68"></div>
+            <div class="form-group"><label>折返跑 (秒)</label><input type="number" step="0.01" id="newShuttle" placeholder="例如: 14.2"></div>
           </div>
         </div>
         <button type="button" id="newRegBtn" class="btn-submit">確認送出加入申請並綁定 LINE</button>
@@ -324,8 +345,12 @@
             <div style="font-size:19px; font-weight:bold; color:#FFF; margin-top:2px;">
               <span id="myName">載入中...</span> <span id="myNumber" style="font-size:13px; color:#94A3B8;"></span>
             </div>
-            <!-- 位置文字加大且全中文 -->
-            <div style="font-size:13px; color:#CBD5E1; margin-top:3px;">位置: <b id="myPosition" style="color:#F59E0B;">--</b> | 折返跑: <b id="myShuttle" style="color:#F59E0B;">--</b>s</div>
+            <div style="font-size:13px; color:#CBD5E1; margin-top:3px;">
+              位置: <b id="myPosition" style="color:#F59E0B;">--</b> | 生日: <span id="myBirthday">--</span>
+            </div>
+            <div style="font-size:12px; color:#94A3B8; margin-top:2px;">
+              折返跑: <b id="myShuttle" style="color:#F59E0B;">--</b> 秒
+            </div>
           </div>
           <img id="myPhoto" src="" style="width: 62px; height: 62px; border-radius: 10px; object-fit: cover; border: 2px solid #F59E0B; background: #0F172A;" onerror="this.src='https://via.placeholder.com/150/0F172A/94A3B8'">
         </div>
@@ -396,21 +421,24 @@
 
       <div class="grid-2">
         <div class="form-group"><label>姓名</label><input type="text" id="editName"></div>
-        <div class="form-group"><label>梯隊</label><select id="editTeam"><option value="大隊">🔥 大隊</option><option value="小隊">⚡ 小隊</option></select></div>
+        <div class="form-group"><label>梯隊</label><select id="editTeam"><option value="大隊">大隊</option><option value="小隊">小隊</option></select></div>
       </div>
       <div class="grid-2">
-        <div class="form-group"><label>背號</label><input type="number" id="editNumber"></div>
-        <!-- 編輯位置改為中文 -->
+        <div class="form-group"><label>背號 (1-99)</label><select id="editNumber"></select></div>
         <div class="form-group">
           <label>守備位置</label>
           <select id="editPos">
-            <option value="控球後衛">控球後衛 (PG)</option>
-            <option value="得分後衛">得分後衛 (SG)</option>
-            <option value="小前鋒">小前鋒 (SF)</option>
-            <option value="大前鋒">大前鋒 (PF)</option>
-            <option value="中鋒">中鋒 (C)</option>
+            <option value="控球後衛">控球後衛</option>
+            <option value="得分後衛">得分後衛</option>
+            <option value="小前鋒">小前鋒</option>
+            <option value="大前鋒">大前鋒</option>
+            <option value="中鋒">中鋒</option>
           </select>
         </div>
+      </div>
+      <div class="form-group">
+        <label>出生年月日</label>
+        <input type="date" id="editBirthday">
       </div>
       <div class="grid-3">
         <div class="form-group"><label>身高(cm)</label><input type="number" step="0.1" id="editHeight"></div>
@@ -436,16 +464,39 @@
     var tempRegPhotoBase64 = "";
     var tempEditPhotoBase64 = "";
 
-    // 自動把英文代碼轉為中文位置
     function formatPosition(pos) {
-      if (!pos) return "--";
-      pos = String(pos).trim();
-      if (pos === "PG" || pos.indexOf("控球") !== -1) return "控球後衛";
-      if (pos === "SG" || pos.indexOf("得分") !== -1) return "得分後衛";
-      if (pos === "SF" || pos.indexOf("小前") !== -1) return "小前鋒";
-      if (pos === "PF" || pos.indexOf("大前") !== -1) return "大前鋒";
-      if (pos === "C" || pos.indexOf("中鋒") !== -1) return "中鋒";
+      if (!pos) return "未指定";
+      var str = String(pos).trim().toUpperCase();
+      if (str === "PG" || str.indexOf("控球") !== -1) return "控球後衛";
+      if (str === "SG" || str.indexOf("得分") !== -1) return "得分後衛";
+      if (str === "SF" || str.indexOf("小前") !== -1) return "小前鋒";
+      if (str === "PF" || str.indexOf("大前") !== -1) return "大前鋒";
+      if (str === "C" || str.indexOf("中鋒") !== -1) return "中鋒";
       return pos;
+    }
+
+    // 核心演算法：動態生成 1-99 背號，並過濾掉已被佔用的背號
+    function populateNumberSelect(selectId, currentVal = null) {
+      var sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- 請選擇背號 --</option>';
+
+      // 收集所有已被選走的背號
+      var usedNumbers = cachedPlayers.map(p => Number(p.number)).filter(n => !isNaN(n) && n > 0);
+
+      for (var i = 1; i <= 99; i++) {
+        // 如果這個背號已被使用，且不是目前編輯中的球員背號，則略過不顯示
+        if (usedNumbers.includes(i) && i !== Number(currentVal)) {
+          continue;
+        }
+        var opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = '#' + i;
+        if (currentVal && Number(currentVal) === i) {
+          opt.selected = true;
+        }
+        sel.appendChild(opt);
+      }
     }
 
     async function callBackend(action, data = {}) {
@@ -537,10 +588,23 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+      // 預先抓取球員名冊以進行背號排重
+      const pRes = await callBackend("getPlayerList");
+      if (pRes && pRes.success) {
+        cachedPlayers = pRes.data || [];
+        populateNumberSelect('newNumber');
+      }
+
       safeBind('tabBtnLogin', 'click', () => switchAuth('login'));
-      safeBind('tabBtnRegister', 'click', () => switchAuth('register'));
-      safeBind('goToReg', 'click', () => switchAuth('register'));
+      safeBind('tabBtnRegister', 'click', () => {
+        populateNumberSelect('newNumber');
+        switchAuth('register');
+      });
+      safeBind('goToReg', 'click', () => {
+        populateNumberSelect('newNumber');
+        switchAuth('register');
+      });
       safeBind('goToLogin', 'click', () => switchAuth('login'));
 
       safeBind('btnLoginSubmit', 'click', async function() {
@@ -561,6 +625,12 @@
 
       safeBind('newRegBtn', 'click', async function() {
         var btn = this;
+        var num = document.getElementById('newNumber').value;
+        if (!num) {
+          alert("請選取一個未被使用的球隊背號！");
+          return;
+        }
+
         btn.innerText = "寫入資料庫中...";
         btn.disabled = true;
 
@@ -573,9 +643,10 @@
           password: document.getElementById('newPassword').value.trim(),
           phone: document.getElementById('newPhone').value.trim(),
           team: document.getElementById('newTeam').value,
-          number: document.getElementById('newNumber').value,
-          position: formatPosition(document.getElementById('newPosition').value), // 儲存中文位置
+          number: num,
+          position: formatPosition(document.getElementById('newPosition').value),
           dominantHand: document.getElementById('newDominantHand').value,
+          birthday: document.getElementById('newBirthday').value, // 新增出生年月日
           height: document.getElementById('newHeight').value,
           weight: document.getElementById('newWeight').value,
           shuttleRun: document.getElementById('newShuttle').value,
@@ -753,13 +824,13 @@
                 <span style="font-weight:bold; color:#FFF; font-size:15px;">${p.name} #${p.number}</span>
                 <button type="button" class="btn-edit" onclick="openEditModal(${p.row})">✏️ 編輯</button>
               </div>
-              <span class="player-tag">${p.team}</span> <span style="font-size:12px; color:#CBD5E1;">${formatPosition(p.position)}</span>
+              <span class="player-tag">${p.team}</span> <span style="font-size:13px; color:#F59E0B; font-weight:bold; margin-left:4px;">${formatPosition(p.position)}</span>
             </div>
           </div>
           <div class="player-stats">
-            <div><span style="color:#94A3B8;">身高/體重</span><b>${p.height}/${p.weight}</b></div>
-            <div><span style="color:#94A3B8;">折返跑</span><b style="color:#F59E0B;">${p.shuttleRun}s</b></div>
-            <div><span style="color:#94A3B8;">狀態</span><b style="color:#10B981;">${p.status}</b></div>
+            <div><span style="color:#94A3B8;">身高/體重</span><b>${p.height || '--'}/${p.weight || '--'}</b></div>
+            <div><span style="color:#94A3B8;">折返跑</span><b style="color:#F59E0B;">${p.shuttleRun ? p.shuttleRun + 's' : '--'}</b></div>
+            <div><span style="color:#94A3B8;">生日</span><b>${p.birthday || '--'}</b></div>
           </div>`;
         box.appendChild(item);
       });
@@ -796,7 +867,7 @@
         var box = document.getElementById('managerRosterList'); if(!box) return; box.innerHTML = '';
         cachedPlayers.forEach(p => {
           var item = document.createElement('div'); item.className = 'player-card';
-          item.innerHTML = `<div style="font-weight:bold; color:#FFF; font-size:14px;">${p.name} (#${p.number}) - ${p.team}</div><div style="font-size:12px; color:#94A3B8;">電話: ${p.phone || '無'}</div>`;
+          item.innerHTML = `<div style="font-weight:bold; color:#FFF; font-size:14px;">${p.name} (#${p.number}) - ${p.team} 【${formatPosition(p.position)}】</div><div style="font-size:12px; color:#94A3B8;">電話: ${p.phone || '無'} | 生日: ${p.birthday || '未填'}</div>`;
           box.appendChild(item);
         });
         renderAttendanceTable();
@@ -938,7 +1009,8 @@
           if(document.getElementById('myName')) document.getElementById('myName').innerText = p.name;
           if(document.getElementById('myNumber')) document.getElementById('myNumber').innerText = '#' + p.number;
           if(document.getElementById('myPosition')) document.getElementById('myPosition').innerText = formatPosition(p.position);
-          if(document.getElementById('myShuttle')) document.getElementById('myShuttle').innerText = p.shuttleRun;
+          if(document.getElementById('myBirthday')) document.getElementById('myBirthday').innerText = p.birthday || "未填寫";
+          if(document.getElementById('myShuttle')) document.getElementById('myShuttle').innerText = p.shuttleRun || "--";
           if(document.getElementById('myPhoto')) document.getElementById('myPhoto').src = p.photoUrl || "https://via.placeholder.com/150";
 
           const evRes = await callBackend("getPlayerRadarData", { name: p.name });
@@ -960,12 +1032,14 @@
       if (!p) return;
       document.getElementById('editRow').value = p.row;
       document.getElementById('editName').value = p.name;
-      document.getElementById('editTeam').value = p.team;
-      document.getElementById('editNumber').value = p.number;
+      document.getElementById('editTeam').value = p.team || '大隊';
+      // 動態過濾產生可選背號
+      populateNumberSelect('editNumber', p.number);
       document.getElementById('editPos').value = formatPosition(p.position);
-      document.getElementById('editHeight').value = p.height;
-      document.getElementById('editWeight').value = p.weight;
-      document.getElementById('editShuttle').value = p.shuttleRun;
+      document.getElementById('editBirthday').value = p.birthday || '';
+      document.getElementById('editHeight').value = p.height || '';
+      document.getElementById('editWeight').value = p.weight || '';
+      document.getElementById('editShuttle').value = p.shuttleRun || '';
       tempEditPhotoBase64 = "";
       var prev = document.getElementById('editPhotoPreview');
       if(p.photoUrl) { prev.src = p.photoUrl; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
@@ -981,6 +1055,7 @@
         team: document.getElementById('editTeam').value,
         number: document.getElementById('editNumber').value,
         position: formatPosition(document.getElementById('editPos').value),
+        birthday: document.getElementById('editBirthday').value,
         height: document.getElementById('editHeight').value,
         weight: document.getElementById('editWeight').value,
         shuttleRun: document.getElementById('editShuttle').value,
