@@ -18,15 +18,27 @@
 <body class="min-h-screen flex flex-col items-center justify-between p-4">
 
     <!-- 頂部導航列 -->
-    <header class="w-full max-w-4xl glass-card rounded-2xl p-4 mb-4 flex justify-between items-center shadow-xl">
-        <div class="flex items-center space-x-3">
-            <div class="bg-orange-500 p-2 rounded-xl text-white font-black text-xl shadow-lg">🏀</div>
-            <div>
-                <h1 class="font-black text-lg tracking-wider text-orange-400">M+ 籃球隊戰情中心</h1>
-                <p class="text-xs text-slate-400" id="userRoleSubtitle">身分辨識中...</p>
+    <header class="w-full max-w-4xl glass-card rounded-2xl p-4 mb-4 flex flex-col md:flex-row justify-between items-center shadow-xl space-y-3 md:space-y-0">
+        <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
+            <div class="flex items-center space-x-3">
+                <div class="bg-orange-500 p-2 rounded-xl text-white font-black text-xl shadow-lg">🏀</div>
+                <div>
+                    <h1 class="font-black text-lg tracking-wider text-orange-400">M+ 籃球隊戰情中心</h1>
+                    <p class="text-xs text-slate-400" id="userRoleSubtitle">身分辨識中...</p>
+                </div>
             </div>
+            <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg">登出</button>
         </div>
-        <div class="flex items-center space-x-2">
+
+        <!-- 多身分視角切換器 (教練/經理/管理員登入後顯示) -->
+        <div id="roleSwitchContainer" class="hidden flex items-center space-x-1 bg-slate-900/80 p-1.5 rounded-xl border border-slate-700 text-xs">
+            <span class="text-slate-400 px-2 font-medium"><i class="fas fa-eye mr-1"></i>視角：</span>
+            <button onclick="switchViewRole('PLAYER')" id="btnRolePlayer" class="px-3 py-1.5 rounded-lg transition font-bold text-slate-300 hover:text-white">球員台</button>
+            <button onclick="switchViewRole('COACH')" id="btnRoleCoach" class="px-3 py-1.5 rounded-lg transition font-bold text-slate-300 hover:text-white">教練台</button>
+            <button onclick="switchViewRole('MANAGER')" id="btnRoleManager" class="px-3 py-1.5 rounded-lg transition font-bold text-slate-300 hover:text-white">經理台</button>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-2">
             <span id="loginStatusBadge" class="text-xs px-3 py-1 rounded-full bg-slate-700 text-slate-300 font-medium">未登入</span>
             <button onclick="logout()" id="logoutBtn" class="hidden text-xs bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition">登出</button>
         </div>
@@ -132,7 +144,8 @@
         const API_ENDPOINT = "https://script.google.com/macros/s/AKfycbxAX6z1idXFUFIRYEAj07WIManJfwOvk-P1mRLhyTn6Ewfv_ZcmhOSsT2kxqDAoxpOWFA/exec"; 
 
         let currentUser = {
-            role: null,      // PLAYER, COACH, MANAGER, ADMIN
+            actualRole: null, // 原始真實身分
+            role: null,      // PLAYER, COACH, MANAGER, ADMIN (目前檢視視角)
             userName: null,
             roleText: null
         };
@@ -143,22 +156,15 @@
         window.addEventListener("DOMContentLoaded", () => {
             const todayStr = new Date().toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit', weekday: 'short' });
             document.getElementById('currentDateBadge').innerText = todayStr;
-            
-            // 初始化 LIFF (已帶入真實 LIFF ID)
             initializeLiff();
         });
 
         function initializeLiff() {
-            if (typeof liff === 'undefined') {
-                console.warn("LIFF SDK 未載入");
-                return;
-            }
+            if (typeof liff === 'undefined') { console.warn("LIFF SDK 未載入"); return; }
             liff.init({ liffId: "2011574321-QGPq8PoR" }).then(() => {
                 if (liff.isLoggedIn()) {
                     const profile = liff.getDecodedIDToken();
-                    if (profile && profile.sub) {
-                        autoLoginWithLine(profile.sub);
-                    }
+                    if (profile && profile.sub) autoLoginWithLine(profile.sub);
                 }
             }).catch(err => console.log("LIFF Init Error:", err));
         }
@@ -166,12 +172,8 @@
         async function autoLoginWithLine(lineUserId) {
             try {
                 const res = await callApi("loginWithLineId", { lineUserId });
-                if (res.success) {
-                    setLoginSuccess(res);
-                }
-            } catch (e) {
-                console.log("自動登入失敗", e);
-            }
+                if (res.success) setLoginSuccess(res);
+            } catch (e) { console.log("自動登入失敗", e); }
         }
 
         async function handleLineLogin() {
@@ -180,9 +182,8 @@
                 const profile = liff.getDecodedIDToken();
                 if (profile && profile.sub) autoLoginWithLine(profile.sub);
             } else {
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
+                if (!liff.isLoggedIn()) { liff.login(); }
+                else {
                     const profile = liff.getDecodedIDToken();
                     if (profile && profile.sub) autoLoginWithLine(profile.sub);
                 }
@@ -195,15 +196,13 @@
             if (!acc || !pass) { alert("請輸入帳號與密碼"); return; }
 
             const res = await callApi("loginUser", { account: acc, password: pass });
-            if (res.success) {
-                setLoginSuccess(res);
-            } else {
-                alert(res.message || "登入失敗");
-            }
+            if (res.success) setLoginSuccess(res);
+            else alert(res.message || "登入失敗");
         }
 
         function setLoginSuccess(res) {
             currentUser = {
+                actualRole: res.role,
                 role: res.role,
                 userName: res.userName,
                 roleText: res.roleText
@@ -211,18 +210,47 @@
 
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.remove('hidden');
-            document.getElementById('loginStatusBadge').innerText = `已自動登入：${currentUser.userName}`;
+            document.getElementById('loginStatusBadge').innerText = `已登入：${currentUser.userName}`;
             document.getElementById('loginStatusBadge').className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-medium";
             document.getElementById('logoutBtn').classList.remove('hidden');
             document.getElementById('userRoleSubtitle').innerText = `${currentUser.userName} (${currentUser.roleText})`;
 
+            // 如果是教練、經理或 ADMIN，顯示多身分切換器
+            if (["COACH", "MANAGER", "ADMIN"].includes(currentUser.actualRole)) {
+                document.getElementById('roleSwitchContainer').classList.remove('hidden');
+            } else {
+                document.getElementById('roleSwitchContainer').classList.add('hidden');
+            }
+
+            updateRoleSwitchButtons();
             loadDashboardOverview();
         }
 
+        function switchViewRole(targetRole) {
+            currentUser.role = targetRole;
+            updateRoleSwitchButtons();
+            loadDashboardOverview();
+        }
+
+        function updateRoleSwitchButtons() {
+            const pBtn = document.getElementById('btnRolePlayer');
+            const cBtn = document.getElementById('btnRoleCoach');
+            const mBtn = document.getElementById('btnRoleManager');
+
+            [pBtn, cBtn, mBtn].forEach(b => {
+                b.className = "px-3 py-1.5 rounded-lg transition font-bold text-slate-300 hover:text-white";
+            });
+
+            if (currentUser.role === "PLAYER") pBtn.className = "px-3 py-1.5 rounded-lg transition font-bold bg-orange-500 text-white shadow";
+            else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") cBtn.className = "px-3 py-1.5 rounded-lg transition font-bold bg-orange-500 text-white shadow";
+            else if (currentUser.role === "MANAGER") mBtn.className = "px-3 py-1.5 rounded-lg transition font-bold bg-orange-500 text-white shadow";
+        }
+
         function logout() {
-            currentUser = { role: null, userName: null, roleText: null };
+            currentUser = { actualRole: null, role: null, userName: null, roleText: null };
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('roleSwitchContainer').classList.add('hidden');
             document.getElementById('loginStatusBadge').innerText = "未登入";
             document.getElementById('loginStatusBadge').className = "text-xs px-3 py-1 rounded-full bg-slate-700 text-slate-300 font-medium";
             document.getElementById('logoutBtn').classList.add('hidden');
@@ -231,7 +259,7 @@
 
         async function loadDashboardOverview() {
             const container = document.getElementById('roleDashboardContainer');
-            container.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-slate-400">載入專屬戰情數據中...</div>`;
+            container.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-slate-400">載入【${currentUser.role === 'PLAYER' ? '球員台' : (currentUser.role === 'COACH' ? '教練台' : '經理台')}】數據中...</div>`;
 
             const res = await callApi("getDashboardData", { role: currentUser.role, playerName: currentUser.userName });
             if (!res.success) {
@@ -357,9 +385,7 @@
                 selectedFileName = file.name;
                 document.getElementById('fileChosenLabel').innerText = `已選擇：${file.name}`;
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    selectedFileBase64 = e.target.result;
-                };
+                reader.onload = function(e) { selectedFileBase64 = e.target.result; };
                 reader.readAsDataURL(file);
             }
         }
