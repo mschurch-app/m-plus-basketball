@@ -23,7 +23,7 @@
     .auth-tab-btn { flex: 1; padding: 11px; font-size: 14px; font-weight: bold; border-radius: 8px; border: none; background: transparent; color: #94A3B8; cursor: pointer; text-align: center; }
     .auth-tab-btn.active { background: #F59E0B; color: #0F172A; }
 
-    /* 平鋪網格選單：字體大、觸控按鈕加高 */
+    /* 平鋪網格選單 */
     .nav-grid { 
       display: grid; 
       grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); 
@@ -251,7 +251,7 @@
           <div class="form-group"><label>進攻 (1-5)</label><select id="cEvOff"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
           <div class="form-group"><label>防守 (1-5)</label><select id="cEvDef"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
           <div class="form-group"><label>體能 (1-5)</label><select id="cEvFit"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
-          <div class="form-group"><label>態度 (1-5)</label><select id="cEvAtt"><option value="5" selected>5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select></div>
+          <div class="form-group"><label>態度 (1-5)</label><select id="cEvAtt"><option value="5" selected>5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
         </div>
         <div class="form-group"><label>指導叮嚀短評</label><textarea id="cEvNote" rows="2" placeholder="輸入具體期許..."></textarea></div>
         <button type="button" id="cEvalBtn" class="btn-submit btn-indigo">儲存戰力評分</button>
@@ -323,7 +323,7 @@
         <div class="form-group"><label>補充說明 (選填)</label><input type="text" id="schedNote" placeholder="如: 需穿著主場白色球衣，提前30分到場熱身"></div>
         <button type="button" id="mAddSchedBtn" class="btn-submit btn-indigo">確認發布此行程至全隊</button>
 
-        <div style="font-size: 13px; font-weight: bold; margin: 18px 0 8px 0; color:#F59E0B;">📋 已排定行程與球員出席/請假狀況</div>
+        <div style="font-size: 13px; font-weight: bold; margin: 18px 0 8px 0; color:#F59E0B;">📋 已排定行程與球員出席/請假狀況 (最近日期在最上方)</div>
         <div id="managerSchedList" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
     </div>
@@ -398,7 +398,7 @@
 
       <div id="p-sched" class="card" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div class="card-title" style="margin:0;">📅 球隊行程與出勤回報 (出席/請假)</div>
+          <div class="card-title" style="margin:0;">📅 球隊行程與出勤回報 (最近日期在最上方)</div>
           <button type="button" id="pSchedRefresh" class="btn-secondary" style="background:#4F46E5; color:#FFF;">🔄</button>
         </div>
         <div id="playerSchedList" style="display: flex; flex-direction: column; gap: 10px;"></div>
@@ -575,7 +575,6 @@
     var tempRegPhotoBase64 = "";
     var tempEditPhotoBase64 = "";
 
-    // ── 快取工具 (LocalStorage) ──
     const CacheManager = {
       set: function(key, data) {
         try { localStorage.setItem('M_PLUS_' + key, JSON.stringify({ t: Date.now(), d: data })); } catch(e){}
@@ -589,7 +588,6 @@
       }
     };
 
-    // ── 照片 Canvas 強制壓縮工具（寬度 200px、品質 0.6，體積縮小 95%） ──
     function compressImage(file, callback) {
       const reader = new FileReader();
       reader.onload = function(event) {
@@ -617,7 +615,6 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          // 輸出 JPEG 0.6 壓縮規格
           const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
           callback(compressedDataUrl);
         };
@@ -750,14 +747,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      // 1. 優先從本地快取即時讀取球員名單（0 秒載入）
       const localPlayers = CacheManager.get('PLAYERS');
       if (localPlayers && localPlayers.length > 0) {
         cachedPlayers = localPlayers;
         populateNumberSelect('newNumber');
       }
 
-      // 2. 掛載所有按鈕
       safeBind('tabBtnLogin', 'click', () => switchAuth('login'));
       safeBind('tabBtnRegister', 'click', () => {
         populateNumberSelect('newNumber');
@@ -879,17 +874,16 @@
       safeBind('cancelTaskModalBtn', 'click', closeTaskModal);
       safeBind('submitTaskReportBtn', 'click', doSubmitTaskReport);
 
-      // 請假 Modal
       safeBind('closeLeaveModalBtn', 'click', closeLeaveModal);
       safeBind('cancelLeaveModalBtn', 'click', closeLeaveModal);
       safeBind('submitLeaveBtn', 'click', doSubmitLeave);
 
-      // 教練審核 Modal
       safeBind('closeReviewModalBtn', 'click', closeReviewModal);
       safeBind('cancelReviewModalBtn', 'click', closeReviewModal);
       safeBind('submitReviewBtn', 'click', doSubmitCoachReview);
 
-      // 3. 背景自動同步最新名冊並寫入本地快取
+      populateNumberSelect('newNumber');
+
       callBackend("getPlayerList").then(pRes => {
         if (pRes && pRes.success) {
           cachedPlayers = pRes.data || [];
@@ -956,18 +950,14 @@
       });
     }
 
-    // 教練台課表（優先讀取快取）
     async function reloadCoachData(force = false) {
-      // 1. 先用快取瞬時渲染名冊
       renderCoachRoster();
 
-      // 2. 課表快取
       const cachedTasks = CacheManager.get('COACH_TASKS');
       if (cachedTasks && !force) {
         renderCoachTaskList(cachedTasks);
       }
 
-      // 3. 背景獲取最新名冊與課表
       const pRes = await callBackend("getPlayerList");
       if (pRes && pRes.success) {
         cachedPlayers = pRes.data || [];
@@ -1143,11 +1133,9 @@
     }
 
     async function loadManagerData() {
-      // 1. 先用快取顯示名冊
       renderManagerRoster();
       renderAttendanceTable();
 
-      // 2. 背景同步
       const res = await callBackend("getPlayerList");
       if (res && res.success) {
         cachedPlayers = res.data || [];
@@ -1232,11 +1220,15 @@
     async function loadScheduleManager(force = false) {
       const cachedSched = CacheManager.get('SCHEDULE_LIST');
       if (cachedSched && !force) {
+        // 經理行事曆排序：最近日期排在最上面
+        cachedSched.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
         renderManagerScheduleList(cachedSched);
       }
 
       const res = await callBackend("getScheduleList");
       if (res && res.data) {
+        // 經理行事曆排序：最近日期排在最上面
+        res.data.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
         CacheManager.set('SCHEDULE_LIST', res.data);
         renderManagerScheduleList(res.data);
       }
@@ -1284,13 +1276,17 @@
     }
 
     async function loadPlayerSchedule() {
-      // 1. 快取渲染
       const cached = CacheManager.get('PLAYER_SCHED_' + currentUser.name);
-      if (cached) renderPlayerScheduleList(cached);
+      if (cached) {
+        // 球員行事曆排序：最近日期排在最上面
+        cached.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+        renderPlayerScheduleList(cached);
+      }
 
-      // 2. 背景更新
       const res = await callBackend("getScheduleList", { playerName: currentUser.name });
       if (res && res.data) {
+        // 球員行事曆排序：最近日期排在最上面
+        res.data.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
         CacheManager.set('PLAYER_SCHED_' + currentUser.name, res.data);
         renderPlayerScheduleList(res.data);
       }
@@ -1397,11 +1393,9 @@
     }
 
     async function loadPlayerTasks() {
-      // 1. 快取渲染
       const cached = CacheManager.get('PLAYER_TASKS_' + currentUser.name);
       if (cached) renderPlayerTaskList(cached);
 
-      // 2. 背景更新
       const res = await callBackend("getAssignments", { playerName: currentUser.name });
       if (res && res.data) {
         CacheManager.set('PLAYER_TASKS_' + currentUser.name, res.data);
@@ -1495,11 +1489,9 @@
     }
 
     async function loadPlayerDashboard() {
-      // 1. 優先從本地快取抓取球員本人檔案（立即呈現，不用等）
       var p = cachedPlayers.find(x => x.name === currentUser.name);
       if (p) renderPlayerCardInfo(p);
 
-      // 2. 獲取雷達圖評分
       const evRes = await callBackend("getPlayerRadarData", { name: currentUser.name });
       var ev = (evRes && evRes.data) ? evRes.data : { offense: 3, defense: 3, fitness: 3, attitude: 4, note: "保持熱情與專注！" };
       drawSvgRadar([ev.offense, ev.defense, ev.fitness, ev.attitude, 4]);
