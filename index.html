@@ -76,7 +76,7 @@
     .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
     .player-card { background: #0F172A; border: 1px solid #334155; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
     .player-header { display: flex; gap: 10px; align-items: center; }
-    .player-avatar { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; border: 2px solid #F59E0B; background: #1E293B; flex-shrink: 0; }
+    .player-avatar { xwidth: 52px; height: 52px; border-radius: 8px; object-fit: cover; border: 2px solid #F59E0B; background: #1E293B; flex-shrink: 0; }
     .player-tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.2); color: #F59E0B; font-weight: bold; }
     .player-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center; border-top: 1px solid #1E293B; padding-top: 6px; font-size: 11px; }
 
@@ -206,7 +206,7 @@
       </div>
     </div>
 
-    <!-- 2. 教練中控台 -->
+    <!-- 2. 教練中控台 (含精選教練常用任務選項) -->
     <div id="coachPanel" class="app-panel">
       <div class="nav-grid">
         <button type="button" class="nav-btn active" id="btn-c-roster"><span class="icon">👥</span>名冊</button>
@@ -229,12 +229,32 @@
 
       <div id="c-task" class="card" style="display:none;">
         <div class="card-title">派發訓練課表</div>
-        <div class="grid-3">
+        
+        <div class="grid-2">
           <div class="form-group"><label>對象</label><select id="cTaskTarget"><option value="大隊全體">大隊全體</option><option value="小隊全體">小隊全體</option><option value="全隊全員">全隊全員</option></select></div>
-          <div class="form-group"><label>訓練項目</label><input type="text" id="cTaskTitle" placeholder="如: 罰球進100顆"></div>
-          <div class="form-group"><label>目標量</label><input type="text" id="cTaskAmount" placeholder="如: 進球率70%"></div>
+          <div class="form-group"><label>截止日期</label><input type="date" id="cTaskDead"></div>
         </div>
-        <div class="form-group"><label>截止日期</label><input type="date" id="cTaskDead"></div>
+
+        <!-- 豐富的教練常用任務選單 -->
+        <div class="form-group">
+          <label>快速選擇常用訓練項目 (或下方直接手動輸入)</label>
+          <select id="cTaskPreset" onchange="onPresetTaskChange(this)">
+            <option value="">-- 請選擇常用訓練項目或自訂 --</option>
+            <option value="定點罰球進球特訓">🏀 定點罰球進球特訓 (例: 進球100顆)</option>
+            <option value="三分外線投籃特訓">🔥 三分外線投籃特訓 (例: 中30顆)</option>
+            <option value="左右手運球突破特訓">⚡ 左右手運球突破特訓 (例: 左右手各5分鐘)</option>
+            <option value="全場折返跑耐力特訓">🏃 全場折返跑耐力特訓 (例: 5趟)</option>
+            <option value="核心肌群與棒式特訓">💪 核心肌群與棒式特訓 (例: 3組每組2分鐘)</option>
+            <option value="籃下擦板與對抗上籃">🛡️ 籃下擦板與對抗上籃 (例: 左右邊各進30顆)</option>
+            <option value="自主看球賽影片寫心得">📺 自主看球賽影片寫心得 (例: 戰術觀察筆記)</option>
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group"><label>訓練項目名稱</label><input type="text" id="cTaskTitle" placeholder="如: 三分球特訓"></div>
+          <div class="form-group"><label>目標量要求</label><input type="text" id="cTaskAmount" placeholder="如: 進球30顆 / 實施10分鐘"></div>
+        </div>
+
         <button type="button" id="cTaskBtn" class="btn-submit btn-indigo">確定派發訓練任務</button>
         
         <div style="display:flex; justify-content:space-between; align-items:center; margin: 18px 0 8px 0;">
@@ -650,6 +670,21 @@
       if (str === "PF" || str.indexOf("大前") !== -1) return "大前鋒";
       if (str === "C" || str.indexOf("中鋒") !== -1) return "中鋒";
       return pos;
+    }
+
+    // 常用任務項目連動選擇
+    function onPresetTaskChange(selectEl) {
+      var val = selectEl.value;
+      if (val) {
+        document.getElementById('cTaskTitle').value = val;
+        if (val.indexOf("罰球") !== -1) document.getElementById('cTaskAmount').value = "進球100顆";
+        else if (val.indexOf("三分") !== -1) document.getElementById('cTaskAmount').value = "進球30顆";
+        else if (val.indexOf("運球") !== -1) document.getElementById('cTaskAmount').value = "左右手各5分鐘";
+        else if (val.indexOf("折返跑") !== -1) document.getElementById('cTaskAmount').value = "全場5趟";
+        else if (val.indexOf("核心") !== -1) document.getElementById('cTaskAmount').value = "3組每組2分鐘";
+        else if (val.indexOf("籃下") !== -1) document.getElementById('cTaskAmount').value = "左右邊各進30顆";
+        else if (val.indexOf("心得") !== -1) document.getElementById('cTaskAmount').value = "繳交戰術觀察筆記";
+      }
     }
 
     function populateNumberSelect(selectId, currentVal = null) {
@@ -1220,14 +1255,12 @@
     async function loadScheduleManager(force = false) {
       const cachedSched = CacheManager.get('SCHEDULE_LIST');
       if (cachedSched && !force) {
-        // 經理行事曆排序：最近日期排在最上面
         cachedSched.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
         renderManagerScheduleList(cachedSched);
       }
 
       const res = await callBackend("getScheduleList");
       if (res && res.data) {
-        // 經理行事曆排序：最近日期排在最上面
         res.data.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
         CacheManager.set('SCHEDULE_LIST', res.data);
         renderManagerScheduleList(res.data);
@@ -1278,14 +1311,12 @@
     async function loadPlayerSchedule() {
       const cached = CacheManager.get('PLAYER_SCHED_' + currentUser.name);
       if (cached) {
-        // 球員行事曆排序：最近日期排在最上面
         cached.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
         renderPlayerScheduleList(cached);
       }
 
       const res = await callBackend("getScheduleList", { playerName: currentUser.name });
       if (res && res.data) {
-        // 球員行事曆排序：最近日期排在最上面
         res.data.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
         CacheManager.set('PLAYER_SCHED_' + currentUser.name, res.data);
         renderPlayerScheduleList(res.data);
