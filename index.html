@@ -23,7 +23,7 @@
     .auth-tab-btn { flex: 1; padding: 11px; font-size: 14px; font-weight: bold; border-radius: 8px; border: none; background: transparent; color: #94A3B8; cursor: pointer; text-align: center; }
     .auth-tab-btn.active { background: #F59E0B; color: #0F172A; }
 
-    /* 大字體、平鋪網格選單 */
+    /* 大字體、平鋪自適應選單 */
     .nav-grid { 
       display: grid; 
       grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); 
@@ -150,7 +150,6 @@
 
         <div class="grid-2">
           <div class="form-group"><label>聯絡電話</label><input type="tel" id="newPhone" placeholder="09xx-xxx-xxx"></div>
-          <!-- 梯隊純化為：大隊、小隊 -->
           <div class="form-group" id="groupNewTeam">
             <label>志願梯隊</label>
             <select id="newTeam">
@@ -173,14 +172,12 @@
           </div>
 
           <div class="grid-3" style="margin-top: 10px;">
-            <!-- 嚴格排重：1-99 背號下拉選單 -->
             <div class="form-group">
               <label>背號 (1-99)</label>
               <select id="newNumber">
-                <option value="">請選背號</option>
+                <option value="">載入背號中...</option>
               </select>
             </div>
-            <!-- 純中文位置 -->
             <div class="form-group">
               <label>守備位置</label>
               <select id="newPosition">
@@ -194,13 +191,11 @@
             <div class="form-group"><label>慣用手</label><select id="newDominantHand"><option value="右手">右手</option><option value="左手">左手</option></select></div>
           </div>
 
-          <!-- 新增出生年月日 -->
           <div class="form-group">
             <label>出生年月日</label>
             <input type="date" id="newBirthday">
           </div>
 
-          <!-- 取消所有欄位預設數字 -->
           <div class="grid-3">
             <div class="form-group"><label>身高 (cm)</label><input type="number" step="0.1" id="newHeight" placeholder="例如: 178"></div>
             <div class="form-group"><label>體重 (kg)</label><input type="number" step="0.1" id="newWeight" placeholder="例如: 68"></div>
@@ -389,20 +384,55 @@
         <button type="button" id="pDailyBtn" class="btn-submit">送出今日晨報</button>
       </div>
 
+      <!-- 補齊：自主加練任務與即時回報系統 -->
       <div id="p-task" class="card" style="display:none;">
-        <div class="card-title">我的自主訓練任務</div>
-        <div id="myTaskList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div class="card-title" style="margin:0;">🎯 我的自主訓練課表</div>
+          <button type="button" id="pTaskRefresh" class="btn-secondary" style="background:#4F46E5; color:#FFF;">🔄</button>
+        </div>
+        <div id="myTaskList" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
 
+      <!-- 補齊：行事曆手動刷新按鈕 -->
       <div id="p-sched" class="card" style="display:none;">
-        <div class="card-title">📅 球隊行事曆與賽程安排</div>
-        <div id="playerSchedList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div class="card-title" style="margin:0;">📅 球隊行事曆與賽程安排</div>
+          <button type="button" id="pSchedRefresh" class="btn-secondary" style="background:#4F46E5; color:#FFF;">🔄</button>
+        </div>
+        <div id="playerSchedList" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
     </div>
 
   </div>
 
-  <!-- 編輯 Modal -->
+  <!-- 補齊：球員回報課表成果 Modal -->
+  <div id="taskReportModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="color:#F59E0B; font-size:16px;">🏀 回報自主加練成果</h3>
+        <button type="button" id="closeTaskModalBtn" style="background:transparent; border:none; color:#94A3B8; font-size:18px; cursor:pointer;">✕</button>
+      </div>
+      <input type="hidden" id="reportTaskRow">
+      <div class="form-group">
+        <label>訓練項目</label>
+        <input type="text" id="reportTaskTitle" readonly style="color:#94A3B8; background:#1E293B;">
+      </div>
+      <div class="form-group">
+        <label>實際完成成果 (如: 投進100顆、耗時25分鐘)</label>
+        <input type="text" id="reportTaskContent" placeholder="簡述本次訓練達成狀況...">
+      </div>
+      <div class="form-group">
+        <label>自主訓練心得 / 感受 (選填)</label>
+        <textarea id="reportTaskNote" rows="2" placeholder="如: 出手感覺很順、後段體力有些下滑..."></textarea>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <button type="button" id="cancelTaskModalBtn" class="btn-secondary" style="flex:1;">取消</button>
+        <button type="button" id="submitTaskReportBtn" class="btn-submit btn-indigo" style="flex:1; margin:0;">送交教練審核</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 編輯球員 Modal -->
   <div id="editModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -475,17 +505,13 @@
       return pos;
     }
 
-    // 核心演算法：動態生成 1-99 背號，並過濾掉已被佔用的背號
     function populateNumberSelect(selectId, currentVal = null) {
       var sel = document.getElementById(selectId);
       if (!sel) return;
       sel.innerHTML = '<option value="">-- 請選擇背號 --</option>';
-
-      // 收集所有已被選走的背號
       var usedNumbers = cachedPlayers.map(p => Number(p.number)).filter(n => !isNaN(n) && n > 0);
 
       for (var i = 1; i <= 99; i++) {
-        // 如果這個背號已被使用，且不是目前編輯中的球員背號，則略過不顯示
         if (usedNumbers.includes(i) && i !== Number(currentVal)) {
           continue;
         }
@@ -588,14 +614,8 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', async function() {
-      // 預先抓取球員名冊以進行背號排重
-      const pRes = await callBackend("getPlayerList");
-      if (pRes && pRes.success) {
-        cachedPlayers = pRes.data || [];
-        populateNumberSelect('newNumber');
-      }
-
+    document.addEventListener('DOMContentLoaded', function() {
+      // 1. 優先掛載按鈕監聽事件
       safeBind('tabBtnLogin', 'click', () => switchAuth('login'));
       safeBind('tabBtnRegister', 'click', () => {
         populateNumberSelect('newNumber');
@@ -646,7 +666,7 @@
           number: num,
           position: formatPosition(document.getElementById('newPosition').value),
           dominantHand: document.getElementById('newDominantHand').value,
-          birthday: document.getElementById('newBirthday').value, // 新增出生年月日
+          birthday: document.getElementById('newBirthday').value,
           height: document.getElementById('newHeight').value,
           weight: document.getElementById('newWeight').value,
           shuttleRun: document.getElementById('newShuttle').value,
@@ -706,12 +726,29 @@
       safeBind('btn-p-task', 'click', () => showPlayerTab('task'));
       safeBind('btn-p-sched', 'click', () => showPlayerTab('sched'));
       safeBind('pDailyBtn', 'click', doSubmitDaily);
+      safeBind('pTaskRefresh', 'click', loadPlayerTasks);
+      safeBind('pSchedRefresh', 'click', loadPlayerSchedule);
 
       // Modal
       safeBind('closeModalBtn', 'click', closeEditModal);
       safeBind('cancelModalBtn', 'click', closeEditModal);
       safeBind('editSubmitBtn', 'click', doSaveEditPlayer);
+      safeBind('closeTaskModalBtn', 'click', closeTaskModal);
+      safeBind('cancelTaskModalBtn', 'click', closeTaskModal);
+      safeBind('submitTaskReportBtn', 'click', doSubmitTaskReport);
 
+      // 2. 先填充 1-99 背號
+      populateNumberSelect('newNumber');
+
+      // 3. 背景非同步獲取球員進行背號排除
+      callBackend("getPlayerList").then(pRes => {
+        if (pRes && pRes.success) {
+          cachedPlayers = pRes.data || [];
+          populateNumberSelect('newNumber');
+        }
+      });
+
+      // 4. 啟動原生 LIFF
       initLiff();
     });
 
@@ -829,7 +866,7 @@
           </div>
           <div class="player-stats">
             <div><span style="color:#94A3B8;">身高/體重</span><b>${p.height || '--'}/${p.weight || '--'}</b></div>
-            <div><span style="color:#94A3B8;">折返跑</span><b style="color:#F59E0B;">${p.shuttleRun ? p.shuttleRun + 's' : '--'}</b></div>
+            <div><span style="color:#94A3B8;">折返跑</span><b style="color:#F59E0B;">${p.shuttleRun ? p.shuttleRun + '秒' : '--'}</b></div>
             <div><span style="color:#94A3B8;">生日</span><b>${p.birthday || '--'}</b></div>
           </div>`;
         box.appendChild(item);
@@ -991,6 +1028,72 @@
       });
     }
 
+    // 補齊：球員端讀取課表與點擊回報
+    async function loadPlayerTasks() {
+      var box = document.getElementById('myTaskList');
+      if (!box) return;
+      box.innerHTML = '<div style="color:#94A3B8; font-size:12px;">載入課表中...</div>';
+
+      const res = await callBackend("getAssignments");
+      if (!res || !res.data || res.data.length === 0) {
+        box.innerHTML = '<div style="color:#94A3B8; font-size:12px; padding:10px 0;">目前暫無被指派的訓練課表。</div>';
+        return;
+      }
+      box.innerHTML = '';
+      res.data.forEach(t => {
+        var card = document.createElement('div');
+        card.style.cssText = "background:#0F172A; padding:10px 12px; border-radius:8px; border:1px solid #334155; font-size:13px;";
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <b style="color:#FFF; font-size:14px;">${t.title}</b>
+            <span style="color:#F59E0B; font-weight:bold; font-size:12px;">${t.reviewState || '待審核'}</span>
+          </div>
+          <div style="color:#94A3B8; font-size:12px; margin:3px 0;">目標：${t.targetAmount} | 截止：${t.deadline}</div>
+          ${t.coachFeedback ? `<div style="color:#10B981; font-size:12px;">教練評語：${t.coachFeedback}</div>` : ''}
+          <button type="button" class="btn-submit btn-indigo" style="padding:6px 10px; font-size:12px; margin-top:6px;" onclick="openTaskModal(${t.row}, '${t.title}')">📝 回報訓練進度</button>
+        `;
+        box.appendChild(card);
+      });
+    }
+
+    function openTaskModal(row, title) {
+      document.getElementById('reportTaskRow').value = row;
+      document.getElementById('reportTaskTitle').value = title;
+      document.getElementById('reportTaskContent').value = '';
+      document.getElementById('reportTaskNote').value = '';
+      document.getElementById('taskReportModal').style.display = 'flex';
+    }
+
+    function closeTaskModal() {
+      document.getElementById('taskReportModal').style.display = 'none';
+    }
+
+    async function doSubmitTaskReport() {
+      var row = document.getElementById('reportTaskRow').value;
+      var content = document.getElementById('reportTaskContent').value.trim();
+      var note = document.getElementById('reportTaskNote').value.trim();
+      if (!content) {
+        alert("請簡要填寫實際完成狀況！");
+        return;
+      }
+      var btn = document.getElementById('submitTaskReportBtn');
+      btn.innerText = "送交中...";
+      btn.disabled = true;
+
+      const res = await callBackend("submitAssignmentProgress", {
+        row: row,
+        reportContent: content,
+        playerNote: note
+      });
+      btn.innerText = "送交教練審核";
+      btn.disabled = false;
+      alert(res.message);
+      if (res.success) {
+        closeTaskModal();
+        loadPlayerTasks();
+      }
+    }
+
     function showPlayerTab(t) {
       ['dash', 'daily', 'task', 'sched'].forEach(k => {
         var el = document.getElementById('p-' + k), btn = document.getElementById('btn-p-' + k);
@@ -998,6 +1101,7 @@
         if (btn) btn.className = (k === t) ? 'nav-btn active' : 'nav-btn';
       });
       if (t === 'sched') loadPlayerSchedule();
+      if (t === 'task') loadPlayerTasks();
     }
 
     async function loadPlayerDashboard() {
@@ -1033,7 +1137,6 @@
       document.getElementById('editRow').value = p.row;
       document.getElementById('editName').value = p.name;
       document.getElementById('editTeam').value = p.team || '大隊';
-      // 動態過濾產生可選背號
       populateNumberSelect('editNumber', p.number);
       document.getElementById('editPos').value = formatPosition(p.position);
       document.getElementById('editBirthday').value = p.birthday || '';
