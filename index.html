@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>M+ 籃球隊管理系統</title>
+  <title>M+ 籃球隊管理中心</title>
   <!-- 原生 LINE LIFF SDK -->
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
@@ -76,7 +76,7 @@
     .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
     .player-card { background: #0F172A; border: 1px solid #334155; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
     .player-header { display: flex; gap: 10px; align-items: center; }
-    .player-avatar { xwidth: 52px; height: 52px; border-radius: 8px; object-fit: cover; border: 2px solid #F59E0B; background: #1E293B; flex-shrink: 0; }
+    .player-avatar { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; border: 2px solid #F59E0B; background: #1E293B; flex-shrink: 0; }
     .player-tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.2); color: #F59E0B; font-weight: bold; }
     .player-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center; border-top: 1px solid #1E293B; padding-top: 6px; font-size: 11px; }
 
@@ -206,7 +206,7 @@
       </div>
     </div>
 
-    <!-- 2. 教練中控台 (含精選教練常用任務選項) -->
+    <!-- 2. 教練中控台 -->
     <div id="coachPanel" class="app-panel">
       <div class="nav-grid">
         <button type="button" class="nav-btn active" id="btn-c-roster"><span class="icon">👥</span>名冊</button>
@@ -235,9 +235,8 @@
           <div class="form-group"><label>截止日期</label><input type="date" id="cTaskDead"></div>
         </div>
 
-        <!-- 豐富的教練常用任務選單 -->
         <div class="form-group">
-          <label>快速選擇常用訓練項目 (或下方直接手動輸入)</label>
+          <label>快速選擇常用訓練項目</label>
           <select id="cTaskPreset" onchange="onPresetTaskChange(this)">
             <option value="">-- 請選擇常用訓練項目或自訂 --</option>
             <option value="定點罰球進球特訓">🏀 定點罰球進球特訓 (例: 進球100顆)</option>
@@ -246,13 +245,12 @@
             <option value="全場折返跑耐力特訓">🏃 全場折返跑耐力特訓 (例: 5趟)</option>
             <option value="核心肌群與棒式特訓">💪 核心肌群與棒式特訓 (例: 3組每組2分鐘)</option>
             <option value="籃下擦板與對抗上籃">🛡️ 籃下擦板與對抗上籃 (例: 左右邊各進30顆)</option>
-            <option value="自主看球賽影片寫心得">📺 自主看球賽影片寫心得 (例: 戰術觀察筆記)</option>
           </select>
         </div>
 
         <div class="grid-2">
           <div class="form-group"><label>訓練項目名稱</label><input type="text" id="cTaskTitle" placeholder="如: 三分球特訓"></div>
-          <div class="form-group"><label>目標量要求</label><input type="text" id="cTaskAmount" placeholder="如: 進球30顆 / 實施10分鐘"></div>
+          <div class="form-group"><label>目標量要求</label><input type="text" id="cTaskAmount" placeholder="如: 進球30顆"></div>
         </div>
 
         <button type="button" id="cTaskBtn" class="btn-submit btn-indigo">確定派發訓練任務</button>
@@ -466,7 +464,7 @@
     </div>
   </div>
 
-  <!-- 教練審核特定球員成果 Modal -->
+  <!-- 教練審核特定球員成果 Modal (支援播放雲端影片) -->
   <div id="coachReviewModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -486,6 +484,11 @@
         <div id="reviewModalContent" style="font-size:14px; color:#FFF; margin-top:4px; font-weight:bold;"></div>
         <div style="font-size:12px; color:#94A3B8; margin-top:8px;">💭 心得感受：<span id="reviewModalNote" style="color:#CBD5E1;"></span></div>
         <div style="font-size:11px; color:#64748B; margin-top:4px;">⏱️ 回報時間：<span id="reviewModalTime"></span></div>
+        
+        <!-- 雲端檔案觀看按鈕 -->
+        <div id="reviewModalFileBox" style="margin-top: 10px; display: none;">
+          <a id="reviewModalFileLink" href="#" target="_blank" class="btn-submit btn-indigo" style="display: inline-block; text-align: center; text-decoration: none; padding: 8px; font-size: 13px;">▶️ 觀看球員上傳的訓練影片 / 照片</a>
+        </div>
       </div>
 
       <div class="form-group" style="margin-top:10px;">
@@ -506,7 +509,7 @@
     </div>
   </div>
 
-  <!-- 球員回報成果 Modal -->
+  <!-- 球員回報成果 Modal (支援上傳 1 分鐘短片 / 照片) -->
   <div id="taskReportModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -526,6 +529,15 @@
         <label>自主訓練心得 / 感受 (選填)</label>
         <textarea id="reportTaskNote" rows="2" placeholder="如: 出手感覺很順、後段體力有些下滑..."></textarea>
       </div>
+
+      <!-- 雲端硬碟檔案上傳欄位 -->
+      <div class="form-group" style="background: #0F172A; padding: 10px; border-radius: 8px; border: 1px dashed #475569;">
+        <label style="color: #F59E0B; margin-bottom: 4px;">🎥 上傳 1 分鐘訓練短片 / 照片 (選填)</label>
+        <input type="file" id="taskFileInput" accept="video/*,image/*" style="display:none;" onchange="handleTaskFileSelect(this)">
+        <button type="button" onclick="document.getElementById('taskFileInput').click()" style="background: #334155; color: #FFF; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">📁 選擇影片或照片檔案</button>
+        <div id="taskFileNameDisplay" style="font-size: 12px; color: #10B981; margin-top: 6px;">尚未選擇檔案</div>
+      </div>
+
       <div style="display:flex; gap:8px; margin-top:12px;">
         <button type="button" id="cancelTaskModalBtn" class="btn-secondary" style="flex:1;">取消</button>
         <button type="button" id="submitTaskReportBtn" class="btn-submit btn-indigo" style="flex:1; margin:0;">送交教練審核</button>
@@ -594,6 +606,8 @@
     var attTeamFilter = 'ALL';
     var tempRegPhotoBase64 = "";
     var tempEditPhotoBase64 = "";
+    var tempTaskFileBase64 = "";
+    var tempTaskFileName = "";
 
     const CacheManager = {
       set: function(key, data) {
@@ -661,6 +675,21 @@
       }
     }
 
+    // 處理球員上傳的訓練影片或照片
+    function handleTaskFileSelect(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        tempTaskFileName = file.name;
+        document.getElementById('taskFileNameDisplay').innerText = `已選擇：${tempTaskFileName}`;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          tempTaskFileBase64 = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
     function formatPosition(pos) {
       if (!pos) return "未指定";
       var str = String(pos).trim().toUpperCase();
@@ -672,7 +701,6 @@
       return pos;
     }
 
-    // 常用任務項目連動選擇
     function onPresetTaskChange(selectEl) {
       var val = selectEl.value;
       if (val) {
@@ -683,7 +711,6 @@
         else if (val.indexOf("折返跑") !== -1) document.getElementById('cTaskAmount').value = "全場5趟";
         else if (val.indexOf("核心") !== -1) document.getElementById('cTaskAmount').value = "3組每組2分鐘";
         else if (val.indexOf("籃下") !== -1) document.getElementById('cTaskAmount').value = "左右邊各進30顆";
-        else if (val.indexOf("心得") !== -1) document.getElementById('cTaskAmount').value = "繳交戰術觀察筆記";
       }
     }
 
@@ -1043,10 +1070,11 @@
                   <b style="color:#FFF; font-size:13px;">👤 ${sub.playerName}</b> <span style="font-size:11px; color:#94A3B8;">(${sub.team})</span>
                   <div style="color:#CBD5E1; font-size:12px; margin-top:2px;">成果：${sub.reportContent}</div>
                   ${sub.playerNote ? `<div style="color:#94A3B8; font-size:11px;">心得：${sub.playerNote}</div>` : ''}
+                  ${sub.fileUrl ? `<div style="margin-top:4px;"><a href="${sub.fileUrl}" target="_blank" style="color:#38BDF8; font-size:11px; text-decoration:underline;">📁 檢視球員上傳的訓練檔案</a></div>` : ''}
                 </div>
                 <div style="text-align:right;">
                   <span style="color:${badgeColor}; font-size:11px; font-weight:bold; display:block; margin-bottom:4px;">${sub.reviewState}</span>
-                  <button type="button" class="btn-secondary" style="background:#4F46E5; color:#FFF; padding:3px 8px; font-size:11px; font-weight:bold;" onclick="openCoachReviewModal(${sub.subRow}, '${sub.playerName}', '${t.title}', '${sub.reportContent.replace(/'/g, "\\'")}', '${sub.playerNote.replace(/'/g, "\\'")}', '${sub.coachFeedback.replace(/'/g, "\\'")}', '${sub.submittedAt}')">🔍 審核</button>
+                  <button type="button" class="btn-secondary" style="background:#4F46E5; color:#FFF; padding:3px 8px; font-size:11px; font-weight:bold;" onclick="openCoachReviewModal(${sub.subRow}, '${sub.playerName}', '${t.title}', '${sub.reportContent.replace(/'/g, "\\'")}','${(sub.playerNote||'').replace(/'/g, "\\'")}', '${(sub.coachFeedback||'').replace(/'/g, "\\'")}', '${sub.submittedAt}', '${sub.fileUrl}')">🔍 審核</button>
                 </div>
               </div>
             `;
@@ -1066,7 +1094,7 @@
       });
     }
 
-    function openCoachReviewModal(subRow, playerName, title, report, note, feedback, time) {
+    function openCoachReviewModal(subRow, playerName, title, report, note, feedback, time, fileUrl) {
       document.getElementById('reviewSubRow').value = subRow;
       document.getElementById('reviewPlayerName').value = playerName;
       document.getElementById('reviewModalTitle').innerText = `${playerName} - ${title}`;
@@ -1074,6 +1102,16 @@
       document.getElementById('reviewModalNote').innerText = note || '無特別補充';
       document.getElementById('reviewModalTime').innerText = time || '剛才';
       document.getElementById('reviewModalFeedback').value = feedback || '';
+
+      var fileBox = document.getElementById('reviewModalFileBox');
+      var fileLink = document.getElementById('reviewModalFileLink');
+      if (fileUrl && fileUrl !== 'undefined' && fileUrl !== 'null' && fileUrl !== '') {
+        fileLink.href = fileUrl;
+        fileBox.style.display = 'block';
+      } else {
+        fileBox.style.display = 'none';
+      }
+
       document.getElementById('coachReviewModal').style.display = 'flex';
     }
 
@@ -1460,6 +1498,7 @@
           ${mySub ? `
             <div style="background:#1E293B; padding:6px 8px; border-radius:6px; margin:4px 0; font-size:12px;">
               <span style="color:#F59E0B;">我的成果：</span> ${mySub.reportContent}
+              ${mySub.fileUrl ? `<div style="margin-top:2px;"><a href="${mySub.fileUrl}" target="_blank" style="color:#38BDF8; text-decoration:underline;">📁 已上傳的檔案</a></div>` : ''}
               ${mySub.coachFeedback ? `<div style="color:#10B981; margin-top:2px;">教練評語：${mySub.coachFeedback}</div>` : ''}
             </div>` : ''}
           <button type="button" class="btn-submit btn-indigo" style="padding:6px 10px; font-size:12px; margin-top:6px;" onclick="openTaskModal('${t.taskId}', '${t.title}')">${mySub ? '🔄 重新回報進度' : '📝 回報訓練進度'}</button>
@@ -1473,6 +1512,9 @@
       document.getElementById('reportTaskTitle').value = title;
       document.getElementById('reportTaskContent').value = '';
       document.getElementById('reportTaskNote').value = '';
+      document.getElementById('taskFileNameDisplay').innerText = '尚未選擇檔案';
+      tempTaskFileBase64 = "";
+      tempTaskFileName = "";
       document.getElementById('taskReportModal').style.display = 'flex';
     }
 
@@ -1489,7 +1531,7 @@
         return;
       }
       var btn = document.getElementById('submitTaskReportBtn');
-      btn.innerText = "送交中...";
+      btn.innerText = "上傳檔案並送交中...";
       btn.disabled = true;
 
       const res = await callBackend("submitAssignmentProgress", {
@@ -1497,7 +1539,9 @@
         playerName: currentUser.name,
         team: '大隊',
         reportContent: content,
-        playerNote: note
+        playerNote: note,
+        fileBase64: tempTaskFileBase64,
+        fileName: tempTaskFileName
       });
 
       btn.innerText = "送交教練審核";
