@@ -30,7 +30,7 @@
             <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg">登出</button>
         </div>
 
-        <!-- 多身分視角切換器 (教練/經理/管理員登入後顯示) -->
+        <!-- 多身分視角切換器 -->
         <div id="roleSwitchContainer" class="hidden flex items-center space-x-1 bg-slate-900/80 p-1.5 rounded-xl border border-slate-700 text-xs">
             <span class="text-slate-400 px-2 font-medium"><i class="fas fa-eye mr-1"></i>視角：</span>
             <button onclick="switchViewRole('PLAYER')" id="btnRolePlayer" class="px-3 py-1.5 rounded-lg transition font-bold text-slate-300 hover:text-white">球員台</button>
@@ -47,7 +47,7 @@
     <!-- 主要內容區塊 -->
     <main class="w-full max-w-4xl flex-1 flex flex-col space-y-4 mb-6">
 
-        <!-- 1. 登入畫面 (未登入時顯示) -->
+        <!-- 1. 登入畫面 -->
         <section id="loginSection" class="glass-card rounded-3xl p-6 shadow-2xl flex flex-col items-center justify-center space-y-6 my-auto">
             <div class="text-center space-y-2">
                 <div class="inline-block p-4 bg-orange-500/10 rounded-full text-orange-400 text-3xl mb-2">🛡️</div>
@@ -70,7 +70,7 @@
             </div>
         </section>
 
-        <!-- 2. 戰情總覽主面板 (登入後動態渲染) -->
+        <!-- 2. 戰情總覽主面板與功能區塊 -->
         <section id="dashboardSection" class="hidden space-y-4">
             
             <!-- 天氣與快捷資訊列 -->
@@ -87,9 +87,17 @@
                 </div>
             </div>
 
-            <!-- 動態渲染容器：依據 role 顯示對應面板 -->
-            <div id="roleDashboardContainer" class="space-y-4">
-                <!-- 內容由 JS 動態塞入 -->
+            <!-- 導覽功能分頁切換列 -->
+            <div class="flex space-x-2 overflow-x-auto pb-2">
+                <button onclick="switchTab('overview')" id="tabBtnOverview" class="px-4 py-2 bg-orange-500 text-white font-bold rounded-xl text-xs whitespace-nowrap shadow">🔥 戰情總覽</button>
+                <button onclick="switchTab('assignments')" id="tabBtnAssignments" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs whitespace-nowrap">🎯 訓練任務</button>
+                <button onclick="switchTab('schedule')" id="tabBtnSchedule" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs whitespace-nowrap">📅 球隊行程</button>
+                <button onclick="switchTab('dailystatus')" id="tabBtnDailystatus" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs whitespace-nowrap">📋 每日晨報</button>
+            </div>
+
+            <!-- 分頁內容容器 -->
+            <div id="tabContentContainer" class="space-y-4">
+                <!-- 動態載入各分頁內容 -->
             </div>
         </section>
 
@@ -112,8 +120,8 @@
                     <input type="text" id="modalTaskTitle" readonly class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-slate-300">
                 </div>
                 <div>
-                    <label class="text-xs text-slate-400 block mb-1">實際完成成果 (如: 投進100顆、耗時25分鐘)</label>
-                    <input type="text" id="modalReportContent" placeholder="例如：順利完成目標，狀況良好" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 focus:border-orange-500">
+                    <label class="text-xs text-slate-400 block mb-1">實際完成成果</label>
+                    <input type="text" id="modalReportContent" placeholder="例如：投進100顆、耗時25分鐘" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 focus:border-orange-500">
                 </div>
                 <div>
                     <label class="text-xs text-slate-400 block mb-1">球員心得與自我檢討</label>
@@ -144,12 +152,13 @@
         const API_ENDPOINT = "https://script.google.com/macros/s/AKfycbxAX6z1idXFUFIRYEAj07WIManJfwOvk-P1mRLhyTn6Ewfv_ZcmhOSsT2kxqDAoxpOWFA/exec"; 
 
         let currentUser = {
-            actualRole: null, // 原始真實身分
-            role: null,      // PLAYER, COACH, MANAGER, ADMIN (目前檢視視角)
+            actualRole: null,
+            role: null,      // PLAYER, COACH, MANAGER, ADMIN
             userName: null,
             roleText: null
         };
 
+        let currentActiveTab = 'overview';
         let selectedFileBase64 = "";
         let selectedFileName = "";
 
@@ -215,7 +224,6 @@
             document.getElementById('logoutBtn').classList.remove('hidden');
             document.getElementById('userRoleSubtitle').innerText = `${currentUser.userName} (${currentUser.roleText})`;
 
-            // 如果是教練、經理或 ADMIN，顯示多身分切換器
             if (["COACH", "MANAGER", "ADMIN"].includes(currentUser.actualRole)) {
                 document.getElementById('roleSwitchContainer').classList.remove('hidden');
             } else {
@@ -223,13 +231,13 @@
             }
 
             updateRoleSwitchButtons();
-            loadDashboardOverview();
+            switchTab('overview');
         }
 
         function switchViewRole(targetRole) {
             currentUser.role = targetRole;
             updateRoleSwitchButtons();
-            loadDashboardOverview();
+            switchTab(currentActiveTab);
         }
 
         function updateRoleSwitchButtons() {
@@ -257,9 +265,26 @@
             document.getElementById('userRoleSubtitle').innerText = "身分辨識中...";
         }
 
+        function switchTab(tabName) {
+            currentActiveTab = tabName;
+            ['overview', 'assignments', 'schedule', 'dailystatus'].forEach(t => {
+                const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (btn) {
+                    btn.className = (t === tabName) 
+                        ? "px-4 py-2 bg-orange-500 text-white font-bold rounded-xl text-xs whitespace-nowrap shadow" 
+                        : "px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs whitespace-nowrap";
+                }
+            });
+
+            if (tabName === 'overview') loadDashboardOverview();
+            else if (tabName === 'assignments') loadAssignmentsTab();
+            else if (tabName === 'schedule') loadScheduleTab();
+            else if (tabName === 'dailystatus') loadDailyStatusTab();
+        }
+
         async function loadDashboardOverview() {
-            const container = document.getElementById('roleDashboardContainer');
-            container.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-slate-400">載入【${currentUser.role === 'PLAYER' ? '球員台' : (currentUser.role === 'COACH' ? '教練台' : '經理台')}】數據中...</div>`;
+            const container = document.getElementById('tabContentContainer');
+            container.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-slate-400">載入戰情總覽數據中...</div>`;
 
             const res = await callApi("getDashboardData", { role: currentUser.role, playerName: currentUser.userName });
             if (!res.success) {
@@ -274,12 +299,10 @@
             }
 
             let html = "";
-
-            // 1. 球員介面
             if (currentUser.role === "PLAYER") {
                 const checkedStatus = data.hasCheckedInToday 
                     ? `<div class="bg-emerald-500/20 border border-emerald-500/40 p-4 rounded-xl text-emerald-300 text-sm font-medium flex items-center justify-between"><span>✅ 今日晨報已完成回報</span><span class="text-xs bg-emerald-600 text-white px-2 py-1 rounded">狀況良好</span></div>`
-                    : `<div class="bg-orange-500/20 border border-orange-500/40 p-4 rounded-xl text-orange-300 text-sm font-medium flex items-center justify-between"><span>⚠️ 今日晨報尚未填寫</span><button onclick="alert('請前往晨報填寫頁面完成身心回報')" class="text-xs bg-orange-500 text-white px-3 py-1.5 rounded-lg shadow font-bold">立即填寫</button></div>`;
+                    : `<div class="bg-orange-500/20 border border-orange-500/40 p-4 rounded-xl text-orange-300 text-sm font-medium flex items-center justify-between"><span>⚠️ 今日晨報尚未填寫</span><button onclick="switchTab('dailystatus')" class="text-xs bg-orange-500 text-white px-3 py-1.5 rounded-lg shadow font-bold">立即填寫</button></div>`;
 
                 html += `
                     <div class="space-y-4">
@@ -302,10 +325,7 @@
                         </div>
                     </div>
                 `;
-            }
-
-            // 2. 教練介面
-            else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
+            } else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
                 html += `
                     <div class="glass-card rounded-2xl p-5 space-y-3">
                         <h3 class="font-bold text-orange-400 flex items-center space-x-2"><span>📋</span><span>教練審核中心 (全隊任務與回報)</span></h3>
@@ -328,10 +348,7 @@
                         `).join('') : '<p class="text-xs text-slate-400 text-center py-4">目前沒有任何任務紀錄</p>'}
                     </div>
                 `;
-            }
-
-            // 3. 經理介面
-            else if (currentUser.role === "MANAGER") {
+            } else if (currentUser.role === "MANAGER") {
                 html += `
                     <div class="space-y-4">
                         <div class="glass-card rounded-2xl p-5 space-y-3">
@@ -358,8 +375,122 @@
                     </div>
                 `;
             }
-
             container.innerHTML = html;
+        }
+
+        async function loadAssignmentsTab() {
+            const container = document.getElementById('tabContentContainer');
+            container.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-slate-400">載入訓練任務中...</div>`;
+            const res = await callApi("getAssignments", { playerName: currentUser.userName });
+            if (!res.success) { container.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-red-400">載入失敗</div>`; return; }
+
+            container.innerHTML = `
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <h3 class="font-bold text-orange-400">🎯 訓練任務列表</h3>
+                    ${(res.data && res.data.length > 0) ? res.data.map(t => `
+                        <div class="bg-slate-800/80 p-4 rounded-xl space-y-2 border border-slate-700">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-bold text-slate-100">${t.title}</h4>
+                                <span class="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">期限: ${t.deadline}</span>
+                            </div>
+                            <p class="text-xs text-slate-400">目標：${t.targetAmount}</p>
+                            <div class="flex justify-end pt-2">
+                                <button onclick="openReportModal('${t.taskId}', '${t.title}')" class="px-4 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-lg shadow">上傳回報</button>
+                            </div>
+                        </div>
+                    `).join('') : '<p class="text-xs text-slate-400 text-center py-4">目前無任務</p>'}
+                </div>
+            `;
+        }
+
+        async function loadScheduleTab() {
+            const container = document.getElementById('tabContentContainer');
+            container.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-slate-400">載入行程中...</div>`;
+            const res = await callApi("getScheduleList", { playerName: currentUser.userName });
+            if (!res.success) { container.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-red-400">載入失敗</div>`; return; }
+
+            container.innerHTML = `
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <h3 class="font-bold text-orange-400">📅 球隊行程與活動</h3>
+                    ${(res.data && res.data.length > 0) ? res.data.map(ev => `
+                        <div class="bg-slate-800/80 p-4 rounded-xl space-y-2 border border-slate-700">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-bold text-slate-100">${ev.title}</h4>
+                                <span class="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded">${ev.date} ${ev.time}</span>
+                            </div>
+                            <p class="text-xs text-slate-400">地點：${ev.location} ｜ 類型：${ev.type}</p>
+                            <div class="flex space-x-2 pt-2">
+                                <button onclick="submitRsvp('${ev.id}', '${ev.title}', '${ev.date}', 'ATTEND')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg">出席</button>
+                                <button onclick="promptLeave('${ev.id}', '${ev.title}', '${ev.date}')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg">請假</button>
+                            </div>
+                        </div>
+                    `).join('') : '<p class="text-xs text-slate-400 text-center py-4">目前無近期行程</p>'}
+                </div>
+            `;
+        }
+
+        async function loadDailyStatusTab() {
+            const container = document.getElementById('tabContentContainer');
+            container.innerHTML = `
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <h3 class="font-bold text-orange-400">📋 每日晨報身心回報</h3>
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">昨晚睡眠時數 (小時)</label>
+                            <input type="number" id="dailySleep" value="7.5" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">精神狀態</label>
+                            <select id="dailyEnergy" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-slate-200">
+                                <option value="精神飽滿">精神飽滿</option>
+                                <option value="普通正常">普通正常</option>
+                                <option value="稍微疲憊">稍微疲憊</option>
+                                <option value="極度疲勞">極度疲勞</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">身體痠痛部位</label>
+                            <input type="text" id="dailySore" placeholder="例如：無、右大腿輕微痠痛" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">自覺疲勞度 (1-5分)</label>
+                            <input type="number" id="dailyFatigue" min="1" max="5" value="2" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">其他備註說明</label>
+                            <textarea id="dailyNote" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2"></textarea>
+                        </div>
+                        <button onclick="submitDailyStatusForm()" class="w-full py-3 bg-orange-500 hover:bg-orange-600 font-bold rounded-xl shadow transition">送出今日晨報</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function submitDailyStatusForm() {
+            const res = await callApi("saveDailyStatus", {
+                playerName: currentUser.userName,
+                team: "大隊",
+                sleepHours: document.getElementById('dailySleep').value,
+                energy: document.getElementById('dailyEnergy').value,
+                soreArea: document.getElementById('dailySore').value,
+                fatigue: document.getElementById('dailyFatigue').value,
+                note: document.getElementById('dailyNote').value
+            });
+            if (res.success) { alert(res.message); switchTab('overview'); } else { alert(res.message); }
+        }
+
+        async function submitRsvp(eventId, eventTitle, eventDate, status, reason = "") {
+            const res = await callApi("submitEventRSVP", {
+                eventId, eventTitle, eventDate, playerName: currentUser.userName, status, reason
+            });
+            alert(res.message);
+        }
+
+        function promptLeave(eventId, eventTitle, eventDate) {
+            const reason = prompt("請輸入請假事由：", "感冒/身體不適");
+            if (reason !== null) {
+                submitRsvp(eventId, eventTitle, eventDate, "LEAVE", reason);
+            }
         }
 
         function openReportModal(taskId, taskTitle) {
@@ -368,8 +499,7 @@
             document.getElementById('modalReportContent').value = "";
             document.getElementById('modalPlayerNote').value = "";
             document.getElementById('fileChosenLabel').innerText = "點擊或拖曳上傳訓練影片/照片";
-            selectedFileBase64 = "";
-            selectedFileName = "";
+            selectedFileBase64 = ""; selectedFileName = "";
             document.getElementById('reportModal').classList.remove('hidden');
             document.getElementById('reportModal').classList.add('flex');
         }
@@ -400,12 +530,8 @@
             btn.disabled = true;
 
             const res = await callApi("submitAssignmentProgress", {
-                taskId: taskId,
-                playerName: currentUser.userName,
-                reportContent: reportContent,
-                playerNote: playerNote,
-                fileBase64: selectedFileBase64,
-                fileName: selectedFileName
+                taskId, playerName: currentUser.userName, reportContent, playerNote,
+                fileBase64: selectedFileBase64, fileName: selectedFileName
             });
 
             btn.innerText = "確認送出回報";
@@ -414,7 +540,7 @@
             if (res.success) {
                 alert(res.message);
                 closeReportModal();
-                loadDashboardOverview();
+                switchTab('overview');
             } else {
                 alert("回報失敗: " + res.message);
             }
@@ -425,18 +551,10 @@
             if (feedback === null) return;
 
             const res = await callApi("reviewAssignment", {
-                subRow: subRow,
-                playerName: playerName,
-                coachFeedback: feedback,
-                reviewState: "✅ 審核通過 (核可)"
+                subRow, playerName, coachFeedback: feedback, reviewState: "✅ 審核通過 (核可)"
             });
 
-            if (res.success) {
-                alert(res.message);
-                loadDashboardOverview();
-            } else {
-                alert("審核失敗: " + res.message);
-            }
+            if (res.success) { alert(res.message); switchTab('overview'); } else { alert("審核失敗: " + res.message); }
         }
 
         async function callApi(action, data) {
