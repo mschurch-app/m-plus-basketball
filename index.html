@@ -3,324 +3,349 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>M+ 籃球隊官方戰情中心</title>
+  <title>M+ 籃球隊官方戰情中心 - 旗艦版</title>
   <!-- 原生 LINE LIFF SDK -->
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
+    :root {
+      --bg-dark: #0A0F1D;
+      --card-bg: #141E33;
+      --card-border: #233252;
+      --gold-primary: #F59E0B;
+      --gold-glow: rgba(245, 158, 11, 0.25);
+      --accent-blue: #3B82F6;
+      --accent-green: #10B981;
+      --accent-red: #EF4444;
+      --text-white: #FFFFFF;
+      --text-muted: #94A3B8;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    html, body { background-color: #070D18 !important; color: #F1F5F9 !important; padding: 12px; padding-top: 20px; padding-bottom: 60px; }
+    html, body { background-color: var(--bg-dark) !important; color: #F1F5F9 !important; padding: 12px; padding-top: 18px; padding-bottom: 70px; }
 
-    .header { text-align: center; margin-bottom: 12px; }
-    .badge { display: inline-block; padding: 3px 10px; background: rgba(245, 158, 11, 0.2); color: #F59E0B; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 4px; }
-    .header h1 { font-size: 21px; font-weight: 900; color: #FFFFFF; }
+    /* 頂部英雄區 */
+    .header { text-align: center; margin-bottom: 14px; position: relative; }
+    .badge { display: inline-block; padding: 3px 12px; background: var(--gold-glow); color: var(--gold-primary); border-radius: 20px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; margin-bottom: 4px; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .header h1 { font-size: 22px; font-weight: 900; color: var(--text-white); text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+    .header-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
-    .container { max-width: 820px; margin: 0 auto; }
-    .card { background: #1E293B; border: 1px solid #334155; border-radius: 14px; padding: 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); margin-bottom: 16px; }
-    .card-title { font-size: 16px; font-weight: bold; color: #FFFFFF; margin-bottom: 4px; }
-    .card-subtitle { font-size: 11px; color: #94A3B8; margin-bottom: 12px; }
+    /* 警報列 (傷病與疲勞提醒) */
+    .alert-banner { display: none; background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05)); border: 1px solid var(--accent-red); border-radius: 10px; padding: 8px 12px; font-size: 12px; color: #FCA5A5; margin-bottom: 12px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
 
-    .auth-tabs { display: flex; max-width: 400px; margin: 0 auto 15px auto; background: #0F172A; padding: 4px; border-radius: 10px; border: 1px solid #334155; }
-    .auth-tab-btn { flex: 1; padding: 10px; font-size: 13px; font-weight: bold; border-radius: 8px; border: none; background: transparent; color: #94A3B8; cursor: pointer; text-align: center; }
-    .auth-tab-btn.active { background: #F59E0B; color: #0F172A; }
+    .container { max-width: 860px; margin: 0 auto; }
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); margin-bottom: 16px; backdrop-filter: blur(10px); }
+    .card-title { font-size: 16px; font-weight: 800; color: var(--text-white); margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+    .card-subtitle { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
 
+    /* 標籤導航列 (橫向滾動) */
     .nav-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: none; }
     .nav-scroll::-webkit-scrollbar { display: none; }
-    .nav-btn { flex: 0 0 auto; background: #0F172A; border: 1px solid #334155; color: #94A3B8; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; text-align: center; }
-    .nav-btn.active { background: #F59E0B; color: #0F172A; border-color: #F59E0B; }
+    .nav-btn { flex: 0 0 auto; background: #0F172A; border: 1px solid var(--card-border); color: var(--text-muted); padding: 8px 14px; font-size: 12px; font-weight: bold; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    .nav-btn.active { background: linear-gradient(135deg, #F59E0B, #D97706); color: #0F172A; border-color: #F59E0B; font-weight: 900; box-shadow: 0 3px 12px rgba(245, 158, 11, 0.3); }
 
+    /* 角色台切換按鈕 */
+    .role-switcher { display: flex; gap: 6px; margin-top: 8px; justify-content: center; }
+    .role-btn { background: #1E293B; border: 1px solid var(--card-border); color: var(--text-muted); padding: 4px 10px; font-size: 11px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+    .role-btn.active { background: var(--gold-primary); color: #0F172A; }
+
+    /* 表單元件 */
     .form-group { margin-bottom: 10px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; }
     label { display: block; font-size: 11px; font-weight: bold; color: #CBD5E1; margin-bottom: 4px; }
-    
-    input, select, textarea { width: 100%; background: #0F172A; border: 1px solid #475569; border-radius: 6px; padding: 8px; font-size: 13px; color: #FFFFFF; outline: none; }
-    input:focus, select:focus { border-color: #F59E0B; }
-    .section-divider { font-size: 11px; font-weight: bold; color: #F59E0B; border-bottom: 1px solid #334155; padding-bottom: 3px; margin: 12px 0 8px 0; }
+    input, select, textarea { width: 100%; background: #0A0F1D; border: 1px solid #334155; border-radius: 8px; padding: 9px; font-size: 13px; color: #FFFFFF; outline: none; transition: border 0.2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--gold-primary); }
 
-    .btn-submit { width: 100%; padding: 12px; background: #F59E0B; color: #0F172A; border: none; border-radius: 8px; font-size: 14px; font-weight: 900; cursor: pointer; margin-top: 8px; }
-    .btn-indigo { background: #4F46E5; color: #FFFFFF; }
-    .btn-secondary { background: #334155; color: #E2E8F0; padding: 5px 10px; border-radius: 6px; font-size: 11px; border: none; cursor: pointer; }
-    .btn-secondary.active { background: #F59E0B; color: #0F172A; font-weight: bold; }
-    .btn-edit { background: #334155; color: #F59E0B; border: 1px solid #F59E0B; padding: 3px 8px; font-size: 11px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-submit { width: 100%; padding: 12px; background: linear-gradient(135deg, #F59E0B, #D97706); color: #0F172A; border: none; border-radius: 10px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); transition: transform 0.1s; }
+    .btn-submit:active { transform: scale(0.98); }
+    .btn-blue { background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #FFF; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+    .btn-secondary { background: #1E293B; color: #E2E8F0; padding: 6px 12px; border-radius: 8px; font-size: 11px; border: 1px solid var(--card-border); cursor: pointer; }
+    .btn-secondary.active { background: var(--gold-primary); color: #0F172A; font-weight: bold; }
 
-    .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
-    .player-card { background: #0F172A; border: 1px solid #334155; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-    .player-header { display: flex; gap: 10px; align-items: center; }
-    .player-avatar { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; border: 2px solid #F59E0B; background: #1E293B; flex-shrink: 0; }
-    .player-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.2); color: #F59E0B; font-weight: bold; }
-    .player-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center; border-top: 1px solid #1E293B; padding-top: 6px; font-size: 10px; }
+    /* EXP 等級進度條 */
+    .exp-bar-container { background: #0A0F1D; border: 1px solid #334155; border-radius: 20px; height: 10px; width: 100%; overflow: hidden; margin-top: 6px; }
+    .exp-bar-fill { background: linear-gradient(90deg, #F59E0B, #10B981); height: 100%; width: 0%; transition: width 0.5s; }
 
+    /* 球員卡片 Grid */
+    .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .player-card { background: #0D1527; border: 1px solid var(--card-border); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden; }
+    .player-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--gold-primary), transparent); }
+    .player-header { display: flex; gap: 12px; align-items: center; }
+    .player-avatar { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; border: 2px solid var(--gold-primary); background: #1E293B; flex-shrink: 0; }
+    .player-rank-tag { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.2); color: var(--gold-primary); font-weight: 800; }
+    .player-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center; border-top: 1px solid #1E293B; padding-top: 8px; font-size: 10px; }
+
+    /* 數據表格 */
     table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
-    th, td { border: 1px solid #334155; padding: 6px; text-align: center; }
-    th { background: #0F172A; color: #F59E0B; }
+    th, td { border: 1px solid #24314C; padding: 8px 6px; text-align: center; }
+    th { background: #0A0F1D; color: var(--gold-primary); font-weight: 800; }
+    tr:nth-child(even) { background: rgba(255,255,255,0.02); }
 
     .app-panel { display: none; }
     .app-panel.active { display: block; }
-    
+
+    /* Modal */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 99999; padding: 15px; }
-    .modal-box { background: #1E293B; border: 1px solid #475569; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-radius: 14px; padding: 18px; }
+    .modal-box { background: var(--card-bg); border: 1px solid #334155; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; border-radius: 16px; padding: 20px; }
   </style>
 </head>
 <body>
 
+  <!-- 頂部英雄區塊 -->
   <div class="header">
-    <span class="badge">M+ BASKETBALL SYSTEM</span>
+    <span class="badge">M+ BASKETBALL SYSTEM 2.0</span>
     <h1>M+ 籃球隊官方戰情中控台</h1>
-    <div id="liffStatusTag" style="font-size: 11px; color: #10B981; margin-top: 5px; font-weight: bold;">連線中...</div>
+    <div id="liffStatusTag" style="font-size: 11px; color: var(--accent-green); margin-top: 5px; font-weight: bold;">⚡ 正在連線 LINE 服務...</div>
 
-    <div id="userBar" style="display:none; margin-top: 8px; font-size: 12px; color: #94A3B8;">
-      目前登入：<b id="displayUserName" style="color: #F59E0B; font-size: 13px;"></b> (<span id="displayUserRole"></span>)
-      <div id="adminSwitcher" style="display:none; margin-top: 6px;">
-        <button type="button" id="switchCoach" class="btn-secondary" style="padding: 3px 6px;">📋 教練台</button>
-        <button type="button" id="switchManager" class="btn-secondary" style="padding: 3px 6px;">💼 經理台</button>
-        <button type="button" id="switchPlayer" class="btn-secondary" style="padding: 3px 6px;">🏀 球員台</button>
+    <!-- 傷病/高疲勞預警橫幅 (教練/經理看得到) -->
+    <div id="injuryAlertBanner" class="alert-banner" style="margin-top: 10px;">
+      ⚠️ <b>運動防護警報</b>：今日有 <span id="alertPlayerCount" style="color:#FFF; font-weight:bold;">0</span> 位球員回報高疲勞或部位痠痛，請注意訓練強度！
+    </div>
+
+    <!-- 登入身分條 -->
+    <div id="userBar" style="display:none; margin-top: 10px; font-size: 12px; color: var(--text-muted);">
+      登入身分：<b id="displayUserName" style="color: var(--gold-primary); font-size: 14px;"></b> (<span id="displayUserRole"></span>)
+      <div id="adminSwitcher" class="role-switcher" style="display:none;">
+        <button type="button" id="switchCoach" class="role-btn">📋 教練台</button>
+        <button type="button" id="switchManager" class="role-btn">💼 經理台</button>
+        <button type="button" id="switchPlayer" class="role-btn">🏀 球員台</button>
       </div>
-      <button type="button" id="btnLogout" style="background: transparent; border: 1px solid #EF4444; color: #EF4444; padding: 2px 6px; border-radius: 4px; margin-top: 6px; cursor: pointer;">登出</button>
+      <button type="button" id="btnLogout" style="background: transparent; border: 1px solid var(--accent-red); color: var(--accent-red); padding: 3px 8px; border-radius: 6px; margin-top: 8px; cursor: pointer; font-size: 11px;">登出系統</button>
     </div>
   </div>
 
   <div class="container">
 
-    <!-- 1. 登入與註冊 -->
+    <!-- 1. 訪客登入與註冊 -->
     <div id="authSection" class="app-panel active">
-      <div class="auth-tabs">
-        <button type="button" id="tabBtnLogin" class="auth-tab-btn active">🔑 會員登入</button>
-        <button type="button" id="tabBtnRegister" class="auth-tab-btn">📝 加入球隊 (註冊)</button>
+      <div style="display:flex; max-width:400px; margin:0 auto 15px auto; background:#0F172A; padding:4px; border-radius:10px; border:1px solid #334155;">
+        <button type="button" id="tabBtnLogin" class="nav-btn active" style="flex:1; border-radius:8px;">🔑 會員登入</button>
+        <button type="button" id="tabBtnRegister" class="nav-btn" style="flex:1; border-radius:8px;">📝 新人註冊</button>
       </div>
 
       <div id="loginCard" class="card" style="max-width: 400px; margin: 0 auto; display:block;">
-        <div class="card-title" style="text-align: center;">球隊身分登入</div>
-        <div class="card-subtitle" style="text-align: center;">請輸入姓名與密碼登入</div>
-        
+        <div class="card-title" style="justify-content:center;">球隊身分認證</div>
+        <div class="card-subtitle" style="text-align: center;">請輸入已建檔之姓名與密碼</div>
         <div class="form-group"><input type="text" id="loginAccount" placeholder="姓名 (如: 吳俊璋)"></div>
         <div class="form-group"><input type="password" id="loginPassword" placeholder="密碼"></div>
         <button type="button" id="btnLoginSubmit" class="btn-submit">立即登入</button>
-
-        <div style="text-align: center; margin-top: 15px; border-top: 1px solid #334155; padding-top: 10px;">
-          <span style="font-size: 11px; color: #94A3B8;">新進球員尚未建檔？</span>
-          <button type="button" id="goToReg" style="background: transparent; border: none; color: #F59E0B; font-weight: bold; font-size: 12px; cursor: pointer; text-decoration: underline;">點此填寫註冊資料</button>
-        </div>
       </div>
 
       <div id="registerCard" class="card" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div class="card-title" style="margin:0;">加入 M+ 籃球隊申請</div>
-          <button type="button" id="goToLogin" class="btn-secondary">返回登入</button>
-        </div>
-
+        <div class="card-title">加入 M+ 籃球隊申請表</div>
+        <div class="card-subtitle">註冊後將自動綁定您目前的 LINE 身分</div>
         <div class="grid-3">
-          <div class="form-group">
-            <label>身分</label>
-            <select id="newRole"><option value="球員">🏀 球員</option><option value="教練">📋 教練</option><option value="球隊經理">💼 球隊經理</option></select>
-          </div>
-          <div class="form-group"><label>真實姓名</label><input type="text" id="newName" placeholder="姓名"></div>
-          <div class="form-group"><label>自訂密碼</label><input type="password" id="newPassword" placeholder="至少4碼"></div>
+          <div class="form-group"><label>身分</label><select id="newRole"><option value="球員">🏀 球員</option><option value="教練">📋 教練</option><option value="球隊經理">💼 球隊經理</option></select></div>
+          <div class="form-group"><label>姓名</label><input type="text" id="newName" placeholder="姓名"></div>
+          <div class="form-group"><label>密碼</label><input type="password" id="newPassword" placeholder="密碼"></div>
         </div>
-
         <div class="grid-2">
-          <div class="form-group"><label>聯絡電話</label><input type="tel" id="newPhone" placeholder="09xx-xxx-xxx"></div>
-          <div class="form-group" id="groupNewTeam"><label>志願梯隊</label><select id="newTeam"><option value="大隊">🔥 大隊 (一軍)</option><option value="小隊">⚡ 小隊 (二軍)</option></select></div>
+          <div class="form-group"><label>手機</label><input type="tel" id="newPhone" placeholder="09xx-xxx-xxx"></div>
+          <div class="form-group"><label>志願梯隊</label><select id="newTeam"><option value="大隊">🔥 大隊 (一軍)</option><option value="小隊">⚡ 小隊 (二軍)</option></select></div>
         </div>
-
-        <div id="regPlayerExtra">
-          <div class="section-divider">球員基本資料與照片</div>
-          
-          <div class="form-group" style="text-align: center; background: #0F172A; padding: 12px; border-radius: 8px; border: 1px dashed #475569;">
-            <label style="color: #F59E0B; margin-bottom: 6px;">📷 球員大頭貼 (可使用相機拍照或自動抓取 LINE 頭像)</label>
-            <input type="file" id="regPhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="previewRegPhoto(this)">
-            <button type="button" onclick="document.getElementById('regPhotoInput').click()" style="background: #334155; color: #FFF; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">📸 自訂拍照 / 上傳相片</button>
-            <div style="margin-top: 8px;">
-              <img id="regPhotoPreview" src="" style="width: 70px; height: 70px; border-radius: 8px; object-fit: cover; display: none; border: 2px solid #F59E0B; margin: 0 auto;" />
-            </div>
-          </div>
-
-          <div class="grid-3" style="margin-top: 10px;">
-            <div class="form-group"><label>背號</label><input type="number" id="newNumber" value="7"></div>
-            <div class="form-group"><label>守備位置</label><select id="newPosition"><option value="PG">PG 控球</option><option value="SG">SG 得分</option><option value="SF">SF 小前</option><option value="PF">PF 大前</option><option value="C">C 中鋒</option></select></div>
-            <div class="form-group"><label>慣用手</label><select id="newDominantHand"><option value="右手">右手</option><option value="左手">左手</option></select></div>
-          </div>
-          <div class="grid-3">
-            <div class="form-group"><label>身高 (cm)</label><input type="number" step="0.1" id="newHeight" value="175"></div>
-            <div class="form-group"><label>體重 (kg)</label><input type="number" step="0.1" id="newWeight" value="65"></div>
-            <div class="form-group"><label>折返跑 (秒)</label><input type="number" step="0.01" id="newShuttle" value="14.2"></div>
-          </div>
+        <div class="grid-3">
+          <div class="form-group"><label>背號</label><input type="number" id="newNumber" value="7"></div>
+          <div class="form-group"><label>位置</label><select id="newPosition"><option value="PG">PG 控球</option><option value="SG">SG 得分</option><option value="SF">SF 小前</option><option value="PF">PF 大前</option><option value="C">C 中鋒</option></select></div>
+          <div class="form-group"><label>慣用手</label><select id="newDominantHand"><option value="右手">右手</option><option value="左手">左手</option></select></div>
         </div>
-        <button type="button" id="newRegBtn" class="btn-submit">確認送出加入申請並綁定 LINE</button>
+        <div class="grid-3">
+          <div class="form-group"><label>身高 (cm)</label><input type="number" step="0.1" id="newHeight" value="175"></div>
+          <div class="form-group"><label>體重 (kg)</label><input type="number" step="0.1" id="newWeight" value="65"></div>
+          <div class="form-group"><label>折返跑 (秒)</label><input type="number" step="0.01" id="newShuttle" value="14.2"></div>
+        </div>
+        <button type="button" id="newRegBtn" class="btn-submit">確認加入球隊並綁定 LINE</button>
       </div>
     </div>
 
     <!-- 2. 教練中控台 -->
     <div id="coachPanel" class="app-panel">
       <div class="nav-scroll">
-        <button type="button" class="nav-btn active" id="btn-c-roster">👥 梯隊名冊</button>
-        <button type="button" class="nav-btn" id="btn-c-task">🎯 派發課表</button>
-        <button type="button" class="nav-btn" id="btn-c-eval">📋 戰力評分</button>
+        <button type="button" class="nav-btn active" id="btn-c-roster">👥 梯隊與戰力榜</button>
+        <button type="button" class="nav-btn" id="btn-c-game">🏆 實戰紀錄板</button>
+        <button type="button" class="nav-btn" id="btn-c-task">🎯 課表與影片審核</button>
+        <button type="button" class="nav-btn" id="btn-c-eval">📋 雷達圖評核</button>
       </div>
 
+      <!-- 梯隊與排行 -->
       <div id="c-roster" class="card" style="display:block;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div class="card-title" style="margin:0;">球員名冊與梯隊管理</div>
+          <div class="card-title" style="margin:0;">全隊戰力與 EXP 榜</div>
           <div>
             <button class="btn-secondary active" id="c-f-all">全部</button>
             <button class="btn-secondary" id="c-f-1">大隊</button>
             <button class="btn-secondary" id="c-f-2">小隊</button>
-            <button class="btn-secondary" id="c-refresh" style="background:#4F46E5; color:#FFF;">🔄</button>
+            <button class="btn-secondary" id="c-refresh" style="background:#3B82F6; color:#FFF;">🔄</button>
           </div>
         </div>
         <div id="coachRosterList" class="roster-grid"></div>
       </div>
 
+      <!-- 賽事 Box Score -->
+      <div id="c-game" class="card" style="display:none;">
+        <div class="card-title">比賽攻守技術統計 (Box Score)</div>
+        <div class="card-subtitle">場邊即時點擊登錄，賽後自動結算 MVP</div>
+        <div class="grid-3">
+          <div class="form-group"><label>對手名稱</label><input type="text" id="gameOpponent" placeholder="例: 台中科技大學"></div>
+          <div class="form-group"><label>我方得分</label><input type="number" id="gameMyScore" value="0"></div>
+          <div class="form-group"><label>對手得分</label><input type="number" id="gameOppScore" value="0"></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>單場 MVP</label><select id="gameMvpSelect"><option value="">-- 請選取 MVP 球員 --</option></select></div>
+          <div class="form-group"><label>戰術註記</label><input type="text" id="gameNote" placeholder="例: 區域聯防奏效"></div>
+        </div>
+        <button type="button" id="btnSaveGame" class="btn-submit btn-blue">封存本場比賽紀錄</button>
+
+        <div style="font-size: 13px; font-weight: bold; margin: 16px 0 6px 0; color:var(--gold-primary);">📜 近期實戰戰報</div>
+        <div id="gameHistoryList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
+      <!-- 課表指派與審核 -->
       <div id="c-task" class="card" style="display:none;">
         <div class="card-title">派發訓練課表</div>
         <div class="grid-3">
           <div class="form-group"><label>對象</label><select id="cTaskTarget"><option value="大隊全體">大隊全體</option><option value="小隊全體">小隊全體</option><option value="全隊全員">全隊全員</option></select></div>
-          <div class="form-group"><label>訓練項目</label><input type="text" id="cTaskTitle" placeholder="如: 罰球進100顆"></div>
-          <div class="form-group"><label>目標量</label><input type="text" id="cTaskAmount" placeholder="如: 進球率70%"></div>
+          <div class="form-group"><label>訓練項目</label><input type="text" id="cTaskTitle" placeholder="例: 底角三分球 100 顆"></div>
+          <div class="form-group"><label>要求量</label><input type="text" id="cTaskAmount" placeholder="例: 命中率達 65%"></div>
         </div>
-        <div class="form-group"><label>截止日期</label><input type="date" id="cTaskDead"></div>
-        <button type="button" id="cTaskBtn" class="btn-submit btn-indigo">確定派發訓練任務</button>
-        <div style="font-size: 13px; font-weight: bold; margin: 15px 0 8px 0; color:#F59E0B;">🎯 目前指派課表</div>
+        <div class="grid-2">
+          <div class="form-group"><label>示範影片網址 (YouTube/IG)</label><input type="url" id="cTaskDemo" placeholder="https://..."></div>
+          <div class="form-group"><label>截止日</label><input type="date" id="cTaskDead"></div>
+        </div>
+        <button type="button" id="cTaskBtn" class="btn-submit btn-blue">指派課表</button>
+
+        <div style="font-size: 13px; font-weight: bold; margin: 16px 0 6px 0; color:var(--gold-primary);">🎯 球員課表審核清單</div>
         <div id="coachTaskList" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
 
+      <!-- 雷達圖評核 -->
       <div id="c-eval" class="card" style="display:none;">
-        <div class="card-title">教練戰力評核登錄</div>
-        <div class="form-group"><label>受評球員</label><select id="cEvalPlayerSelect"><option value="">-- 請先重新整理載入球員 --</option></select></div>
-        <div class="grid-2">
-          <div class="form-group"><label>進攻 (1-5)</label><select id="cEvOff"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
-          <div class="form-group"><label>防守 (1-5)</label><select id="cEvDef"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
-          <div class="form-group"><label>體能 (1-5)</label><select id="cEvFit"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
-          <div class="form-group"><label>態度 (1-5)</label><select id="cEvAtt"><option value="5" selected>5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select></div>
+        <div class="card-title">球員五芒星戰力評分</div>
+        <div class="form-group"><label>評核對象</label><select id="cEvalPlayerSelect"><option value="">-- 請選取球員 --</option></select></div>
+        <div class="grid-4">
+          <div class="form-group"><label>進攻 (1-5)</label><input type="number" id="cEvOff" min="1" max="5" value="3"></div>
+          <div class="form-group"><label>防守 (1-5)</label><input type="number" id="cEvDef" min="1" max="5" value="3"></div>
+          <div class="form-group"><label>體能 (1-5)</label><input type="number" id="cEvFit" min="1" max="5" value="3"></div>
+          <div class="form-group"><label>態度 (1-5)</label><input type="number" id="cEvAtt" min="1" max="5" value="5"></div>
         </div>
-        <div class="form-group"><label>指導叮嚀短評</label><textarea id="cEvNote" rows="2" placeholder="輸入具體期許..."></textarea></div>
-        <button type="button" id="cEvalBtn" class="btn-submit btn-indigo">儲存戰力評分</button>
+        <div class="form-group"><label>教練叮嚀指導語</label><textarea id="cEvNote" rows="2" placeholder="輸入具體改善建言..."></textarea></div>
+        <button type="button" id="cEvalBtn" class="btn-submit btn-blue">儲存戰力評分</button>
       </div>
     </div>
 
     <!-- 3. 經理台 -->
     <div id="managerPanel" class="app-panel">
       <div class="nav-scroll">
-        <button type="button" class="nav-btn active" id="btn-m-roster">📇 人事名冊</button>
-        <button type="button" class="nav-btn" id="btn-m-att">✅ 出勤點名</button>
-        <button type="button" class="nav-btn" id="btn-m-checkin">☀️ 晨報看板</button>
+        <button type="button" class="nav-btn active" id="btn-m-att">✅ 訓練點名 (+EXP)</button>
+        <button type="button" class="nav-btn" id="btn-m-checkin">☀️ 晨報防護看板</button>
+        <button type="button" class="nav-btn" id="btn-m-roster">📇 通訊名冊</button>
       </div>
 
-      <div id="m-roster" class="card" style="display:block;">
+      <div id="m-att" class="card" style="display:block;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div class="card-title" style="margin:0;">全隊人事通訊</div>
-          <button type="button" id="m-refresh" class="btn-secondary" style="background:#4F46E5; color:#FFF;">🔄 重新整理</button>
-        </div>
-        <div id="managerRosterList" class="roster-grid"></div>
-      </div>
-
-      <div id="m-att" class="card" style="display:none;">
-        <div class="card-title">訓練出勤快速點名</div>
-        <div style="display:flex; gap:6px; margin-bottom:8px;">
-          <button type="button" class="btn-secondary active" id="m-att-all">全部</button>
-          <button type="button" class="btn-secondary" id="m-att-1">大隊</button>
-          <button type="button" class="btn-secondary" id="m-att-2">小隊</button>
+          <div class="card-title" style="margin:0;">出勤快速批次點名</div>
+          <div>
+            <button type="button" class="btn-secondary active" id="m-att-all">全部</button>
+            <button type="button" class="btn-secondary" id="m-att-1">大隊</button>
+            <button type="button" class="btn-secondary" id="m-att-2">小隊</button>
+          </div>
         </div>
         <table>
-          <thead><tr><th>球員</th><th>梯隊</th><th>出席狀態</th><th>備註</th></tr></thead>
-          <tbody id="attendanceTbody"><tr><td colspan="4" style="color:#94A3B8;">載入名冊中...</td></tr></tbody>
+          <thead><tr><th>球員</th><th>梯隊</th><th>狀態</th><th>備註</th></tr></thead>
+          <tbody id="attendanceTbody"><tr><td colspan="4">載入名冊中...</td></tr></tbody>
         </table>
-        <button type="button" id="mSubmitAtt" class="btn-submit btn-indigo" style="margin-top:10px;">儲存今日出勤紀錄</button>
+        <button type="button" id="mSubmitAtt" class="btn-submit btn-blue" style="margin-top:12px;">儲存出勤紀錄 (出席球員 +50 EXP)</button>
       </div>
 
       <div id="m-checkin" class="card" style="display:none;">
-        <div class="card-title">今日晨報回報統計</div>
-        <div style="font-weight:bold; font-size:12px; color:#F59E0B; margin-bottom:6px;">
-          今日已回報：<span id="checkinCount">0</span> 人
-        </div>
+        <div class="card-title">今日球員晨報與傷病預警</div>
         <table>
-          <thead><tr><th>球員</th><th>梯隊</th><th>睡眠</th><th>感受</th><th>疲勞</th><th>痠痛部位</th></tr></thead>
-          <tbody id="todayCheckinTbody"><tr><td colspan="6" style="color:#94A3B8;">今日尚無回報紀錄。</td></tr></tbody>
+          <thead><tr><th>球員</th><th>睡眠</th><th>感受</th><th>疲勞</th><th>不適部位</th><th>防護提示</th></tr></thead>
+          <tbody id="todayCheckinTbody"><tr><td colspan="6">今日尚無回報資料。</td></tr></tbody>
         </table>
+      </div>
+
+      <div id="m-roster" class="card" style="display:none;">
+        <div class="card-title">球員聯絡與緊急通訊錄</div>
+        <div id="managerRosterList" class="roster-grid" style="margin-top:10px;"></div>
       </div>
     </div>
 
     <!-- 4. 球員台 -->
     <div id="playerPanel" class="app-panel">
       <div class="nav-scroll">
-        <button type="button" class="nav-btn active" id="btn-p-dash">📊 我的戰力</button>
-        <button type="button" class="nav-btn" id="btn-p-daily">☀️ 填寫晨報</button>
-        <button type="button" class="nav-btn" id="btn-p-task">🎯 訓練課表</button>
+        <button type="button" class="nav-btn active" id="btn-p-dash">📊 我的榮譽榜</button>
+        <button type="button" class="nav-btn" id="btn-p-daily">☀️ 填寫晨報 (+25 EXP)</button>
+        <button type="button" class="nav-btn" id="btn-p-task">🎯 自主課表繳交</button>
       </div>
 
+      <!-- 個人榮譽與雷達圖 -->
       <div id="p-dash" class="card" style="display:block;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
-            <div style="font-size:18px; font-weight:bold; color:#FFF;"><span id="myName"></span> <span id="myNumber" style="font-size:12px; color:#94A3B8;"></span></div>
-            <div style="font-size:12px; color:#CBD5E1; margin-top:2px;">位置: <b id="myPosition" style="color:#F59E0B;"></b> | 身高體重: <span id="myHW"></span></div>
-            <div style="font-size:12px; color:#CBD5E1; margin-top:2px;">折返跑: <b id="myShuttle" style="color:#F59E0B;"></b> 秒</div>
+            <span id="myRankTitle" class="player-rank-tag">🌱 新進儲備</span>
+            <div style="font-size:20px; font-weight:900; color:#FFF; margin-top:4px;"><span id="myName"></span> <span id="myNumber" style="font-size:13px; color:var(--text-muted);"></span></div>
+            <div style="font-size:12px; color:#CBD5E1; margin-top:2px;">位置: <b id="myPosition" style="color:var(--gold-primary);"></b> | 折返跑: <b id="myShuttle" style="color:var(--gold-primary);"></b>s</div>
           </div>
-          <img id="myPhoto" src="" style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid #F59E0B;" onerror="this.src='https://via.placeholder.com/150/0F172A/94A3B8'">
+          <img id="myPhoto" src="" style="width: 66px; height: 66px; border-radius: 12px; object-fit: cover; border: 2px solid var(--gold-primary);" onerror="this.src='https://via.placeholder.com/150'">
+        </div>
+
+        <!-- 經驗值條 -->
+        <div style="margin: 15px 0 10px 0;">
+          <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold;">
+            <span style="color:var(--gold-primary);">EXP 經驗值：<span id="myExpText">0</span></span>
+            <span style="color:var(--text-muted);">下一等級目標：<span id="myExpNext">150</span></span>
+          </div>
+          <div class="exp-bar-container"><div id="myExpFill" class="exp-bar-fill"></div></div>
         </div>
 
         <div style="text-align: center; margin: 15px 0;">
-          <svg id="mySvgRadar" width="260" height="260" viewBox="0 0 300 300" style="background: #0F172A; border-radius: 12px; border: 1px solid #334155;"></svg>
+          <svg id="mySvgRadar" width="260" height="260" viewBox="0 0 300 300" style="background: #0A0F1D; border-radius: 14px; border: 1px solid var(--card-border);"></svg>
         </div>
-        <div style="background: #0F172A; padding: 12px; border-radius: 8px; border-left: 4px solid #F59E0B; font-size: 12px;">
-          <div style="color: #F59E0B; font-weight: bold;">💬 教練最新指導：</div>
-          <div id="myCoachNote" style="color: #E2E8F0; margin-top: 4px;">保持專注，持續強化基本功！</div>
+
+        <div style="background: #0A0F1D; padding: 12px; border-radius: 10px; border-left: 4px solid var(--gold-primary); font-size: 12px;">
+          <div style="color: var(--gold-primary); font-weight: bold;">💬 教練個人戰術叮嚀：</div>
+          <div id="myCoachNote" style="color: #E2E8F0; margin-top: 4px;">積極防守，把握每一次空檔機會！</div>
         </div>
       </div>
 
+      <!-- 晨報填寫 -->
       <div id="p-daily" class="card" style="display:none;">
-        <div class="card-title">今日狀態晨報回報</div>
+        <div class="card-title">每日狀態回報 (+25 EXP)</div>
+        <div class="card-subtitle">協助教練掌握您的疲勞度與健康狀態</div>
         <div class="grid-2">
-          <div class="form-group"><label>睡眠時數 (小時)</label><input type="number" step="0.5" id="pSleep" value="8"></div>
+          <div class="form-group"><label>睡眠時數</label><input type="number" step="0.5" id="pSleep" value="8"></div>
           <div class="form-group"><label>精神感受</label><select id="pEnergy"><option value="精神飽滿">⚡ 精神飽滿</option><option value="正常" selected>👌 正常狀態</option><option value="有點疲累">🥱 有點疲累</option></select></div>
         </div>
         <div class="grid-2">
-          <div class="form-group"><label>疲勞指數 (1-5)</label><select id="pFatigue"><option value="1">1 (輕鬆)</option><option value="3" selected>3 (正常)</option><option value="5">5 (極度疲累)</option></select></div>
-          <div class="form-group"><label>痠痛不適部位</label><select id="pSore"><option value="無痠痛">🟢 無特殊痠痛</option><option value="腳踝">🦶 腳踝緊繃</option><option value="膝蓋">🦵 膝蓋微痛</option><option value="大腿">🏃 大腿緊繃</option><option value="腰背">🧍 腰背痠痛</option></select></div>
+          <div class="form-group"><label>疲勞指數 (1輕鬆 - 5極度疲累)</label><select id="pFatigue"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4 (疲勞)</option><option value="5">5 (極度疲憊)</option></select></div>
+          <div class="form-group"><label>痠痛不適部位</label><select id="pSore"><option value="無痠痛">🟢 無特殊痠痛</option><option value="腳踝緊繃">🦶 腳踝緊繃</option><option value="膝蓋微痛">🦵 膝蓋微痛</option><option value="大腿緊繃">🏃 大腿緊繃</option><option value="腰背痠痛">🧍 腰背痠痛</option></select></div>
         </div>
-        <div class="form-group"><label>備註說明 (選填)</label><input type="text" id="pNote" placeholder="例如: 狀況良好"></div>
-        <button type="button" id="pDailyBtn" class="btn-submit">送出今日晨報</button>
+        <div class="form-group"><label>備註說明</label><input type="text" id="pNote" placeholder="例: 昨晚重訓大腿較痠"></div>
+        <button type="button" id="pDailyBtn" class="btn-submit">送出晨報並領取 EXP</button>
       </div>
 
+      <!-- 自主課表回傳 -->
       <div id="p-task" class="card" style="display:none;">
-        <div class="card-title">我的自主訓練任務</div>
-        <div id="myTaskList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;"></div>
+        <div class="card-title">自主訓練任務清單</div>
+        <div class="card-subtitle">完成課表並繳交成果影片，教練審核通過即得 +100 EXP</div>
+        <div id="myTaskList" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
     </div>
 
   </div>
 
-  <!-- 編輯 Modal -->
-  <div id="editModal" class="modal-overlay" style="display:none;">
+  <!-- 繳交課表成果 Modal -->
+  <div id="taskProofModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <h3 style="color:#F59E0B; font-size:16px;">✏️ 維護球員檔案與相片</h3>
-        <button type="button" id="closeModalBtn" style="background:transparent; border:none; color:#94A3B8; font-size:18px; cursor:pointer;">✕</button>
-      </div>
-      <input type="hidden" id="editRow">
-
-      <div class="form-group" style="text-align: center; background: #0F172A; padding: 10px; border-radius: 8px; border: 1px dashed #475569; margin-bottom: 10px;">
-        <input type="file" id="editPhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="previewEditPhoto(this)">
-        <button type="button" onclick="document.getElementById('editPhotoInput').click()" style="background: #334155; color: #FFF; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px;">📸 更換大頭貼 (相機/相簿)</button>
-        <div style="margin-top: 6px;">
-          <img id="editPhotoPreview" src="" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; display: none; border: 2px solid #F59E0B; margin: 0 auto;" />
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="form-group"><label>姓名</label><input type="text" id="editName"></div>
-        <div class="form-group"><label>梯隊</label><select id="editTeam"><option value="大隊">🔥 大隊</option><option value="小隊">⚡ 小隊</option></select></div>
-      </div>
-      <div class="grid-2">
-        <div class="form-group"><label>背號</label><input type="number" id="editNumber"></div>
-        <div class="form-group"><label>位置</label><select id="editPos"><option value="PG">PG</option><option value="SG">SG</option><option value="SF">SF</option><option value="PF">PF</option><option value="C">C</option></select></div>
-      </div>
-      <div class="grid-3">
-        <div class="form-group"><label>身高(cm)</label><input type="number" step="0.1" id="editHeight"></div>
-        <div class="form-group"><label>體重(kg)</label><input type="number" step="0.1" id="editWeight"></div>
-        <div class="form-group"><label>折返跑(秒)</label><input type="number" step="0.01" id="editShuttle"></div>
-      </div>
+      <div class="card-title">繳交訓練影片成果</div>
+      <input type="hidden" id="proofTaskRow">
+      <div class="form-group"><label>成果影片連結 (YouTube / IG / 雲端)</label><input type="url" id="proofVideoUrl" placeholder="https://..."></div>
+      <div class="form-group"><label>訓練心得與自評</label><textarea id="proofPlayerNote" rows="3" placeholder="例如: 投進70球，出手節奏改善..."></textarea></div>
       <div style="display:flex; gap:8px; margin-top:12px;">
-        <button type="button" id="cancelModalBtn" class="btn-secondary" style="flex:1;">取消</button>
-        <button type="button" id="editSubmitBtn" class="btn-submit" style="flex:1; margin:0;">儲存更新</button>
+        <button type="button" onclick="closeProofModal()" class="btn-secondary" style="flex:1;">取消</button>
+        <button type="button" id="btnSubmitProof" class="btn-submit btn-blue" style="flex:1; margin:0;">送交教練審核</button>
       </div>
     </div>
   </div>
@@ -334,10 +359,7 @@
     var cachedPlayers = [];
     var currentCoachTeam = 'ALL';
     var attTeamFilter = 'ALL';
-    var tempRegPhotoBase64 = "";
-    var tempEditPhotoBase64 = "";
 
-    // 封裝通用 API 呼叫函式 (取代 google.script.run)
     async function callBackend(action, data = {}) {
       try {
         const res = await fetch(API_ENDPOINT, {
@@ -348,7 +370,7 @@
         return await res.json();
       } catch (err) {
         console.error("API Error:", err);
-        return { success: false, message: "網路連線失敗：" + err.message };
+        return { success: false, message: "連線異常：" + err.message };
       }
     }
 
@@ -357,7 +379,7 @@
       if (el) el.onclick = fn;
     }
 
-    // 原生 LIFF 初始化 (在獨立 GitHub 域名下完美運作)
+    // 原生 LIFF 初始化與自動免密碼登入
     async function initLiff() {
       var statusTag = document.getElementById('liffStatusTag');
       try {
@@ -368,84 +390,42 @@
             liff.login();
             return;
           } else {
-            if (statusTag) statusTag.innerText = "🌐 瀏覽器模式 (請手動登入)";
+            statusTag.innerText = "🌐 一般瀏覽器模式";
             return;
           }
         }
 
-        // 成功提取 LINE 真實 Profile
         currentLiffProfile = await liff.getProfile();
         var uid = currentLiffProfile.userId;
-        if (statusTag) statusTag.innerText = "🟢 LINE 已連線: " + currentLiffProfile.displayName;
+        statusTag.innerText = "🟢 LINE 已連線: " + currentLiffProfile.displayName;
 
-        // 若大頭貼欄位為空，自動預填 LINE 大頭照
-        if (currentLiffProfile.pictureUrl && !tempRegPhotoBase64) {
-          var regPrev = document.getElementById('regPhotoPreview');
-          if (regPrev) {
-            regPrev.src = currentLiffProfile.pictureUrl;
-            regPrev.style.display = 'block';
-          }
-        }
-
-        // 自動免密碼登入
         if (uid && !currentUser) {
-          if (statusTag) statusTag.innerText = "⚡ 正在以 LINE 身分自動登入...";
+          statusTag.innerText = "⚡ 正在以 LINE 身分自動登入...";
           const res = await callBackend("loginWithLineId", { lineUserId: uid });
           if (res && res.success) {
             currentUser = { name: res.userName, role: res.role, roleText: res.roleText };
-            if (statusTag) statusTag.innerText = "🟢 已自動登入：" + res.userName;
+            statusTag.innerText = "🟢 已自動登入：" + res.userName;
             renderUserSession();
           } else {
-            if (statusTag) statusTag.innerText = "🟢 LINE 驗證完成 (未建立球員資料，請註冊)";
+            statusTag.innerText = "🟢 LINE 已連線 (請註冊球員帳號)";
           }
         }
       } catch (err) {
-        if (statusTag) statusTag.innerText = "🌐 一般模式";
-        console.warn("LIFF Error:", err);
-      }
-    }
-
-    function previewRegPhoto(input) {
-      if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-          tempRegPhotoBase64 = e.target.result;
-          var preview = document.getElementById('regPhotoPreview');
-          preview.src = tempRegPhotoBase64;
-          preview.style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
-    }
-
-    function previewEditPhoto(input) {
-      if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-          tempEditPhotoBase64 = e.target.result;
-          var preview = document.getElementById('editPhotoPreview');
-          preview.src = tempEditPhotoBase64;
-          preview.style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
+        statusTag.innerText = "🌐 瀏覽器模式";
       }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
       safeBind('tabBtnLogin', 'click', () => switchAuth('login'));
       safeBind('tabBtnRegister', 'click', () => switchAuth('register'));
-      safeBind('goToReg', 'click', () => switchAuth('register'));
-      safeBind('goToLogin', 'click', () => switchAuth('login'));
 
-      // 帳密手動登入
       safeBind('btnLoginSubmit', 'click', async function() {
         var acc = document.getElementById('loginAccount').value.trim();
         var pass = document.getElementById('loginPassword').value.trim();
-        if (!acc) { alert("請輸入姓名！"); return; }
-        var btn = this; btn.innerText = "驗證中..."; btn.disabled = true;
-
+        if (!acc) return alert("請輸入姓名！");
+        this.innerText = "驗證中..."; this.disabled = true;
         const res = await callBackend("loginUser", { account: acc, password: pass });
-        btn.innerText = "立即登入"; btn.disabled = false;
+        this.innerText = "立即登入"; this.disabled = false;
         if (res && res.success) {
           currentUser = { name: res.userName, role: res.role, roleText: res.roleText };
           renderUserSession();
@@ -454,15 +434,8 @@
         }
       });
 
-      // 註冊並寫入真實 LINE ID
       safeBind('newRegBtn', 'click', async function() {
-        var btn = this;
-        btn.innerText = "寫入資料庫中...";
-        btn.disabled = true;
-
         var realLineUid = currentLiffProfile ? currentLiffProfile.userId : "";
-        var photoToSend = tempRegPhotoBase64 || (currentLiffProfile ? currentLiffProfile.pictureUrl : "");
-
         var data = {
           role: document.getElementById('newRole').value,
           name: document.getElementById('newName').value.trim(),
@@ -475,21 +448,14 @@
           height: document.getElementById('newHeight').value,
           weight: document.getElementById('newWeight').value,
           shuttleRun: document.getElementById('newShuttle').value,
-          photoBase64: photoToSend,
-          lineUserId: realLineUid, // 真實 LINE ID
-          schoolGrade: "大雅國中", emergencyContact: "家長", parentPhone: "", injuryHistory: "", status: "正常"
+          photoBase64: (currentLiffProfile ? currentLiffProfile.pictureUrl : ""),
+          lineUserId: realLineUid
         };
 
-        if (!data.name || !data.password || !data.phone) {
-          alert("請完整填寫姓名、密碼與電話！");
-          btn.innerText = "確認送出加入申請並綁定 LINE";
-          btn.disabled = false;
-          return;
-        }
-
+        if (!data.name || !data.password || !data.phone) return alert("請填寫完整資訊！");
+        this.innerText = "寫入資料庫中..."; this.disabled = true;
         const res = await callBackend("registerNewMember", data);
-        btn.innerText = "確認送出加入申請並綁定 LINE";
-        btn.disabled = false;
+        this.innerText = "確認加入球隊並綁定 LINE"; this.disabled = false;
         alert(res.message);
         if (res.success) {
           currentUser = { name: res.userName, role: res.role, roleText: res.roleText };
@@ -502,7 +468,9 @@
       safeBind('switchPlayer', 'click', () => switchRoleView('PLAYER'));
       safeBind('btnLogout', 'click', handleLogout);
 
+      // 教練導航
       safeBind('btn-c-roster', 'click', () => showCoachTab('roster'));
+      safeBind('btn-c-game', 'click', () => showCoachTab('game'));
       safeBind('btn-c-task', 'click', () => showCoachTab('task'));
       safeBind('btn-c-eval', 'click', () => showCoachTab('eval'));
       safeBind('c-f-all', 'click', () => filterCoachTeam('ALL'));
@@ -511,39 +479,32 @@
       safeBind('c-refresh', 'click', reloadCoachData);
       safeBind('cTaskBtn', 'click', doAssignTask);
       safeBind('cEvalBtn', 'click', doCoachEval);
+      safeBind('btnSaveGame', 'click', doSaveGame);
 
-      safeBind('btn-m-roster', 'click', () => showManagerTab('roster'));
+      // 經理導航
       safeBind('btn-m-att', 'click', () => showManagerTab('att'));
       safeBind('btn-m-checkin', 'click', () => showManagerTab('checkin'));
-      safeBind('m-refresh', 'click', loadManagerData);
+      safeBind('btn-m-roster', 'click', () => showManagerTab('roster'));
       safeBind('m-att-all', 'click', () => filterAtt('ALL'));
       safeBind('m-att-1', 'click', () => filterAtt('大隊'));
       safeBind('m-att-2', 'click', () => filterAtt('小隊'));
       safeBind('mSubmitAtt', 'click', submitAttendanceBatch);
 
+      // 球員導航
       safeBind('btn-p-dash', 'click', () => showPlayerTab('dash'));
       safeBind('btn-p-daily', 'click', () => showPlayerTab('daily'));
       safeBind('btn-p-task', 'click', () => showPlayerTab('task'));
       safeBind('pDailyBtn', 'click', doSubmitDaily);
+      safeBind('btnSubmitProof', 'click', doSubmitProof);
 
-      safeBind('closeModalBtn', 'click', closeEditModal);
-      safeBind('cancelModalBtn', 'click', closeEditModal);
-      safeBind('editSubmitBtn', 'click', doSaveEditPlayer);
-
-      // 啟動原生 LIFF
       initLiff();
     });
 
     function switchAuth(mode) {
-      var lCard = document.getElementById('loginCard'), rCard = document.getElementById('registerCard');
-      var bL = document.getElementById('tabBtnLogin'), bR = document.getElementById('tabBtnRegister');
-      if (mode === 'login') {
-        if(lCard) lCard.style.display = 'block'; if(rCard) rCard.style.display = 'none';
-        if(bL) bL.className = 'auth-tab-btn active'; if(bR) bR.className = 'auth-tab-btn';
-      } else {
-        if(lCard) lCard.style.display = 'none'; if(rCard) rCard.style.display = 'block';
-        if(bL) bL.className = 'auth-tab-btn'; if(bR) bR.className = 'auth-tab-btn active';
-      }
+      document.getElementById('loginCard').style.display = (mode === 'login') ? 'block' : 'none';
+      document.getElementById('registerCard').style.display = (mode === 'register') ? 'block' : 'none';
+      document.getElementById('tabBtnLogin').className = (mode === 'login') ? 'nav-btn active' : 'nav-btn';
+      document.getElementById('tabBtnRegister').className = (mode === 'register') ? 'nav-btn active' : 'nav-btn';
     }
 
     function renderUserSession() {
@@ -561,14 +522,19 @@
       else switchRoleView('COACH');
     }
 
-    function switchRoleView(roleView) {
-      document.getElementById('coachPanel').className = 'app-panel' + (roleView === 'COACH' ? ' active' : '');
-      document.getElementById('managerPanel').className = 'app-panel' + (roleView === 'MANAGER' ? ' active' : '');
-      document.getElementById('playerPanel').className = 'app-panel' + (roleView === 'PLAYER' ? ' active' : '');
+    function switchRoleView(r) {
+      document.getElementById('coachPanel').className = 'app-panel' + (r === 'COACH' ? ' active' : '');
+      document.getElementById('managerPanel').className = 'app-panel' + (r === 'MANAGER' ? ' active' : '');
+      document.getElementById('playerPanel').className = 'app-panel' + (r === 'PLAYER' ? ' active' : '');
 
-      if (roleView === 'COACH') reloadCoachData();
-      if (roleView === 'MANAGER') loadManagerData();
-      if (roleView === 'PLAYER') loadPlayerDashboard();
+      ['switchCoach', 'switchManager', 'switchPlayer'].forEach(id => {
+        var el = document.getElementById(id);
+        if (el) el.className = 'role-btn' + (id.toUpperCase().indexOf(r) !== -1 ? ' active' : '');
+      });
+
+      if (r === 'COACH') reloadCoachData();
+      if (r === 'MANAGER') loadManagerData();
+      if (r === 'PLAYER') loadPlayerDashboard();
     }
 
     function handleLogout() {
@@ -582,57 +548,90 @@
     }
 
     function showCoachTab(t) {
-      ['roster', 'task', 'eval'].forEach(k => {
+      ['roster', 'game', 'task', 'eval'].forEach(k => {
         var el = document.getElementById('c-' + k), btn = document.getElementById('btn-c-' + k);
         if (el) el.style.display = (k === t) ? 'block' : 'none';
         if (btn) btn.className = (k === t) ? 'nav-btn active' : 'nav-btn';
       });
+      if (t === 'game') loadGameHistory();
     }
 
     async function reloadCoachData() {
+      // 1. 取得球員與排行
       const res = await callBackend("getPlayerList");
       if (res && res.success) {
         cachedPlayers = res.data || [];
         renderCoachRoster();
+
         var sel = document.getElementById('cEvalPlayerSelect');
-        if (sel) {
-          sel.innerHTML = '<option value="">-- 請選取球員 --</option>';
-          cachedPlayers.forEach(p => {
-            var opt = document.createElement('option');
-            opt.value = p.name; opt.textContent = `[${p.team}] #${p.number} ${p.name}`;
-            sel.appendChild(opt);
-          });
-        }
+        var mvpSel = document.getElementById('gameMvpSelect');
+        if (sel) sel.innerHTML = '<option value="">-- 請選取球員 --</option>';
+        if (mvpSel) mvpSel.innerHTML = '<option value="">-- 請選取 MVP 球員 --</option>';
+
+        cachedPlayers.forEach(p => {
+          var opt = `<option value="${p.name}">[${p.team}] #${p.number} ${p.name} (${p.rankTitle})</option>`;
+          if (sel) sel.innerHTML += opt;
+          if (mvpSel) mvpSel.innerHTML += opt;
+        });
       }
 
+      // 2. 取得今日防護預警
+      const checkinRes = await callBackend("getTodayCheckins");
+      if (checkinRes && checkinRes.success && checkinRes.alertCount > 0) {
+        document.getElementById('injuryAlertBanner').style.display = 'block';
+        document.getElementById('alertPlayerCount').innerText = checkinRes.alertCount;
+      } else {
+        document.getElementById('injuryAlertBanner').style.display = 'none';
+      }
+
+      // 3. 取得課表與影片繳交
       const tRes = await callBackend("getAssignments");
       var tBox = document.getElementById('coachTaskList'); if (!tBox) return;
       tBox.innerHTML = '';
       if (!tRes || !tRes.data || tRes.data.length === 0) {
-        tBox.innerHTML = '<div style="color:#94A3B8; font-size:11px;">目前暫無課表。</div>'; return;
+        tBox.innerHTML = '<div style="color:var(--text-muted); font-size:11px;">暫無指派課表。</div>'; return;
       }
       tRes.data.forEach(t => {
         var d = document.createElement('div');
-        d.style.cssText = "background:#0F172A; padding:8px 10px; border-radius:8px; border:1px solid #334155; font-size:11px;";
-        d.innerHTML = `<div style="display:flex; justify-content:space-between;"><b style="color:#FFF;">${t.title} (${t.target})</b><span style="color:#F59E0B;">${t.reviewState}</span></div><div style="color:#94A3B8; margin-top:2px;">目標：${t.targetAmount} | 截止：${t.deadline}</div>`;
+        d.style.cssText = "background:#0D1527; padding:10px; border-radius:10px; border:1px solid var(--card-border); font-size:11px;";
+        var videoLink = t.proofContent ? `<a href="${t.proofContent}" target="_blank" style="color:#3B82F6; font-weight:bold; text-decoration:underline;">📹 點擊觀看作業成果影片</a>` : `<span style="color:#94A3B8;">尚未上傳影片</span>`;
+        d.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <b style="color:#FFF; font-size:13px;">${t.title} (${t.target})</b>
+            <span style="color:var(--gold-primary); font-weight:bold;">${t.reviewState}</span>
+          </div>
+          <div style="color:var(--text-muted); margin:4px 0;">目標：${t.targetAmount} | 截止：${t.deadline}</div>
+          <div style="margin:4px 0;">${videoLink}</div>
+          ${t.playerNote ? `<div style="color:#E2E8F0; background:#1E293B; padding:4px 8px; border-radius:6px; margin:4px 0;">球員心得：${t.playerNote}</div>` : ''}
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button class="btn-secondary" onclick="reviewTaskPrompt(${t.row}, '${t.target}', '已通過')" style="background:#10B981; color:#FFF; font-weight:bold;">✅ 審核通過 (+100 EXP)</button>
+            <button class="btn-secondary" onclick="reviewTaskPrompt(${t.row}, '${t.target}', '需重做')" style="background:#EF4444; color:#FFF;">❌ 退回重做</button>
+          </div>
+        `;
         tBox.appendChild(d);
       });
     }
 
-    function filterCoachTeam(team) {
-      currentCoachTeam = team;
+    async function reviewTaskPrompt(row, targetName, state) {
+      var fb = prompt(`請輸入給球員的審核評語：`, state === '已通過' ? "動作非常確實，保持下去！" : "節奏有點急躁，請重新錄製修正後的版本。");
+      if (fb === null) return;
+      const res = await callBackend("reviewTask", { row: row, playerName: targetName, state: state, feedback: fb });
+      alert(res.message);
+      reloadCoachData();
+    }
+
+    function filterCoachTeam(t) {
+      currentCoachTeam = t;
       ['all', '1', '2'].forEach(k => { var b = document.getElementById('c-f-' + k); if(b) b.className = 'btn-secondary'; });
-      if(team==='ALL') document.getElementById('c-f-all').className = 'btn-secondary active';
-      if(team==='大隊') document.getElementById('c-f-1').className = 'btn-secondary active';
-      if(team==='小隊') document.getElementById('c-f-2').className = 'btn-secondary active';
+      if(t==='ALL') document.getElementById('c-f-all').className = 'btn-secondary active';
+      if(t==='大隊') document.getElementById('c-f-1').className = 'btn-secondary active';
+      if(t==='小隊') document.getElementById('c-f-2').className = 'btn-secondary active';
       renderCoachRoster();
     }
 
     function renderCoachRoster() {
-      var box = document.getElementById('coachRosterList'); if(!box) return; box.innerHTML = '';
+      var box = document.getElementById('coachRosterList'); if (!box) return; box.innerHTML = '';
       var list = currentCoachTeam === 'ALL' ? cachedPlayers : cachedPlayers.filter(p => p.team === currentCoachTeam);
-      if (list.length === 0) { box.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #94A3B8; padding: 15px;">尚無球員資料。</div>'; return; }
-
       list.forEach(p => {
         var item = document.createElement('div'); item.className = 'player-card';
         item.innerHTML = `
@@ -640,37 +639,87 @@
             <img class="player-avatar" src="${p.photoUrl || 'https://via.placeholder.com/150'}">
             <div style="flex:1;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:bold; color:#FFF;">${p.name} #${p.number}</span>
-                <button type="button" class="btn-edit" onclick="openEditModal(${p.row})">✏️ 編輯</button>
+                <span style="font-weight:900; color:#FFF; font-size:14px;">${p.name} #${p.number}</span>
+                <span class="player-rank-tag">${p.rankTitle}</span>
               </div>
-              <span class="player-tag">${p.team}</span> <span style="font-size:11px; color:#CBD5E1;">${p.position}</span>
+              <div style="font-size:11px; color:var(--gold-primary); font-weight:bold; margin-top:2px;">⚡ EXP：${p.exp}</div>
             </div>
           </div>
           <div class="player-stats">
-            <div><span style="color:#94A3B8;">身高/體重</span><b>${p.height}/${p.weight}</b></div>
-            <div><span style="color:#94A3B8;">折返跑</span><b style="color:#F59E0B;">${p.shuttleRun}s</b></div>
-            <div><span style="color:#94A3B8;">狀態</span><b style="color:#10B981;">${p.status}</b></div>
+            <div><span style="color:var(--text-muted);">梯隊/位置</span><b>${p.team} / ${p.position}</b></div>
+            <div><span style="color:var(--text-muted);">折返跑</span><b style="color:var(--gold-primary);">${p.shuttleRun}s</b></div>
+            <div><span style="color:var(--text-muted);">身高/體重</span><b>${p.height}/${p.weight}</b></div>
           </div>`;
         box.appendChild(item);
       });
     }
 
     async function doAssignTask() {
-      var data = { target: document.getElementById('cTaskTarget').value, title: document.getElementById('cTaskTitle').value, targetAmount: document.getElementById('cTaskAmount').value, deadline: document.getElementById('cTaskDead').value };
-      if(!data.title || !data.deadline) { alert("請填寫訓練項目與截止日期！"); return; }
+      var data = {
+        target: document.getElementById('cTaskTarget').value,
+        title: document.getElementById('cTaskTitle').value,
+        targetAmount: document.getElementById('cTaskAmount').value,
+        demoUrl: document.getElementById('cTaskDemo').value,
+        deadline: document.getElementById('cTaskDead').value
+      };
+      if (!data.title || !data.deadline) return alert("請填寫項目與截止日！");
       const res = await callBackend("assignTask", data);
       alert(res.message); reloadCoachData();
     }
 
     async function doCoachEval() {
-      var data = { playerName: document.getElementById('cEvalPlayerSelect').value, offense: document.getElementById('cEvOff').value, defense: document.getElementById('cEvDef').value, fitness: document.getElementById('cEvFit').value, attitude: document.getElementById('cEvAtt').value, note: document.getElementById('cEvNote').value };
-      if(!data.playerName) { alert("請選取球員！"); return; }
+      var data = {
+        playerName: document.getElementById('cEvalPlayerSelect').value,
+        offense: document.getElementById('cEvOff').value,
+        defense: document.getElementById('cEvDef').value,
+        fitness: document.getElementById('cEvFit').value,
+        attitude: document.getElementById('cEvAtt').value,
+        note: document.getElementById('cEvNote').value
+      };
+      if (!data.playerName) return alert("請選取評核球員！");
       const res = await callBackend("saveEvaluation", data);
-      alert(res.message); document.getElementById('cEvNote').value='';
+      alert(res.message); document.getElementById('cEvNote').value = '';
+    }
+
+    async function doSaveGame() {
+      var data = {
+        opponent: document.getElementById('gameOpponent').value.trim(),
+        myScore: document.getElementById('gameMyScore').value,
+        oppScore: document.getElementById('gameOppScore').value,
+        mvp: document.getElementById('gameMvpSelect').value,
+        note: document.getElementById('gameNote').value.trim(),
+        recorder: currentUser.name
+      };
+      if (!data.opponent) return alert("請輸入對手名稱！");
+      const res = await callBackend("saveGameBoxScore", data);
+      alert(res.message); loadGameHistory();
+    }
+
+    async function loadGameHistory() {
+      const res = await callBackend("getGameList");
+      var gBox = document.getElementById('gameHistoryList'); if (!gBox) return;
+      gBox.innerHTML = '';
+      if (!res || !res.data || res.data.length === 0) {
+        gBox.innerHTML = '<div style="color:var(--text-muted); font-size:11px;">目前尚無歷史比賽紀錄。</div>'; return;
+      }
+      res.data.forEach(g => {
+        var isWin = g.result.indexOf("WIN") !== -1;
+        var d = document.createElement('div');
+        d.style.cssText = "background:#0D1527; padding:10px; border-radius:10px; border:1px solid var(--card-border); font-size:11px;";
+        d.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:bold; color:#FFF; font-size:13px;">VS ${g.opponent}</span>
+            <span style="font-weight:900; color:${isWin ? '#10B981':'#EF4444'}; font-size:13px;">${g.result} (${g.myScore} : ${g.oppScore})</span>
+          </div>
+          <div style="color:var(--text-muted); margin-top:3px;">日期：${g.date} | MVP：<b style="color:var(--gold-primary);">${g.mvp || '未設定'}</b></div>
+          ${g.note ? `<div style="color:#CBD5E1; margin-top:2px;">戰術備註：${g.note}</div>` : ''}
+        `;
+        gBox.appendChild(d);
+      });
     }
 
     function showManagerTab(t) {
-      ['roster', 'att', 'checkin'].forEach(k => {
+      ['att', 'checkin', 'roster'].forEach(k => {
         var el = document.getElementById('m-' + k), btn = document.getElementById('btn-m-' + k);
         if (el) el.style.display = (k === t) ? 'block' : 'none';
         if (btn) btn.className = (k === t) ? 'nav-btn active' : 'nav-btn';
@@ -682,10 +731,14 @@
       const res = await callBackend("getPlayerList");
       if (res && res.success) {
         cachedPlayers = res.data || [];
-        var box = document.getElementById('managerRosterList'); if(!box) return; box.innerHTML = '';
+        var box = document.getElementById('managerRosterList'); if (!box) return; box.innerHTML = '';
         cachedPlayers.forEach(p => {
           var item = document.createElement('div'); item.className = 'player-card';
-          item.innerHTML = `<div style="font-weight:bold; color:#FFF;">${p.name} (#${p.number}) - ${p.team}</div><div style="font-size:11px; color:#94A3B8;">電話: ${p.phone || '無'}</div>`;
+          item.innerHTML = `
+            <div style="font-weight:900; color:#FFF;">${p.name} (#${p.number}) - ${p.team}</div>
+            <div style="font-size:11px; color:var(--text-muted);">電話：${p.phone || '無'}</div>
+            <div style="font-size:11px; color:var(--gold-primary);">經驗值：${p.exp} EXP (${p.rankTitle})</div>
+          `;
           box.appendChild(item);
         });
         renderAttendanceTable();
@@ -693,11 +746,16 @@
     }
 
     function renderAttendanceTable() {
-      var tbody = document.getElementById('attendanceTbody'); if(!tbody) return; tbody.innerHTML = '';
+      var tbody = document.getElementById('attendanceTbody'); if (!tbody) return; tbody.innerHTML = '';
       var list = attTeamFilter === 'ALL' ? cachedPlayers : cachedPlayers.filter(p => p.team === attTeamFilter);
       list.forEach((p, idx) => {
         var tr = document.createElement('tr');
-        tr.innerHTML = `<td><b>${p.name}</b></td><td>${p.team}</td><td><select id="attStat-${idx}"><option value="出席">出席</option><option value="請假">請假</option><option value="缺席">缺席</option></select></td><td><input type="text" id="attNote-${idx}" placeholder="備註"></td>`;
+        tr.innerHTML = `
+          <td><b>${p.name}</b></td>
+          <td>${p.team}</td>
+          <td><select id="attStat-${idx}"><option value="出席">出席 (+50 EXP)</option><option value="請假">請假</option><option value="缺席">缺席</option></select></td>
+          <td><input type="text" id="attNote-${idx}" placeholder="備註"></td>
+        `;
         tbody.appendChild(tr);
       });
     }
@@ -719,12 +777,25 @@
     }
 
     async function loadTodayCheckins() {
-      var tbody = document.getElementById('todayCheckinTbody'); if(!tbody) return;
+      var tbody = document.getElementById('todayCheckinTbody'); if (!tbody) return;
       const res = await callBackend("getTodayCheckins");
-      if (!res || !res.success || res.data.length === 0) { tbody.innerHTML = '<tr><td colspan="6">今日尚無回報紀錄。</td></tr>'; return; }
-      var cnt = document.getElementById('checkinCount'); if(cnt) cnt.innerText = res.data.length;
       tbody.innerHTML = '';
-      res.data.forEach(d => { tbody.innerHTML += `<tr><td><b>${d.name}</b></td><td>${d.team}</td><td>${d.sleep}h</td><td>${d.energy}</td><td>${d.fatigue}</td><td>${d.sore}</td></tr>`; });
+      if (!res || !res.data || res.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6">今日尚無回報紀錄。</td></tr>'; return;
+      }
+      res.data.forEach(d => {
+        var alertTag = d.isAlert ? `<span style="color:#EF4444; font-weight:bold;">⚠️ 需防護關注</span>` : `<span style="color:#10B981;">正常</span>`;
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${d.name}</b></td>
+            <td>${d.sleep}h</td>
+            <td>${d.energy}</td>
+            <td style="color:${d.fatigue >= 4 ? '#EF4444' : '#FFF'}; font-weight:bold;">${d.fatigue}</td>
+            <td style="color:${d.sore !== '無痠痛' ? '#F59E0B' : '#94A3B8'};">${d.sore}</td>
+            <td>${alertTag}</td>
+          </tr>
+        `;
+      });
     }
 
     function showPlayerTab(t) {
@@ -733,6 +804,7 @@
         if (el) el.style.display = (k === t) ? 'block' : 'none';
         if (btn) btn.className = (k === t) ? 'nav-btn active' : 'nav-btn';
       });
+      if (t === 'task') loadPlayerTasks();
     }
 
     async function loadPlayerDashboard() {
@@ -741,61 +813,81 @@
         cachedPlayers = res.data || [];
         var p = cachedPlayers.find(x => x.name === currentUser.name);
         if (p) {
-          if(document.getElementById('myName')) document.getElementById('myName').innerText = p.name;
-          if(document.getElementById('myNumber')) document.getElementById('myNumber').innerText = '#' + p.number;
-          if(document.getElementById('myPosition')) document.getElementById('myPosition').innerText = p.position;
-          if(document.getElementById('myHW')) document.getElementById('myHW').innerText = p.height + 'cm / ' + p.weight + 'kg';
-          if(document.getElementById('myShuttle')) document.getElementById('myShuttle').innerText = p.shuttleRun;
-          if(document.getElementById('myPhoto')) document.getElementById('myPhoto').src = p.photoUrl || "https://via.placeholder.com/150";
+          document.getElementById('myName').innerText = p.name;
+          document.getElementById('myNumber').innerText = '#' + p.number;
+          document.getElementById('myPosition').innerText = p.position;
+          document.getElementById('myShuttle').innerText = p.shuttleRun;
+          document.getElementById('myPhoto').src = p.photoUrl || "https://via.placeholder.com/150";
+          document.getElementById('myRankTitle').innerText = p.rankTitle;
+
+          // EXP 經驗值進度計算
+          document.getElementById('myExpText').innerText = p.exp + ' EXP';
+          document.getElementById('myExpNext').innerText = p.rankNext + ' EXP';
+          var pct = Math.min(100, Math.round((p.exp / p.rankNext) * 100));
+          document.getElementById('myExpFill').style.width = pct + '%';
 
           const evRes = await callBackend("getPlayerRadarData", { name: p.name });
-          var ev = (evRes && evRes.data) ? evRes.data : { offense: 3, defense: 3, fitness: 3, attitude: 4, note: "保持訓練！" };
+          var ev = (evRes && evRes.data) ? evRes.data : { offense: 3, defense: 3, fitness: 3, attitude: 4, note: "保持熱情與專注！" };
           drawSvgRadar([ev.offense, ev.defense, ev.fitness, ev.attitude, 4]);
-          if(document.getElementById('myCoachNote')) document.getElementById('myCoachNote').innerText = ev.note;
+          document.getElementById('myCoachNote').innerText = ev.note;
         }
       }
     }
 
     async function doSubmitDaily() {
-      var data = { playerName: currentUser.name, team: '大隊', sleepHours: document.getElementById('pSleep').value, energy: document.getElementById('pEnergy').value, fatigue: document.getElementById('pFatigue').value, soreArea: document.getElementById('pSore').value, note: document.getElementById('pNote').value };
+      var data = {
+        playerName: currentUser.name,
+        team: '大隊',
+        sleepHours: document.getElementById('pSleep').value,
+        energy: document.getElementById('pEnergy').value,
+        fatigue: document.getElementById('pFatigue').value,
+        soreArea: document.getElementById('pSore').value,
+        note: document.getElementById('pNote').value
+      };
       const res = await callBackend("saveDailyStatus", data);
       alert(res.message);
+      loadPlayerDashboard();
     }
 
-    function openEditModal(row) {
-      var p = cachedPlayers.find(x => Number(x.row) === Number(row));
-      if (!p) return;
-      document.getElementById('editRow').value = p.row;
-      document.getElementById('editName').value = p.name;
-      document.getElementById('editTeam').value = p.team;
-      document.getElementById('editNumber').value = p.number;
-      document.getElementById('editPos').value = p.position;
-      document.getElementById('editHeight').value = p.height;
-      document.getElementById('editWeight').value = p.weight;
-      document.getElementById('editShuttle').value = p.shuttleRun;
-      tempEditPhotoBase64 = "";
-      var prev = document.getElementById('editPhotoPreview');
-      if(p.photoUrl) { prev.src = p.photoUrl; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
-      document.getElementById('editModal').style.display = 'flex';
+    async function loadPlayerTasks() {
+      const res = await callBackend("getAssignments", { playerName: currentUser.name });
+      var box = document.getElementById('myTaskList'); if (!box) return;
+      box.innerHTML = '';
+      if (!res || !res.data || res.data.length === 0) {
+        box.innerHTML = '<div style="color:var(--text-muted); font-size:11px;">目前暫無指派任務。</div>'; return;
+      }
+      res.data.forEach(t => {
+        var d = document.createElement('div');
+        d.style.cssText = "background:#0D1527; padding:10px; border-radius:10px; border:1px solid var(--card-border); font-size:11px;";
+        d.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <b style="color:#FFF; font-size:13px;">${t.title}</b>
+            <span style="color:var(--gold-primary); font-weight:bold;">${t.reviewState}</span>
+          </div>
+          <div style="color:var(--text-muted); margin:4px 0;">要求：${t.targetAmount} | 截止日：${t.deadline}</div>
+          ${t.coachFeedback ? `<div style="color:#10B981; margin:4px 0;">教練點評：${t.coachFeedback}</div>` : ''}
+          <button class="btn-submit btn-blue" onclick="openProofModal(${t.row})" style="padding:6px; font-size:11px; margin-top:6px;">📹 繳交成果影片連結</button>
+        `;
+        box.appendChild(d);
+      });
     }
 
-    function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+    function openProofModal(row) {
+      document.getElementById('proofTaskRow').value = row;
+      document.getElementById('proofVideoUrl').value = '';
+      document.getElementById('proofPlayerNote').value = '';
+      document.getElementById('taskProofModal').style.display = 'flex';
+    }
 
-    async function doSaveEditPlayer() {
-      var data = {
-        row: document.getElementById('editRow').value,
-        name: document.getElementById('editName').value,
-        team: document.getElementById('editTeam').value,
-        number: document.getElementById('editNumber').value,
-        position: document.getElementById('editPos').value,
-        height: document.getElementById('editHeight').value,
-        weight: document.getElementById('editWeight').value,
-        shuttleRun: document.getElementById('editShuttle').value,
-        photoBase64: tempEditPhotoBase64,
-        status: "正常"
-      };
-      const res = await callBackend("saveOrUpdatePlayer", data);
-      alert(res.message); closeEditModal(); reloadCoachData();
+    function closeProofModal() { document.getElementById('taskProofModal').style.display = 'none'; }
+
+    async function doSubmitProof() {
+      var row = document.getElementById('proofTaskRow').value;
+      var url = document.getElementById('proofVideoUrl').value.trim();
+      var note = document.getElementById('proofPlayerNote').value.trim();
+      if (!url) return alert("請填寫影片連結！");
+      const res = await callBackend("submitTaskProof", { row: row, videoUrl: url, playerNote: note });
+      alert(res.message); closeProofModal(); loadPlayerTasks();
     }
 
     function drawSvgRadar(scores) {
@@ -804,12 +896,12 @@
       for (let l = 1; l <= 5; l++) {
         var lr = (r / 5) * l, pts = [];
         for (let a = 0; a < 5; a++) { var ang = -Math.PI / 2 + a * step; pts.push((cx + lr * Math.cos(ang)) + ',' + (cy + lr * Math.sin(ang))); }
-        html += '<polygon points="' + pts.join(' ') + '" fill="none" stroke="#334155" stroke-width="1"/>';
+        html += '<polygon points="' + pts.join(' ') + '" fill="none" stroke="#24314C" stroke-width="1"/>';
       }
       var dataPoints = [];
       for (let i = 0; i < 5; i++) {
         var ang = -Math.PI / 2 + i * step;
-        html += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + r * Math.cos(ang)) + '" y2="' + (cy + r * Math.sin(ang)) + '" stroke="#334155" stroke-width="1"/>';
+        html += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + r * Math.cos(ang)) + '" y2="' + (cy + r * Math.sin(ang)) + '" stroke="#24314C" stroke-width="1"/>';
         html += '<text x="' + (cx + (r + 18) * Math.cos(ang)) + '" y="' + (cy + (r + 18) * Math.sin(ang) + 4) + '" fill="#94A3B8" font-size="11" text-anchor="middle" font-weight="bold">' + labels[i] + '</text>';
         var valR = (r / 5) * (scores[i] || 1);
         dataPoints.push((cx + valR * Math.cos(ang)) + ',' + (cy + valR * Math.sin(ang)));
