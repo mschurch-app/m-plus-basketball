@@ -23,7 +23,7 @@
     .auth-tab-btn { flex: 1; padding: 11px; font-size: 14px; font-weight: bold; border-radius: 8px; border: none; background: transparent; color: #94A3B8; cursor: pointer; text-align: center; }
     .auth-tab-btn.active { background: #F59E0B; color: #0F172A; }
 
-    /* 平鋪網格選單：字體加大、觸控加大 */
+    /* 平鋪網格選單 */
     .nav-grid { 
       display: grid; 
       grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); 
@@ -35,8 +35,8 @@
       border: 1px solid #334155; 
       color: #CBD5E1; 
       padding: 12px 6px; 
-      font-size: 15px;
-      font-weight: 800;
+      font-size: 15px; 
+      font-weight: 800; 
       border-radius: 10px; 
       cursor: pointer; 
       text-align: center; 
@@ -48,7 +48,7 @@
       transition: background 0.15s ease, border-color 0.15s ease;
     }
     .nav-btn .icon {
-      font-size: 20px;
+      font-size: 20px; 
       line-height: 1;
     }
     .nav-btn.active { 
@@ -206,7 +206,7 @@
       </div>
     </div>
 
-    <!-- 2. 教練中控台 (含即時審閱提醒與按鈕) -->
+    <!-- 2. 教練中控台 -->
     <div id="coachPanel" class="app-panel">
       <div class="nav-grid">
         <button type="button" class="nav-btn active" id="btn-c-roster"><span class="icon">👥</span>名冊</button>
@@ -238,7 +238,7 @@
         <button type="button" id="cTaskBtn" class="btn-submit btn-indigo">確定派發訓練任務</button>
         
         <div style="display:flex; justify-content:space-between; align-items:center; margin: 18px 0 8px 0;">
-          <div style="font-size: 14px; font-weight: bold; color:#F59E0B;">🎯 課表進度與球員成果審閱</div>
+          <div style="font-size: 14px; font-weight: bold; color:#F59E0B;">🎯 各球員自主訓練回報清單</div>
           <button type="button" class="btn-secondary" onclick="reloadCoachData()" style="background:#4F46E5; color:#FFF;">🔄 重新整理</button>
         </div>
         <div id="coachTaskList" style="display: flex; flex-direction: column; gap: 8px;"></div>
@@ -251,7 +251,7 @@
           <div class="form-group"><label>進攻 (1-5)</label><select id="cEvOff"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
           <div class="form-group"><label>防守 (1-5)</label><select id="cEvDef"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
           <div class="form-group"><label>體能 (1-5)</label><select id="cEvFit"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
-          <div class="form-group"><label>態度 (1-5)</label><select id="cEvAtt"><option value="5" selected>5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select></div>
+          <div class="form-group"><label>態度 (1-5)</label><select id="cEvAtt"><option value="5" selected>5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
         </div>
         <div class="form-group"><label>指導叮嚀短評</label><textarea id="cEvNote" rows="2" placeholder="輸入具體期許..."></textarea></div>
         <button type="button" id="cEvalBtn" class="btn-submit btn-indigo">儲存戰力評分</button>
@@ -300,6 +300,7 @@
         </table>
       </div>
 
+      <!-- 經理行程管理（同步查看出席與請假清單） -->
       <div id="m-sched" class="card" style="display:none;">
         <div class="card-title">📅 發布球隊行事曆與賽程</div>
         <div class="grid-2">
@@ -323,7 +324,7 @@
         <div class="form-group"><label>補充說明 (選填)</label><input type="text" id="schedNote" placeholder="如: 需穿著主場白色球衣，提前30分到場熱身"></div>
         <button type="button" id="mAddSchedBtn" class="btn-submit btn-indigo">確認發布此行程至全隊</button>
 
-        <div style="font-size: 13px; font-weight: bold; margin: 18px 0 8px 0; color:#F59E0B;">📋 已排定之球隊行程</div>
+        <div style="font-size: 13px; font-weight: bold; margin: 18px 0 8px 0; color:#F59E0B;">📋 已排定行程與球員出席/請假狀況</div>
         <div id="managerSchedList" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
     </div>
@@ -396,34 +397,79 @@
         <div id="myTaskList" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
 
+      <!-- 球員行事曆（含出席/請假直接 2 選 1） -->
       <div id="p-sched" class="card" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div class="card-title" style="margin:0;">📅 球隊行事曆與賽程安排</div>
+          <div class="card-title" style="margin:0;">📅 球隊行程與出勤回報 (出席/請假)</div>
           <button type="button" id="pSchedRefresh" class="btn-secondary" style="background:#4F46E5; color:#FFF;">🔄</button>
         </div>
-        <div id="playerSchedList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        <div id="playerSchedList" style="display: flex; flex-direction: column; gap: 10px;"></div>
       </div>
     </div>
 
   </div>
 
-  <!-- 教練專用：審閱與核定成果 Modal -->
+  <!-- 球員專用：請假原因彈窗 -->
+  <div id="leaveModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="color:#EF4444; font-size:16px;">⚡ 行程請假登記</h3>
+        <button type="button" id="closeLeaveModalBtn" style="background:transparent; border:none; color:#94A3B8; font-size:18px; cursor:pointer;">✕</button>
+      </div>
+      <input type="hidden" id="leaveEventId">
+      <input type="hidden" id="leaveEventTitle">
+      <input type="hidden" id="leaveEventDate">
+
+      <div class="form-group">
+        <label>請假行程</label>
+        <div id="leaveModalEventInfo" style="font-size:14px; font-weight:bold; color:#FFF; padding:4px 0;"></div>
+      </div>
+
+      <div class="form-group">
+        <label>請假假別 / 原因類別</label>
+        <select id="leaveType">
+          <option value="事假">事假 (家中私事/個人事務)</option>
+          <option value="病假">病假 (身體不適/感冒發燒)</option>
+          <option value="傷兵">傷病假 (扭傷/肌肉拉傷)</option>
+          <option value="公假/學業">公假/考試 (學校課業/考試補習)</option>
+          <option value="其他">其他原因</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>具體請假原因說明 (將直接通知球隊經理)</label>
+        <textarea id="leaveReasonText" rows="3" placeholder="請詳細說明原因，例如：段考補習、腳踝扭傷休養中..."></textarea>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:14px;">
+        <button type="button" id="cancelLeaveModalBtn" class="btn-secondary" style="flex:1;">取消返回</button>
+        <button type="button" id="submitLeaveBtn" class="btn-submit" style="background:#EF4444; color:#FFF; flex:1; margin:0;">確認送出請假通知</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 教練專用：審閱特定球員成果 Modal -->
   <div id="coachReviewModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <h3 style="color:#F59E0B; font-size:16px;">📋 審閱球員訓練成果</h3>
         <button type="button" id="closeReviewModalBtn" style="background:transparent; border:none; color:#94A3B8; font-size:18px; cursor:pointer;">✕</button>
       </div>
-      <input type="hidden" id="reviewTaskRow">
+      <input type="hidden" id="reviewSubRow">
+      <input type="hidden" id="reviewPlayerName">
+      
       <div class="form-group">
-        <label>課表項目</label>
-        <div id="reviewModalTitle" style="font-size:14px; font-weight:bold; color:#FFF; padding:6px 0;"></div>
+        <label>受審球員 / 項目</label>
+        <div id="reviewModalTitle" style="font-size:15px; font-weight:bold; color:#FFF; padding:4px 0;"></div>
       </div>
-      <div class="form-group" style="background:#0F172A; padding:10px; border-radius:8px; border:1px solid #334155;">
-        <div style="font-size:12px; color:#F59E0B; font-weight:bold;">📝 球員回報成果：</div>
-        <div id="reviewModalContent" style="font-size:13px; color:#FFF; margin-top:4px;"></div>
-        <div style="font-size:12px; color:#94A3B8; margin-top:6px;">💭 球員心得：<span id="reviewModalNote" style="color:#CBD5E1;"></span></div>
+
+      <div class="form-group" style="background:#0F172A; padding:12px; border-radius:8px; border:1px solid #334155;">
+        <div style="font-size:12px; color:#F59E0B; font-weight:bold;">📥 球員回報成果：</div>
+        <div id="reviewModalContent" style="font-size:14px; color:#FFF; margin-top:4px; font-weight:bold;"></div>
+        <div style="font-size:12px; color:#94A3B8; margin-top:8px;">💭 心得感受：<span id="reviewModalNote" style="color:#CBD5E1;"></span></div>
+        <div style="font-size:11px; color:#64748B; margin-top:4px;">⏱️ 回報時間：<span id="reviewModalTime"></span></div>
       </div>
+
       <div class="form-group" style="margin-top:10px;">
         <label>核定審核結果</label>
         <select id="reviewModalStatus">
@@ -432,24 +478,24 @@
         </select>
       </div>
       <div class="form-group">
-        <label>教練具體評語與指導</label>
-        <textarea id="reviewModalFeedback" rows="2" placeholder="輸入指導反饋..."></textarea>
+        <label>教練個別指導評語</label>
+        <textarea id="reviewModalFeedback" rows="2" placeholder="針對此球員的回覆具體指導..."></textarea>
       </div>
       <div style="display:flex; gap:8px; margin-top:12px;">
         <button type="button" id="cancelReviewModalBtn" class="btn-secondary" style="flex:1;">取消</button>
-        <button type="button" id="submitReviewBtn" class="btn-submit btn-indigo" style="flex:1; margin:0;">確認送出審核</button>
+        <button type="button" id="submitReviewBtn" class="btn-submit btn-indigo" style="flex:1; margin:0;">確認核定結果</button>
       </div>
     </div>
   </div>
 
-  <!-- 球員專用：回報自主訓練成果 Modal -->
+  <!-- 球員專用：回報成果 Modal -->
   <div id="taskReportModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <h3 style="color:#F59E0B; font-size:16px;">🏀 回報自主加練成果</h3>
         <button type="button" id="closeTaskModalBtn" style="background:transparent; border:none; color:#94A3B8; font-size:18px; cursor:pointer;">✕</button>
       </div>
-      <input type="hidden" id="reportTaskRow">
+      <input type="hidden" id="reportTaskId">
       <div class="form-group">
         <label>訓練項目</label>
         <input type="text" id="reportTaskTitle" readonly style="color:#94A3B8; background:#1E293B;">
@@ -610,13 +656,24 @@
 
         if (uid && !currentUser) {
           if (statusTag) statusTag.innerText = "⚡ 正在以 LINE 身分自動登入...";
-          const res = await callBackend("loginWithLineId", { lineUserId: uid });
+          
+          var timeoutPromise = new Promise(function(resolve) {
+            setTimeout(function() { resolve({ success: false, timeout: true }); }, 4000);
+          });
+
+          var res = await Promise.race([
+            callBackend("loginWithLineId", { lineUserId: uid }),
+            timeoutPromise
+          ]);
+
           if (res && res.success) {
             currentUser = { name: res.userName, role: res.role, roleText: res.roleText };
             if (statusTag) statusTag.innerText = "🟢 已自動登入：" + res.userName;
             renderUserSession();
+          } else if (res && res.timeout) {
+            if (statusTag) statusTag.innerText = "⚠️ 自動登入逾時，請手動輸入帳密";
           } else {
-            if (statusTag) statusTag.innerText = "🟢 LINE 驗證完成 (新球員請先註冊)";
+            if (statusTag) statusTag.innerText = "🟢 LINE 驗證完成 (新成員請先註冊或綁定)";
           }
         }
       } catch (err) {
@@ -652,7 +709,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      // 1. 優先掛載按鈕，絕不卡死主執行緒
       safeBind('tabBtnLogin', 'click', () => switchAuth('login'));
       safeBind('tabBtnRegister', 'click', () => {
         populateNumberSelect('newNumber');
@@ -774,6 +830,11 @@
       safeBind('cancelTaskModalBtn', 'click', closeTaskModal);
       safeBind('submitTaskReportBtn', 'click', doSubmitTaskReport);
 
+      // 請假 Modal
+      safeBind('closeLeaveModalBtn', 'click', closeLeaveModal);
+      safeBind('cancelLeaveModalBtn', 'click', closeLeaveModal);
+      safeBind('submitLeaveBtn', 'click', doSubmitLeave);
+
       // 教練審核 Modal
       safeBind('closeReviewModalBtn', 'click', closeReviewModal);
       safeBind('cancelReviewModalBtn', 'click', closeReviewModal);
@@ -846,7 +907,7 @@
       });
     }
 
-    // 教練台：載入課表並加入「審核按鈕與成果醒目化」
+    // 教練台課表
     async function reloadCoachData() {
       const res = await callBackend("getPlayerList");
       if (res && res.success) {
@@ -871,36 +932,56 @@
       }
       tRes.data.forEach(t => {
         var d = document.createElement('div');
-        d.style.cssText = "background:#0F172A; padding:10px 12px; border-radius:8px; border:1px solid #334155; font-size:13px;";
+        d.style.cssText = "background:#0F172A; padding:12px; border-radius:10px; border:1px solid #334155; font-size:13px;";
 
-        var isPending = (t.reviewState === "待審核" || t.reviewState === "待教練審核" || t.playerStatus === "已完成");
-        var stateColor = isPending ? "#F59E0B" : (t.reviewState.indexOf("通過") !== -1 ? "#10B981" : "#94A3B8");
+        var subCount = t.submissions ? t.submissions.length : 0;
+
+        var subsHtml = '';
+        if (subCount === 0) {
+          subsHtml = '<div style="color:#64748B; font-size:12px; margin-top:6px;">尚無球員回報此任務進度。</div>';
+        } else {
+          subsHtml = '<div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">';
+          t.submissions.forEach(sub => {
+            var isPass = sub.reviewState.indexOf("通過") !== -1;
+            var isWait = sub.reviewState.indexOf("待審核") !== -1;
+            var badgeColor = isWait ? "#F59E0B" : (isPass ? "#10B981" : "#EF4444");
+
+            subsHtml += `
+              <div style="background:#1E293B; padding:8px 10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <b style="color:#FFF; font-size:13px;">👤 ${sub.playerName}</b> <span style="font-size:11px; color:#94A3B8;">(${sub.team})</span>
+                  <div style="color:#CBD5E1; font-size:12px; margin-top:2px;">成果：${sub.reportContent}</div>
+                  ${sub.playerNote ? `<div style="color:#94A3B8; font-size:11px;">心得：${sub.playerNote}</div>` : ''}
+                </div>
+                <div style="text-align:right;">
+                  <span style="color:${badgeColor}; font-size:11px; font-weight:bold; display:block; margin-bottom:4px;">${sub.reviewState}</span>
+                  <button type="button" class="btn-secondary" style="background:#4F46E5; color:#FFF; padding:3px 8px; font-size:11px; font-weight:bold;" onclick="openCoachReviewModal(${sub.subRow}, '${sub.playerName}', '${t.title}', '${sub.reportContent.replace(/'/g, "\\'")}', '${sub.playerNote.replace(/'/g, "\\'")}', '${sub.coachFeedback.replace(/'/g, "\\'")}', '${sub.submittedAt}')">🔍 審核</button>
+                </div>
+              </div>
+            `;
+          });
+          subsHtml += '</div>';
+        }
 
         d.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <b style="color:#FFF; font-size:14px;">${t.title} <span style="font-size:12px; color:#94A3B8;">(${t.target})</span></b>
-            <span style="color:${stateColor}; font-weight:bold; font-size:12px;">${isPending ? '🟡 待驗收' : t.reviewState}</span>
+            <b style="color:#F59E0B; font-size:15px;">${t.title}</b>
+            <span style="font-size:11px; color:#94A3B8;">對象：${t.target} | 截止：${t.deadline}</span>
           </div>
-          <div style="color:#94A3B8; font-size:12px; margin:4px 0;">🎯 要求：${t.targetAmount} | 截止：${t.deadline}</div>
-          ${t.playerReport ? `
-            <div style="background:#1E293B; padding:8px; border-radius:6px; margin:6px 0; border-left:3px solid #F59E0B;">
-              <div style="color:#F59E0B; font-weight:bold; font-size:12px;">📥 球員回報：${t.playerReport}</div>
-              ${t.playerNote ? `<div style="color:#CBD5E1; font-size:12px; margin-top:2px;">心得：${t.playerNote}</div>` : ''}
-            </div>` : ''}
-          ${t.coachFeedback ? `<div style="color:#10B981; font-size:12px; margin-top:4px;">指導評語：${t.coachFeedback}</div>` : ''}
-          <div style="margin-top:8px; text-align:right;">
-            <button type="button" class="btn-secondary" style="background:#4F46E5; color:#FFF; font-weight:bold; font-size:12px;" onclick="openCoachReviewModal(${t.row}, '${t.title}', '${t.playerReport.replace(/'/g, "\\'")}', '${t.playerNote.replace(/'/g, "\\'")}', '${t.coachFeedback.replace(/'/g, "\\'")}')">🔍 審閱此成果</button>
-          </div>
+          <div style="color:#CBD5E1; font-size:12px; margin:4px 0;">🎯 要求：${t.targetAmount} (已繳交：${subCount} 人)</div>
+          ${subsHtml}
         `;
         tBox.appendChild(d);
       });
     }
 
-    function openCoachReviewModal(row, title, report, note, feedback) {
-      document.getElementById('reviewTaskRow').value = row;
-      document.getElementById('reviewModalTitle').innerText = title;
-      document.getElementById('reviewModalContent').innerText = report || '（球員尚未填寫成果內容）';
+    function openCoachReviewModal(subRow, playerName, title, report, note, feedback, time) {
+      document.getElementById('reviewSubRow').value = subRow;
+      document.getElementById('reviewPlayerName').value = playerName;
+      document.getElementById('reviewModalTitle').innerText = `${playerName} - ${title}`;
+      document.getElementById('reviewModalContent').innerText = report || '（無內容）';
       document.getElementById('reviewModalNote').innerText = note || '無特別補充';
+      document.getElementById('reviewModalTime').innerText = time || '剛才';
       document.getElementById('reviewModalFeedback').value = feedback || '';
       document.getElementById('coachReviewModal').style.display = 'flex';
     }
@@ -910,7 +991,8 @@
     }
 
     async function doSubmitCoachReview() {
-      var row = document.getElementById('reviewTaskRow').value;
+      var subRow = document.getElementById('reviewSubRow').value;
+      var playerName = document.getElementById('reviewPlayerName').value;
       var status = document.getElementById('reviewModalStatus').value;
       var fb = document.getElementById('reviewModalFeedback').value.trim();
 
@@ -919,12 +1001,13 @@
       btn.disabled = true;
 
       const res = await callBackend("reviewAssignment", {
-        row: row,
+        subRow: subRow,
+        playerName: playerName,
         reviewState: status,
         coachFeedback: fb
       });
 
-      btn.innerText = "確認送出審核";
+      btn.innerText = "確認核定結果";
       btn.disabled = false;
       alert(res.message);
       if (res.success) {
@@ -1070,6 +1153,7 @@
       }
     }
 
+    // 經理台行事曆管理（檢視每場行程的出席與請假清單）
     async function loadScheduleManager() {
       var box = document.getElementById('managerSchedList');
       if (!box) return;
@@ -1083,7 +1167,16 @@
       box.innerHTML = '';
       res.data.forEach(item => {
         var card = document.createElement('div');
-        card.style.cssText = "background:#0F172A; padding:10px 12px; border-radius:8px; border:1px solid #334155; font-size:13px;";
+        card.style.cssText = "background:#0F172A; padding:12px; border-radius:10px; border:1px solid #334155; font-size:13px;";
+
+        var attendList = (item.attends && item.attends.length > 0) 
+          ? item.attends.map(n => `<span style="background:rgba(16,185,129,0.2); color:#10B981; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:4px;">${n}</span>`).join('') 
+          : '<span style="color:#64748B; font-size:11px;">尚無回覆</span>';
+
+        var leaveList = (item.leaves && item.leaves.length > 0)
+          ? item.leaves.map(l => `<span style="background:rgba(239,68,68,0.2); color:#EF4444; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:4px;">${l.name} (${l.reason || '未填'})</span>`).join('')
+          : '<span style="color:#64748B; font-size:11px;">無人請假</span>';
+
         card.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <b style="color:#F59E0B; font-size:14px;">${item.type}</b>
@@ -1092,17 +1185,28 @@
           <div style="font-weight:bold; color:#FFF; font-size:15px; margin:4px 0;">${item.title}</div>
           <div style="color:#CBD5E1; font-size:12px;">📍 地點：${item.location || '待定'}</div>
           ${item.note ? `<div style="color:#94A3B8; font-size:12px; margin-top:2px;">📝 備註：${item.note}</div>` : ''}
+
+          <!-- 出勤狀況統計面板 -->
+          <div style="background:#1E293B; padding:8px 10px; border-radius:6px; margin-top:8px; border-left:3px solid #F59E0B;">
+            <div style="font-size:12px; margin-bottom:4px;">
+              <b style="color:#10B981;">🟢 出席 (${item.attends ? item.attends.length : 0}人)：</b> ${attendList}
+            </div>
+            <div style="font-size:12px;">
+              <b style="color:#EF4444;">🔴 請假 (${item.leaves ? item.leaves.length : 0}人)：</b> ${leaveList}
+            </div>
+          </div>
         `;
         box.appendChild(card);
       });
     }
 
+    // 球員端行事曆：直接 2 選 1 (出席 / 請假)
     async function loadPlayerSchedule() {
       var box = document.getElementById('playerSchedList');
       if (!box) return;
       box.innerHTML = '<div style="color:#94A3B8; font-size:12px;">載入行程中...</div>';
 
-      const res = await callBackend("getScheduleList");
+      const res = await callBackend("getScheduleList", { playerName: currentUser.name });
       if (!res || !res.data || res.data.length === 0) {
         box.innerHTML = '<div style="color:#94A3B8; font-size:12px; padding:10px 0;">目前球隊暫無排定行程。</div>';
         return;
@@ -1110,18 +1214,98 @@
       box.innerHTML = '';
       res.data.forEach(item => {
         var card = document.createElement('div');
-        card.style.cssText = "background:#0F172A; padding:10px 12px; border-radius:8px; border:1px solid #334155; font-size:13px;";
+        card.style.cssText = "background:#0F172A; padding:12px; border-radius:10px; border:1px solid #334155; font-size:13px;";
+
+        var myRsvp = item.myRsvp;
+        var statusBadge = '';
+        if (myRsvp) {
+          if (myRsvp.status === "出席") {
+            statusBadge = '<span style="background:rgba(16,185,129,0.2); color:#10B981; font-weight:bold; font-size:12px; padding:3px 8px; border-radius:4px;">🟢 我已確認出席</span>';
+          } else {
+            statusBadge = `<span style="background:rgba(239,68,68,0.2); color:#EF4444; font-weight:bold; font-size:12px; padding:3px 8px; border-radius:4px;">🔴 我已請假：${myRsvp.reason}</span>`;
+          }
+        } else {
+          statusBadge = '<span style="color:#94A3B8; font-size:12px;">⚪ 尚未回覆意願</span>';
+        }
+
         card.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span class="badge" style="margin:0;">${item.type}</span>
             <span style="color:#F59E0B; font-size:12px; font-weight:bold;">${item.date} ${item.time}</span>
           </div>
-          <div style="font-weight:bold; color:#FFF; font-size:15px; margin:6px 0 2px 0;">${item.title}</div>
+          <div style="font-weight:bold; color:#FFF; font-size:16px; margin:6px 0 2px 0;">${item.title}</div>
           <div style="color:#CBD5E1; font-size:12px;">📍 ${item.location}</div>
           ${item.note ? `<div style="color:#94A3B8; font-size:12px; margin-top:2px;">💡 ${item.note}</div>` : ''}
+
+          <div style="margin-top:10px; padding-top:8px; border-top:1px solid #1E293B; display:flex; justify-content:space-between; align-items:center;">
+            <div>${statusBadge}</div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="btn-secondary" style="background:#10B981; color:#0F172A; font-weight:900; padding:6px 12px;" onclick="doSubmitEventRSVP('${item.id}', '${item.title}', '${item.date}', 'ATTEND')">✅ 我會出席</button>
+              <button type="button" class="btn-secondary" style="background:#EF4444; color:#FFF; font-weight:900; padding:6px 12px;" onclick="openLeaveModal('${item.id}', '${item.title}', '${item.date}')">⚡ 我要請假</button>
+            </div>
+          </div>
         `;
         box.appendChild(card);
       });
+    }
+
+    // 球員直接點「出席」
+    async function doSubmitEventRSVP(eventId, title, date, status, reason = "") {
+      const res = await callBackend("submitEventRSVP", {
+        eventId: eventId,
+        eventTitle: title,
+        eventDate: date,
+        playerName: currentUser.name,
+        status: status,
+        reason: reason
+      });
+      alert(res.message);
+      loadPlayerSchedule();
+    }
+
+    // 開啟請假彈窗
+    function openLeaveModal(eventId, title, date) {
+      document.getElementById('leaveEventId').value = eventId;
+      document.getElementById('leaveEventTitle').value = title;
+      document.getElementById('leaveEventDate').value = date;
+      document.getElementById('leaveModalEventInfo').innerText = `${title} (${date})`;
+      document.getElementById('leaveReasonText').value = '';
+      document.getElementById('leaveModal').style.display = 'flex';
+    }
+
+    function closeLeaveModal() {
+      document.getElementById('leaveModal').style.display = 'none';
+    }
+
+    // 送出請假理由
+    async function doSubmitLeave() {
+      var eventId = document.getElementById('leaveEventId').value;
+      var title = document.getElementById('leaveEventTitle').value;
+      var date = document.getElementById('leaveEventDate').value;
+      var leaveType = document.getElementById('leaveType').value;
+      var reasonText = document.getElementById('leaveReasonText').value.trim();
+
+      var fullReason = `[${leaveType}] ${reasonText || '個人事由'}`;
+      var btn = document.getElementById('submitLeaveBtn');
+      btn.innerText = "送出請假中...";
+      btn.disabled = true;
+
+      const res = await callBackend("submitEventRSVP", {
+        eventId: eventId,
+        eventTitle: title,
+        eventDate: date,
+        playerName: currentUser.name,
+        status: "LEAVE",
+        reason: fullReason
+      });
+
+      btn.innerText = "確認送出請假通知";
+      btn.disabled = false;
+      alert(res.message);
+      if (res.success) {
+        closeLeaveModal();
+        loadPlayerSchedule();
+      }
     }
 
     async function loadPlayerTasks() {
@@ -1129,7 +1313,7 @@
       if (!box) return;
       box.innerHTML = '<div style="color:#94A3B8; font-size:12px;">載入課表中...</div>';
 
-      const res = await callBackend("getAssignments");
+      const res = await callBackend("getAssignments", { playerName: currentUser.name });
       if (!res || !res.data || res.data.length === 0) {
         box.innerHTML = '<div style="color:#94A3B8; font-size:12px; padding:10px 0;">目前暫無被指派的訓練課表。</div>';
         return;
@@ -1138,21 +1322,32 @@
       res.data.forEach(t => {
         var card = document.createElement('div');
         card.style.cssText = "background:#0F172A; padding:10px 12px; border-radius:8px; border:1px solid #334155; font-size:13px;";
+
+        var mySub = t.mySubmission;
+        var myState = mySub ? mySub.reviewState : "未完成";
+        var isWait = myState.indexOf("待審核") !== -1;
+        var isPass = myState.indexOf("通過") !== -1;
+        var stateColor = isWait ? "#F59E0B" : (isPass ? "#10B981" : "#94A3B8");
+
         card.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <b style="color:#FFF; font-size:14px;">${t.title}</b>
-            <span style="color:#F59E0B; font-weight:bold; font-size:12px;">${t.reviewState || '待審核'}</span>
+            <span style="color:${stateColor}; font-weight:bold; font-size:12px;">${myState}</span>
           </div>
           <div style="color:#94A3B8; font-size:12px; margin:3px 0;">目標：${t.targetAmount} | 截止：${t.deadline}</div>
-          ${t.coachFeedback ? `<div style="color:#10B981; font-size:12px;">教練評語：${t.coachFeedback}</div>` : ''}
-          <button type="button" class="btn-submit btn-indigo" style="padding:6px 10px; font-size:12px; margin-top:6px;" onclick="openTaskModal(${t.row}, '${t.title}')">📝 回報訓練進度</button>
+          ${mySub ? `
+            <div style="background:#1E293B; padding:6px 8px; border-radius:6px; margin:4px 0; font-size:12px;">
+              <span style="color:#F59E0B;">我的成果：</span> ${mySub.reportContent}
+              ${mySub.coachFeedback ? `<div style="color:#10B981; margin-top:2px;">教練評語：${mySub.coachFeedback}</div>` : ''}
+            </div>` : ''}
+          <button type="button" class="btn-submit btn-indigo" style="padding:6px 10px; font-size:12px; margin-top:6px;" onclick="openTaskModal('${t.taskId}', '${t.title}')">${mySub ? '🔄 重新回報進度' : '📝 回報訓練進度'}</button>
         `;
         box.appendChild(card);
       });
     }
 
-    function openTaskModal(row, title) {
-      document.getElementById('reportTaskRow').value = row;
+    function openTaskModal(taskId, title) {
+      document.getElementById('reportTaskId').value = taskId;
       document.getElementById('reportTaskTitle').value = title;
       document.getElementById('reportTaskContent').value = '';
       document.getElementById('reportTaskNote').value = '';
@@ -1164,7 +1359,7 @@
     }
 
     async function doSubmitTaskReport() {
-      var row = document.getElementById('reportTaskRow').value;
+      var taskId = document.getElementById('reportTaskId').value;
       var content = document.getElementById('reportTaskContent').value.trim();
       var note = document.getElementById('reportTaskNote').value.trim();
       if (!content) {
@@ -1176,10 +1371,13 @@
       btn.disabled = true;
 
       const res = await callBackend("submitAssignmentProgress", {
-        row: row,
+        taskId: taskId,
+        playerName: currentUser.name,
+        team: '大隊',
         reportContent: content,
         playerNote: note
       });
+
       btn.innerText = "送交教練審核";
       btn.disabled = false;
       alert(res.message);
