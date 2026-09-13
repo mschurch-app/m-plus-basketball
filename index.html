@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>M+ 籃球隊官方戰情中心 - 旗艦版</title>
-  <!-- 原生 LINE LIFF SDK -->
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     :root {
@@ -23,33 +22,29 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     html, body { background-color: var(--bg-dark) !important; color: #F1F5F9 !important; padding: 12px; padding-top: 18px; padding-bottom: 70px; }
 
-    /* 頂部英雄區 */
     .header { text-align: center; margin-bottom: 14px; position: relative; }
     .badge { display: inline-block; padding: 3px 12px; background: var(--gold-glow); color: var(--gold-primary); border-radius: 20px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; margin-bottom: 4px; border: 1px solid rgba(245, 158, 11, 0.4); }
     .header h1 { font-size: 22px; font-weight: 900; color: var(--text-white); text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-    .header-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
-    /* 警報列 (傷病與疲勞提醒) */
-    .alert-banner { display: none; background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05)); border: 1px solid var(--accent-red); border-radius: 10px; padding: 8px 12px; font-size: 12px; color: #FCA5A5; margin-bottom: 12px; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+    /* 未讀紅點徽章 */
+    .notif-badge { display: inline-flex; align-items: center; justify-content: center; background: var(--accent-red); color: #FFF; font-size: 10px; font-weight: 900; border-radius: 12px; padding: 1px 6px; margin-left: 4px; vertical-align: middle; }
+    
+    .alert-banner { display: none; background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05)); border: 1px solid var(--accent-red); border-radius: 10px; padding: 8px 12px; font-size: 12px; color: #FCA5A5; margin-bottom: 12px; }
 
     .container { max-width: 860px; margin: 0 auto; }
     .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); margin-bottom: 16px; backdrop-filter: blur(10px); }
     .card-title { font-size: 16px; font-weight: 800; color: var(--text-white); margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
     .card-subtitle { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
 
-    /* 標籤導航列 (橫向滾動) */
     .nav-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: none; }
     .nav-scroll::-webkit-scrollbar { display: none; }
-    .nav-btn { flex: 0 0 auto; background: #0F172A; border: 1px solid var(--card-border); color: var(--text-muted); padding: 8px 14px; font-size: 12px; font-weight: bold; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    .nav-btn { flex: 0 0 auto; background: #0F172A; border: 1px solid var(--card-border); color: var(--text-muted); padding: 8px 14px; font-size: 12px; font-weight: bold; border-radius: 10px; cursor: pointer; transition: all 0.2s; position: relative; }
     .nav-btn.active { background: linear-gradient(135deg, #F59E0B, #D97706); color: #0F172A; border-color: #F59E0B; font-weight: 900; box-shadow: 0 3px 12px rgba(245, 158, 11, 0.3); }
 
-    /* 角色台切換按鈕 */
     .role-switcher { display: flex; gap: 6px; margin-top: 8px; justify-content: center; }
     .role-btn { background: #1E293B; border: 1px solid var(--card-border); color: var(--text-muted); padding: 4px 10px; font-size: 11px; font-weight: bold; border-radius: 6px; cursor: pointer; }
     .role-btn.active { background: var(--gold-primary); color: #0F172A; }
 
-    /* 表單元件 */
     .form-group { margin-bottom: 10px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
@@ -58,17 +53,21 @@
     input, select, textarea { width: 100%; background: #0A0F1D; border: 1px solid #334155; border-radius: 8px; padding: 9px; font-size: 13px; color: #FFFFFF; outline: none; transition: border 0.2s; }
     input:focus, select:focus, textarea:focus { border-color: var(--gold-primary); }
 
-    .btn-submit { width: 100%; padding: 12px; background: linear-gradient(135deg, #F59E0B, #D97706); color: #0F172A; border: none; border-radius: 10px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); transition: transform 0.1s; }
-    .btn-submit:active { transform: scale(0.98); }
+    .btn-submit { width: 100%; padding: 12px; background: linear-gradient(135deg, #F59E0B, #D97706); color: #0F172A; border: none; border-radius: 10px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); }
     .btn-blue { background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #FFF; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
     .btn-secondary { background: #1E293B; color: #E2E8F0; padding: 6px 12px; border-radius: 8px; font-size: 11px; border: 1px solid var(--card-border); cursor: pointer; }
     .btn-secondary.active { background: var(--gold-primary); color: #0F172A; font-weight: bold; }
 
-    /* EXP 等級進度條 */
+    .tag-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .check-tag { background: #0A0F1D; border: 1px solid #334155; color: var(--text-muted); padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; transition: all 0.15s; user-select: none; }
+    .check-tag.selected { background: rgba(245, 158, 11, 0.15); border-color: var(--gold-primary); color: var(--gold-primary); }
+
+    .shot-btn { background: #0A0F1D; border: 1px solid #334155; color: #FFF; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold; }
+    .shot-btn.active { background: var(--gold-primary); color: #0F172A; border-color: var(--gold-primary); }
+
     .exp-bar-container { background: #0A0F1D; border: 1px solid #334155; border-radius: 20px; height: 10px; width: 100%; overflow: hidden; margin-top: 6px; }
     .exp-bar-fill { background: linear-gradient(90deg, #F59E0B, #10B981); height: 100%; width: 0%; transition: width 0.5s; }
 
-    /* 球員卡片 Grid */
     .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
     .player-card { background: #0D1527; border: 1px solid var(--card-border); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden; }
     .player-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--gold-primary), transparent); }
@@ -77,7 +76,6 @@
     .player-rank-tag { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.2); color: var(--gold-primary); font-weight: 800; }
     .player-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center; border-top: 1px solid #1E293B; padding-top: 8px; font-size: 10px; }
 
-    /* 數據表格 */
     table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
     th, td { border: 1px solid #24314C; padding: 8px 6px; text-align: center; }
     th { background: #0A0F1D; color: var(--gold-primary); font-weight: 800; }
@@ -86,25 +84,21 @@
     .app-panel { display: none; }
     .app-panel.active { display: block; }
 
-    /* Modal */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 99999; padding: 15px; }
     .modal-box { background: var(--card-bg); border: 1px solid #334155; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; border-radius: 16px; padding: 20px; }
   </style>
 </head>
 <body>
 
-  <!-- 頂部英雄區塊 -->
   <div class="header">
     <span class="badge">M+ BASKETBALL SYSTEM 2.0</span>
     <h1>M+ 籃球隊官方戰情中控台</h1>
     <div id="liffStatusTag" style="font-size: 11px; color: var(--accent-green); margin-top: 5px; font-weight: bold;">⚡ 正在連線 LINE 服務...</div>
 
-    <!-- 傷病/高疲勞預警橫幅 (教練/經理看得到) -->
     <div id="injuryAlertBanner" class="alert-banner" style="margin-top: 10px;">
-      ⚠️ <b>運動防護警報</b>：今日有 <span id="alertPlayerCount" style="color:#FFF; font-weight:bold;">0</span> 位球員回報高疲勞或部位痠痛，請注意訓練強度！
+      ⚠️ <b>防護預警提醒</b>：今日有 <span id="alertPlayerCount" style="color:#FFF; font-weight:bold;">0</span> 位球員回報關節不適或過度疲勞！
     </div>
 
-    <!-- 登入身分條 -->
     <div id="userBar" style="display:none; margin-top: 10px; font-size: 12px; color: var(--text-muted);">
       登入身分：<b id="displayUserName" style="color: var(--gold-primary); font-size: 14px;"></b> (<span id="displayUserRole"></span>)
       <div id="adminSwitcher" class="role-switcher" style="display:none;">
@@ -159,16 +153,17 @@
       </div>
     </div>
 
-    <!-- 2. 教練中控台 -->
+    <!-- 2. 教練中控台 (整合通知小紅點) -->
     <div id="coachPanel" class="app-panel">
       <div class="nav-scroll">
-        <button type="button" class="nav-btn active" id="btn-c-roster">👥 梯隊與戰力榜</button>
+        <button type="button" class="nav-btn active" id="btn-c-roster">👥 梯隊戰力榜</button>
+        <button type="button" class="nav-btn" id="btn-c-task">🎯 課表審核 <span id="coachTaskBadge" class="notif-badge" style="display:none;">0</span></button>
+        <button type="button" class="nav-btn" id="btn-c-train">🏀 今日加練看板 <span id="coachTrainBadge" class="notif-badge" style="display:none; background:#F59E0B; color:#0F172A;">0</span></button>
         <button type="button" class="nav-btn" id="btn-c-game">🏆 實戰紀錄板</button>
-        <button type="button" class="nav-btn" id="btn-c-task">🎯 課表與影片審核</button>
-        <button type="button" class="nav-btn" id="btn-c-eval">📋 雷達圖評核</button>
+        <button type="button" class="nav-btn" id="btn-c-eval">📋 五芒星評核</button>
       </div>
 
-      <!-- 梯隊與排行 -->
+      <!-- 梯隊戰力 -->
       <div id="c-roster" class="card" style="display:block;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <div class="card-title" style="margin:0;">全隊戰力與 EXP 榜</div>
@@ -182,44 +177,66 @@
         <div id="coachRosterList" class="roster-grid"></div>
       </div>
 
-      <!-- 賽事 Box Score -->
+      <!-- 課表指派與置頂待審核專區 (方案 B 核心) -->
+      <div id="c-task" class="card" style="display:none;">
+        <!-- 置頂待審核清單 -->
+        <div style="background:#1E1528; border:1px solid #7C3AED; border-radius:12px; padding:12px; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <b style="color:#C4B5FD; font-size:14px;">🚨 待審核課表專區 (<span id="pendingCountText">0</span> 件待批)</b>
+            <button type="button" onclick="reloadCoachData()" class="btn-secondary" style="padding:2px 8px; font-size:10px;">🔄 重整待辦</button>
+          </div>
+          <div id="coachPendingList" style="display:flex; flex-direction:column; gap:8px;">
+            <div style="color:var(--text-muted); font-size:11px;">目前所有繳交皆已審核完成！</div>
+          </div>
+        </div>
+
+        <div class="card-title">指派新訓練課表</div>
+        <div class="grid-3">
+          <div class="form-group"><label>對象</label><select id="cTaskTarget"><option value="大隊全體">大隊全體</option><option value="小隊全體">小隊全體</option><option value="全隊全員">全隊全員</option></select></div>
+          <div class="form-group"><label>訓練項目</label><input type="text" id="cTaskTitle" placeholder="例: 中距離定點跳投"></div>
+          <div class="form-group"><label>目標量</label><input type="text" id="cTaskAmount" placeholder="例: 進 100 顆"></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>示範影片網址 (選填)</label><input type="url" id="cTaskDemo" placeholder="https://..."></div>
+          <div class="form-group"><label>截止日期</label><input type="date" id="cTaskDead"></div>
+        </div>
+        <button type="button" id="cTaskBtn" class="btn-submit btn-blue">指派課表</button>
+
+        <div style="font-size: 13px; font-weight: bold; margin: 16px 0 6px 0; color:var(--gold-primary);">🎯 所有派發歷史</div>
+        <div id="coachAllTaskList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+
+      <!-- 教練專用今日加練看板 -->
+      <div id="c-train" class="card" style="display:none;">
+        <div class="card-title">今日全隊自主訓練動態</div>
+        <div style="display:flex; gap:12px; margin-bottom:10px; font-size:12px;">
+          <span style="color:var(--gold-primary); font-weight:bold;">🔥 今日已打卡：<b id="cTodayTrainCount">0</b> 人</span>
+          <span style="color:var(--accent-green); font-weight:bold;">🏀 全隊投球總數：<b id="cTodayTotalShots">0</b> 顆</span>
+        </div>
+        <table>
+          <thead><tr><th>時間</th><th>球員</th><th>投球數</th><th>項目</th><th>強度</th><th>身體感知</th></tr></thead>
+          <tbody id="cTodayTrainTbody"><tr><td colspan="6">今日尚無打卡。</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- 實戰 Box Score -->
       <div id="c-game" class="card" style="display:none;">
         <div class="card-title">比賽攻守技術統計 (Box Score)</div>
-        <div class="card-subtitle">場邊即時點擊登錄，賽後自動結算 MVP</div>
         <div class="grid-3">
-          <div class="form-group"><label>對手名稱</label><input type="text" id="gameOpponent" placeholder="例: 台中科技大學"></div>
+          <div class="form-group"><label>對手名稱</label><input type="text" id="gameOpponent" placeholder="例: 友誼賽對手"></div>
           <div class="form-group"><label>我方得分</label><input type="number" id="gameMyScore" value="0"></div>
           <div class="form-group"><label>對手得分</label><input type="number" id="gameOppScore" value="0"></div>
         </div>
         <div class="grid-2">
           <div class="form-group"><label>單場 MVP</label><select id="gameMvpSelect"><option value="">-- 請選取 MVP 球員 --</option></select></div>
-          <div class="form-group"><label>戰術註記</label><input type="text" id="gameNote" placeholder="例: 區域聯防奏效"></div>
+          <div class="form-group"><label>戰術備註</label><input type="text" id="gameNote" placeholder="例: 防守壓迫做得好"></div>
         </div>
-        <button type="button" id="btnSaveGame" class="btn-submit btn-blue">封存本場比賽紀錄</button>
-
+        <button type="button" id="btnSaveGame" class="btn-submit btn-blue">封存比賽紀錄 (+150 EXP 給 MVP)</button>
         <div style="font-size: 13px; font-weight: bold; margin: 16px 0 6px 0; color:var(--gold-primary);">📜 近期實戰戰報</div>
         <div id="gameHistoryList" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
 
-      <!-- 課表指派與審核 -->
-      <div id="c-task" class="card" style="display:none;">
-        <div class="card-title">派發訓練課表</div>
-        <div class="grid-3">
-          <div class="form-group"><label>對象</label><select id="cTaskTarget"><option value="大隊全體">大隊全體</option><option value="小隊全體">小隊全體</option><option value="全隊全員">全隊全員</option></select></div>
-          <div class="form-group"><label>訓練項目</label><input type="text" id="cTaskTitle" placeholder="例: 底角三分球 100 顆"></div>
-          <div class="form-group"><label>要求量</label><input type="text" id="cTaskAmount" placeholder="例: 命中率達 65%"></div>
-        </div>
-        <div class="grid-2">
-          <div class="form-group"><label>示範影片網址 (YouTube/IG)</label><input type="url" id="cTaskDemo" placeholder="https://..."></div>
-          <div class="form-group"><label>截止日</label><input type="date" id="cTaskDead"></div>
-        </div>
-        <button type="button" id="cTaskBtn" class="btn-submit btn-blue">指派課表</button>
-
-        <div style="font-size: 13px; font-weight: bold; margin: 16px 0 6px 0; color:var(--gold-primary);">🎯 球員課表審核清單</div>
-        <div id="coachTaskList" style="display: flex; flex-direction: column; gap: 8px;"></div>
-      </div>
-
-      <!-- 雷達圖評核 -->
+      <!-- 五芒星評分 -->
       <div id="c-eval" class="card" style="display:none;">
         <div class="card-title">球員五芒星戰力評分</div>
         <div class="form-group"><label>評核對象</label><select id="cEvalPlayerSelect"><option value="">-- 請選取球員 --</option></select></div>
@@ -229,7 +246,7 @@
           <div class="form-group"><label>體能 (1-5)</label><input type="number" id="cEvFit" min="1" max="5" value="3"></div>
           <div class="form-group"><label>態度 (1-5)</label><input type="number" id="cEvAtt" min="1" max="5" value="5"></div>
         </div>
-        <div class="form-group"><label>教練叮嚀指導語</label><textarea id="cEvNote" rows="2" placeholder="輸入具體改善建言..."></textarea></div>
+        <div class="form-group"><label>指導語</label><textarea id="cEvNote" rows="2" placeholder="輸入具體改善建言..."></textarea></div>
         <button type="button" id="cEvalBtn" class="btn-submit btn-blue">儲存戰力評分</button>
       </div>
     </div>
@@ -237,12 +254,24 @@
     <!-- 3. 經理台 -->
     <div id="managerPanel" class="app-panel">
       <div class="nav-scroll">
-        <button type="button" class="nav-btn active" id="btn-m-att">✅ 訓練點名 (+EXP)</button>
-        <button type="button" class="nav-btn" id="btn-m-checkin">☀️ 晨報防護看板</button>
+        <button type="button" class="nav-btn active" id="btn-m-train">🏀 今日加練看板</button>
+        <button type="button" class="nav-btn" id="btn-m-att">✅ 訓練點名 (+EXP)</button>
         <button type="button" class="nav-btn" id="btn-m-roster">📇 通訊名冊</button>
       </div>
 
-      <div id="m-att" class="card" style="display:block;">
+      <div id="m-train" class="card" style="display:block;">
+        <div class="card-title">今日全隊自主訓練成果</div>
+        <div style="display:flex; gap:12px; margin-bottom:10px; font-size:12px;">
+          <span style="color:var(--gold-primary); font-weight:bold;">🔥 今日已打卡：<b id="todayTrainCount">0</b> 人</span>
+          <span style="color:var(--accent-green); font-weight:bold;">🏀 全隊投球總數：<b id="todayTotalShots">0</b> 顆</span>
+        </div>
+        <table>
+          <thead><tr><th>球員</th><th>投球數</th><th>訓練項目</th><th>強度</th><th>狀態</th></tr></thead>
+          <tbody id="todayTrainTbody"><tr><td colspan="5">今日尚無球員打卡。</td></tr></tbody>
+        </table>
+      </div>
+
+      <div id="m-att" class="card" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <div class="card-title" style="margin:0;">出勤快速批次點名</div>
           <div>
@@ -258,16 +287,8 @@
         <button type="button" id="mSubmitAtt" class="btn-submit btn-blue" style="margin-top:12px;">儲存出勤紀錄 (出席球員 +50 EXP)</button>
       </div>
 
-      <div id="m-checkin" class="card" style="display:none;">
-        <div class="card-title">今日球員晨報與傷病預警</div>
-        <table>
-          <thead><tr><th>球員</th><th>睡眠</th><th>感受</th><th>疲勞</th><th>不適部位</th><th>防護提示</th></tr></thead>
-          <tbody id="todayCheckinTbody"><tr><td colspan="6">今日尚無回報資料。</td></tr></tbody>
-        </table>
-      </div>
-
       <div id="m-roster" class="card" style="display:none;">
-        <div class="card-title">球員聯絡與緊急通訊錄</div>
+        <div class="card-title">全隊通訊錄</div>
         <div id="managerRosterList" class="roster-grid" style="margin-top:10px;"></div>
       </div>
     </div>
@@ -276,11 +297,10 @@
     <div id="playerPanel" class="app-panel">
       <div class="nav-scroll">
         <button type="button" class="nav-btn active" id="btn-p-dash">📊 我的榮譽榜</button>
-        <button type="button" class="nav-btn" id="btn-p-daily">☀️ 填寫晨報 (+25 EXP)</button>
-        <button type="button" class="nav-btn" id="btn-p-task">🎯 自主課表繳交</button>
+        <button type="button" class="nav-btn" id="btn-p-train">🏀 自主訓練打卡 (+35 EXP)</button>
+        <button type="button" class="nav-btn" id="btn-p-task">🎯 課表繳交</button>
       </div>
 
-      <!-- 個人榮譽與雷達圖 -->
       <div id="p-dash" class="card" style="display:block;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
@@ -291,7 +311,6 @@
           <img id="myPhoto" src="" style="width: 66px; height: 66px; border-radius: 12px; object-fit: cover; border: 2px solid var(--gold-primary);" onerror="this.src='https://via.placeholder.com/150'">
         </div>
 
-        <!-- 經驗值條 -->
         <div style="margin: 15px 0 10px 0;">
           <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold;">
             <span style="color:var(--gold-primary);">EXP 經驗值：<span id="myExpText">0</span></span>
@@ -305,47 +324,91 @@
         </div>
 
         <div style="background: #0A0F1D; padding: 12px; border-radius: 10px; border-left: 4px solid var(--gold-primary); font-size: 12px;">
-          <div style="color: var(--gold-primary); font-weight: bold;">💬 教練個人戰術叮嚀：</div>
-          <div id="myCoachNote" style="color: #E2E8F0; margin-top: 4px;">積極防守，把握每一次空檔機會！</div>
+          <div style="color: var(--gold-primary); font-weight: bold;">💬 教練叮嚀：</div>
+          <div id="myCoachNote" style="color: #E2E8F0; margin-top: 4px;">每一次自主練習都是賽場上的底氣！</div>
         </div>
       </div>
 
-      <!-- 晨報填寫 -->
-      <div id="p-daily" class="card" style="display:none;">
-        <div class="card-title">每日狀態回報 (+25 EXP)</div>
-        <div class="card-subtitle">協助教練掌握您的疲勞度與健康狀態</div>
-        <div class="grid-2">
-          <div class="form-group"><label>睡眠時數</label><input type="number" step="0.5" id="pSleep" value="8"></div>
-          <div class="form-group"><label>精神感受</label><select id="pEnergy"><option value="精神飽滿">⚡ 精神飽滿</option><option value="正常" selected>👌 正常狀態</option><option value="有點疲累">🥱 有點疲累</option></select></div>
+      <!-- 自主訓練回報 (勾選標籤 + 投球數快選/手動) -->
+      <div id="p-train" class="card" style="display:none;">
+        <div class="card-title">今日自主訓練打卡 (+35 EXP)</div>
+        <div class="card-subtitle">放學加練登記，教練在後台即刻看得見！</div>
+
+        <div class="form-group">
+          <label>【1. 今日加練項目】(可點選多項)</label>
+          <div class="tag-grid" id="trainingTagsBox">
+            <span class="check-tag selected" onclick="toggleTag(this)">🏀 投籃加練</span>
+            <span class="check-tag" onclick="toggleTag(this)">⚡ 運球腳步</span>
+            <span class="check-tag" onclick="toggleTag(this)">🏋️ 核心肌力</span>
+            <span class="check-tag" onclick="toggleTag(this)">🏃 耐力折返</span>
+            <span class="check-tag" onclick="toggleTag(this)">🧘 伸展拉筋</span>
+            <span class="check-tag" onclick="toggleTag(this)">💤 今日完全休息</span>
+          </div>
         </div>
-        <div class="grid-2">
-          <div class="form-group"><label>疲勞指數 (1輕鬆 - 5極度疲累)</label><select id="pFatigue"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4 (疲勞)</option><option value="5">5 (極度疲憊)</option></select></div>
-          <div class="form-group"><label>痠痛不適部位</label><select id="pSore"><option value="無痠痛">🟢 無特殊痠痛</option><option value="腳踝緊繃">🦶 腳踝緊繃</option><option value="膝蓋微痛">🦵 膝蓋微痛</option><option value="大腿緊繃">🏃 大腿緊繃</option><option value="腰背痠痛">🧍 腰背痠痛</option></select></div>
+
+        <div class="form-group" style="background:#0D1527; padding:12px; border-radius:10px; border:1px solid var(--card-border); margin:12px 0;">
+          <label style="color:var(--gold-primary);">【2. 投球數量】(點按鈕快選 或 手動輸入顆數)</label>
+          <div style="display:flex; gap:6px; margin: 6px 0 8px 0;">
+            <button type="button" class="shot-btn" onclick="selectShots(50, this)">50 顆</button>
+            <button type="button" class="shot-btn active" onclick="selectShots(100, this)">100 顆</button>
+            <button type="button" class="shot-btn" onclick="selectShots(200, this)">200 顆</button>
+            <button type="button" class="shot-btn" onclick="selectShots(300, this)">300 顆</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="number" id="pShotCount" value="100" placeholder="手動輸入數量" style="font-size:16px; font-weight:bold; color:var(--gold-primary);">
+            <span style="font-size:13px; color:var(--text-muted); font-weight:bold;">顆</span>
+          </div>
         </div>
-        <div class="form-group"><label>備註說明</label><input type="text" id="pNote" placeholder="例: 昨晚重訓大腿較痠"></div>
-        <button type="button" id="pDailyBtn" class="btn-submit">送出晨報並領取 EXP</button>
+
+        <div class="form-group">
+          <label>【3. 自覺訓練強度】</label>
+          <select id="pIntensity">
+            <option value="🟢 輕鬆熱身 (微汗/能聊天)">🟢 輕鬆熱身 (微汗 / 能聊天)</option>
+            <option value="🟡 適中流汗 (微喘/節奏良好)" selected>🟡 適中流汗 (微喘 / 節奏良好)</option>
+            <option value="🟠 高強度操練 (大爆汗/疲勞感顯著)">🟠 高強度操練 (大爆汗 / 疲勞感顯著)</option>
+            <option value="🔴 極限燃燒 (精疲力竭/已無保留)">🔴 極限燃燒 (精疲力竭 / 已無保留)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>【4. 身體與肌肉狀況】</label>
+          <select id="pBodyStatus">
+            <option value="🟢 狀態絕佳，無不適" selected>🟢 狀態絕佳，無不適</option>
+            <option value="🟡 正常肌肉延遲性痠痛">🟡 正常肌肉延遲性痠痛 (正常現象)</option>
+            <option value="🔴 腳踝微痛不適 (防護關注)">🔴 腳踝微痛不適 (防護關注)</option>
+            <option value="🔴 膝蓋關節不適 (防護關注)">🔴 膝蓋關節不適 (防護關注)</option>
+            <option value="🔴 腰背拉傷緊繃 (防護關注)">🔴 腰背拉傷緊繃 (防護關注)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>【5. 自主訓練心得 / 投籃感想 (選填)】</label>
+          <input type="text" id="pTrainingNote" placeholder="例: 中距離 100 進 65，出手點有拉高">
+        </div>
+
+        <button type="button" id="btnSubmitTraining" class="btn-submit">🔥 送出今日自主訓練打卡並領取 EXP</button>
       </div>
 
-      <!-- 自主課表回傳 -->
+      <!-- 課表繳交 -->
       <div id="p-task" class="card" style="display:none;">
-        <div class="card-title">自主訓練任務清單</div>
-        <div class="card-subtitle">完成課表並繳交成果影片，教練審核通過即得 +100 EXP</div>
+        <div class="card-title">我的自主指派課表</div>
+        <div class="card-subtitle">繳交訓練成果影片，教練審核通過即得 +100 EXP</div>
         <div id="myTaskList" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
     </div>
 
   </div>
 
-  <!-- 繳交課表成果 Modal -->
+  <!-- 繳交課表 Modal -->
   <div id="taskProofModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
-      <div class="card-title">繳交訓練影片成果</div>
+      <div class="card-title">繳交訓練成果影片</div>
       <input type="hidden" id="proofTaskRow">
-      <div class="form-group"><label>成果影片連結 (YouTube / IG / 雲端)</label><input type="url" id="proofVideoUrl" placeholder="https://..."></div>
-      <div class="form-group"><label>訓練心得與自評</label><textarea id="proofPlayerNote" rows="3" placeholder="例如: 投進70球，出手節奏改善..."></textarea></div>
+      <div class="form-group"><label>影片網址 (YouTube / IG / 雲端)</label><input type="url" id="proofVideoUrl" placeholder="https://..."></div>
+      <div class="form-group"><label>自評心得</label><textarea id="proofPlayerNote" rows="3" placeholder="例如: 動作確實完成..."></textarea></div>
       <div style="display:flex; gap:8px; margin-top:12px;">
         <button type="button" onclick="closeProofModal()" class="btn-secondary" style="flex:1;">取消</button>
-        <button type="button" id="btnSubmitProof" class="btn-submit btn-blue" style="flex:1; margin:0;">送交教練審核</button>
+        <button type="button" id="btnSubmitProof" class="btn-submit btn-blue" style="flex:1; margin:0;">確認送出</button>
       </div>
     </div>
   </div>
@@ -379,7 +442,17 @@
       if (el) el.onclick = fn;
     }
 
-    // 原生 LIFF 初始化與自動免密碼登入
+    function toggleTag(el) {
+      el.classList.toggle('selected');
+    }
+
+    function selectShots(num, btn) {
+      document.getElementById('pShotCount').value = num;
+      var btns = document.querySelectorAll('.shot-btn');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
     async function initLiff() {
       var statusTag = document.getElementById('liffStatusTag');
       try {
@@ -470,8 +543,9 @@
 
       // 教練導航
       safeBind('btn-c-roster', 'click', () => showCoachTab('roster'));
-      safeBind('btn-c-game', 'click', () => showCoachTab('game'));
       safeBind('btn-c-task', 'click', () => showCoachTab('task'));
+      safeBind('btn-c-train', 'click', () => showCoachTab('train'));
+      safeBind('btn-c-game', 'click', () => showCoachTab('game'));
       safeBind('btn-c-eval', 'click', () => showCoachTab('eval'));
       safeBind('c-f-all', 'click', () => filterCoachTeam('ALL'));
       safeBind('c-f-1', 'click', () => filterCoachTeam('大隊'));
@@ -482,8 +556,8 @@
       safeBind('btnSaveGame', 'click', doSaveGame);
 
       // 經理導航
+      safeBind('btn-m-train', 'click', () => showManagerTab('train'));
       safeBind('btn-m-att', 'click', () => showManagerTab('att'));
-      safeBind('btn-m-checkin', 'click', () => showManagerTab('checkin'));
       safeBind('btn-m-roster', 'click', () => showManagerTab('roster'));
       safeBind('m-att-all', 'click', () => filterAtt('ALL'));
       safeBind('m-att-1', 'click', () => filterAtt('大隊'));
@@ -492,9 +566,9 @@
 
       // 球員導航
       safeBind('btn-p-dash', 'click', () => showPlayerTab('dash'));
-      safeBind('btn-p-daily', 'click', () => showPlayerTab('daily'));
+      safeBind('btn-p-train', 'click', () => showPlayerTab('train'));
       safeBind('btn-p-task', 'click', () => showPlayerTab('task'));
-      safeBind('pDailyBtn', 'click', doSubmitDaily);
+      safeBind('btnSubmitTraining', 'click', doSubmitTraining);
       safeBind('btnSubmitProof', 'click', doSubmitProof);
 
       initLiff();
@@ -548,19 +622,84 @@
     }
 
     function showCoachTab(t) {
-      ['roster', 'game', 'task', 'eval'].forEach(k => {
+      ['roster', 'task', 'train', 'game', 'eval'].forEach(k => {
         var el = document.getElementById('c-' + k), btn = document.getElementById('btn-c-' + k);
         if (el) el.style.display = (k === t) ? 'block' : 'none';
         if (btn) btn.className = (k === t) ? 'nav-btn active' : 'nav-btn';
       });
       if (t === 'game') loadGameHistory();
+      if (t === 'train') loadCoachTodayTrainings();
     }
 
+    // 教練資料與通知紅點重載核心 (方案 B)
     async function reloadCoachData() {
-      // 1. 取得球員與排行
-      const res = await callBackend("getPlayerList");
-      if (res && res.success) {
-        cachedPlayers = res.data || [];
+      // 1. 抓取待審核與今日打卡統計
+      const sumRes = await callBackend("getCoachDashboardSummary");
+      if (sumRes && sumRes.success) {
+        // 未審核小紅點
+        var taskBadge = document.getElementById('coachTaskBadge');
+        if (taskBadge) {
+          if (sumRes.pendingTasksCount > 0) {
+            taskBadge.style.display = 'inline-flex';
+            taskBadge.innerText = sumRes.pendingTasksCount;
+          } else {
+            taskBadge.style.display = 'none';
+          }
+        }
+        document.getElementById('pendingCountText').innerText = sumRes.pendingTasksCount;
+
+        // 今日加練徽章
+        var trainBadge = document.getElementById('coachTrainBadge');
+        if (trainBadge) {
+          if (sumRes.todayTrainCount > 0) {
+            trainBadge.style.display = 'inline-flex';
+            trainBadge.innerText = sumRes.todayTrainCount;
+          } else {
+            trainBadge.style.display = 'none';
+          }
+        }
+
+        // 渲染置頂待審核專區
+        var pBox = document.getElementById('coachPendingList');
+        if (pBox) {
+          pBox.innerHTML = '';
+          if (sumRes.pendingTasks.length === 0) {
+            pBox.innerHTML = '<div style="color:var(--text-muted); font-size:11px;">目前所有作業皆已審核完成！</div>';
+          } else {
+            sumRes.pendingTasks.forEach(t => {
+              var d = document.createElement('div');
+              d.style.cssText = "background:#0D1527; padding:10px; border-radius:10px; border:1px solid #7C3AED; font-size:11px;";
+              var videoLink = t.proofContent ? `<a href="${t.proofContent}" target="_blank" style="color:#60A5FA; font-weight:bold; text-decoration:underline;">📹 點擊觀看作業成果影片</a>` : `<span style="color:#94A3B8;">無影片連結</span>`;
+              d.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <b style="color:#FFF; font-size:13px;">${t.title} (${t.target})</b>
+                  <span style="color:#F59E0B; font-weight:bold;">待教練審核</span>
+                </div>
+                <div style="margin:4px 0;">${videoLink}</div>
+                ${t.playerNote ? `<div style="color:#CBD5E1; background:#1E293B; padding:4px 8px; border-radius:6px; margin:4px 0;">球員自評：${t.playerNote}</div>` : ''}
+                <div style="display:flex; gap:6px; margin-top:8px;">
+                  <button class="btn-secondary" onclick="reviewTaskPrompt(${t.row}, '${t.target}', '已通過')" style="background:#10B981; color:#FFF; font-weight:bold;">✅ 通過 (+100 EXP)</button>
+                  <button class="btn-secondary" onclick="reviewTaskPrompt(${t.row}, '${t.target}', '需重做')" style="background:#EF4444; color:#FFF;">❌ 退回重做</button>
+                </div>
+              `;
+              pBox.appendChild(d);
+            });
+          }
+        }
+
+        // 運動防護警報
+        if (sumRes.alertCount > 0) {
+          document.getElementById('injuryAlertBanner').style.display = 'block';
+          document.getElementById('alertPlayerCount').innerText = sumRes.alertCount;
+        } else {
+          document.getElementById('injuryAlertBanner').style.display = 'none';
+        }
+      }
+
+      // 2. 抓取球員名冊
+      const pRes = await callBackend("getPlayerList");
+      if (pRes && pRes.success) {
+        cachedPlayers = pRes.data || [];
         renderCoachRoster();
 
         var sel = document.getElementById('cEvalPlayerSelect');
@@ -575,49 +714,58 @@
         });
       }
 
-      // 2. 取得今日防護預警
-      const checkinRes = await callBackend("getTodayCheckins");
-      if (checkinRes && checkinRes.success && checkinRes.alertCount > 0) {
-        document.getElementById('injuryAlertBanner').style.display = 'block';
-        document.getElementById('alertPlayerCount').innerText = checkinRes.alertCount;
-      } else {
-        document.getElementById('injuryAlertBanner').style.display = 'none';
-      }
-
-      // 3. 取得課表與影片繳交
+      // 3. 所有派發任務歷史
       const tRes = await callBackend("getAssignments");
-      var tBox = document.getElementById('coachTaskList'); if (!tBox) return;
+      var tBox = document.getElementById('coachAllTaskList'); if (!tBox) return;
       tBox.innerHTML = '';
       if (!tRes || !tRes.data || tRes.data.length === 0) {
-        tBox.innerHTML = '<div style="color:var(--text-muted); font-size:11px;">暫無指派課表。</div>'; return;
+        tBox.innerHTML = '<div style="color:var(--text-muted); font-size:11px;">暫無派發紀錄。</div>'; return;
       }
       tRes.data.forEach(t => {
         var d = document.createElement('div');
         d.style.cssText = "background:#0D1527; padding:10px; border-radius:10px; border:1px solid var(--card-border); font-size:11px;";
-        var videoLink = t.proofContent ? `<a href="${t.proofContent}" target="_blank" style="color:#3B82F6; font-weight:bold; text-decoration:underline;">📹 點擊觀看作業成果影片</a>` : `<span style="color:#94A3B8;">尚未上傳影片</span>`;
         d.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <b style="color:#FFF; font-size:13px;">${t.title} (${t.target})</b>
+            <b style="color:#FFF;">${t.title} (${t.target})</b>
             <span style="color:var(--gold-primary); font-weight:bold;">${t.reviewState}</span>
           </div>
-          <div style="color:var(--text-muted); margin:4px 0;">目標：${t.targetAmount} | 截止：${t.deadline}</div>
-          <div style="margin:4px 0;">${videoLink}</div>
-          ${t.playerNote ? `<div style="color:#E2E8F0; background:#1E293B; padding:4px 8px; border-radius:6px; margin:4px 0;">球員心得：${t.playerNote}</div>` : ''}
-          <div style="display:flex; gap:6px; margin-top:8px;">
-            <button class="btn-secondary" onclick="reviewTaskPrompt(${t.row}, '${t.target}', '已通過')" style="background:#10B981; color:#FFF; font-weight:bold;">✅ 審核通過 (+100 EXP)</button>
-            <button class="btn-secondary" onclick="reviewTaskPrompt(${t.row}, '${t.target}', '需重做')" style="background:#EF4444; color:#FFF;">❌ 退回重做</button>
-          </div>
+          <div style="color:var(--text-muted); margin-top:2px;">要求：${t.targetAmount} | 截止：${t.deadline}</div>
         `;
         tBox.appendChild(d);
       });
     }
 
     async function reviewTaskPrompt(row, targetName, state) {
-      var fb = prompt(`請輸入給球員的審核評語：`, state === '已通過' ? "動作非常確實，保持下去！" : "節奏有點急躁，請重新錄製修正後的版本。");
+      var fb = prompt(`請輸入審核評語：`, state === '已通過' ? "動作確實，非常棒！" : "出手弧度不夠，請修正後重新錄製。");
       if (fb === null) return;
       const res = await callBackend("reviewTask", { row: row, playerName: targetName, state: state, feedback: fb });
       alert(res.message);
       reloadCoachData();
+    }
+
+    async function loadCoachTodayTrainings() {
+      var tbody = document.getElementById('cTodayTrainTbody'); if (!tbody) return;
+      const res = await callBackend("getTodayTrainings");
+      tbody.innerHTML = '';
+      if (!res || !res.data || res.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6">今日尚無球員打卡。</td></tr>'; return;
+      }
+      document.getElementById('cTodayTrainCount').innerText = res.data.length;
+      document.getElementById('cTodayTotalShots').innerText = res.totalShots;
+
+      res.data.forEach(d => {
+        var alertTag = d.isAlert ? `<span style="color:#EF4444; font-weight:bold;">${d.bodyStatus}</span>` : `<span style="color:#10B981;">${d.bodyStatus}</span>`;
+        tbody.innerHTML += `
+          <tr>
+            <td style="color:var(--text-muted); font-size:10px;">${d.time}</td>
+            <td><b>${d.name}</b></td>
+            <td style="color:var(--gold-primary); font-weight:bold;">${d.shotCount} 顆</td>
+            <td style="font-size:10px;">${d.items}</td>
+            <td>${d.intensity.split(" ")[0]}</td>
+            <td>${alertTag}</td>
+          </tr>
+        `;
+      });
     }
 
     function filterCoachTeam(t) {
@@ -712,19 +860,42 @@
             <span style="font-weight:900; color:${isWin ? '#10B981':'#EF4444'}; font-size:13px;">${g.result} (${g.myScore} : ${g.oppScore})</span>
           </div>
           <div style="color:var(--text-muted); margin-top:3px;">日期：${g.date} | MVP：<b style="color:var(--gold-primary);">${g.mvp || '未設定'}</b></div>
-          ${g.note ? `<div style="color:#CBD5E1; margin-top:2px;">戰術備註：${g.note}</div>` : ''}
         `;
         gBox.appendChild(d);
       });
     }
 
     function showManagerTab(t) {
-      ['att', 'checkin', 'roster'].forEach(k => {
+      ['train', 'att', 'roster'].forEach(k => {
         var el = document.getElementById('m-' + k), btn = document.getElementById('btn-m-' + k);
         if (el) el.style.display = (k === t) ? 'block' : 'none';
         if (btn) btn.className = (k === t) ? 'nav-btn active' : 'nav-btn';
       });
-      if (t === 'checkin') loadTodayCheckins();
+      if (t === 'train') loadTodayTrainingsList();
+    }
+
+    async function loadTodayTrainingsList() {
+      var tbody = document.getElementById('todayTrainTbody'); if (!tbody) return;
+      const res = await callBackend("getTodayTrainings");
+      tbody.innerHTML = '';
+      if (!res || !res.data || res.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">今日尚無球員打卡。</td></tr>'; return;
+      }
+      document.getElementById('todayTrainCount').innerText = res.data.length;
+      document.getElementById('todayTotalShots').innerText = res.totalShots;
+
+      res.data.forEach(d => {
+        var alertTag = d.isAlert ? `<span style="color:#EF4444; font-weight:bold;">${d.bodyStatus}</span>` : `<span style="color:#10B981;">${d.bodyStatus}</span>`;
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${d.name}</b></td>
+            <td style="color:var(--gold-primary); font-weight:bold;">${d.shotCount} 顆</td>
+            <td style="font-size:10px;">${d.items}</td>
+            <td>${d.intensity.split(" ")[0]}</td>
+            <td>${alertTag}</td>
+          </tr>
+        `;
+      });
     }
 
     async function loadManagerData() {
@@ -742,6 +913,7 @@
           box.appendChild(item);
         });
         renderAttendanceTable();
+        loadTodayTrainingsList();
       }
     }
 
@@ -776,30 +948,8 @@
       alert(res.message);
     }
 
-    async function loadTodayCheckins() {
-      var tbody = document.getElementById('todayCheckinTbody'); if (!tbody) return;
-      const res = await callBackend("getTodayCheckins");
-      tbody.innerHTML = '';
-      if (!res || !res.data || res.data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">今日尚無回報紀錄。</td></tr>'; return;
-      }
-      res.data.forEach(d => {
-        var alertTag = d.isAlert ? `<span style="color:#EF4444; font-weight:bold;">⚠️ 需防護關注</span>` : `<span style="color:#10B981;">正常</span>`;
-        tbody.innerHTML += `
-          <tr>
-            <td><b>${d.name}</b></td>
-            <td>${d.sleep}h</td>
-            <td>${d.energy}</td>
-            <td style="color:${d.fatigue >= 4 ? '#EF4444' : '#FFF'}; font-weight:bold;">${d.fatigue}</td>
-            <td style="color:${d.sore !== '無痠痛' ? '#F59E0B' : '#94A3B8'};">${d.sore}</td>
-            <td>${alertTag}</td>
-          </tr>
-        `;
-      });
-    }
-
     function showPlayerTab(t) {
-      ['dash', 'daily', 'task'].forEach(k => {
+      ['dash', 'train', 'task'].forEach(k => {
         var el = document.getElementById('p-' + k), btn = document.getElementById('btn-p-' + k);
         if (el) el.style.display = (k === t) ? 'block' : 'none';
         if (btn) btn.className = (k === t) ? 'nav-btn active' : 'nav-btn';
@@ -820,31 +970,49 @@
           document.getElementById('myPhoto').src = p.photoUrl || "https://via.placeholder.com/150";
           document.getElementById('myRankTitle').innerText = p.rankTitle;
 
-          // EXP 經驗值進度計算
           document.getElementById('myExpText').innerText = p.exp + ' EXP';
           document.getElementById('myExpNext').innerText = p.rankNext + ' EXP';
           var pct = Math.min(100, Math.round((p.exp / p.rankNext) * 100));
           document.getElementById('myExpFill').style.width = pct + '%';
 
           const evRes = await callBackend("getPlayerRadarData", { name: p.name });
-          var ev = (evRes && evRes.data) ? evRes.data : { offense: 3, defense: 3, fitness: 3, attitude: 4, note: "保持熱情與專注！" };
+          var ev = (evRes && evRes.data) ? evRes.data : { offense: 3, defense: 3, fitness: 3, attitude: 4, note: "保持訓練！" };
           drawSvgRadar([ev.offense, ev.defense, ev.fitness, ev.attitude, 4]);
           document.getElementById('myCoachNote').innerText = ev.note;
         }
       }
     }
 
-    async function doSubmitDaily() {
+    async function doSubmitTraining() {
+      var selectedTags = [];
+      document.querySelectorAll('#trainingTagsBox .check-tag.selected').forEach(tag => {
+        selectedTags.push(tag.innerText.trim());
+      });
+
+      var shotCount = Number(document.getElementById('pShotCount').value) || 0;
+      var intensity = document.getElementById('pIntensity').value;
+      var bodyStatus = document.getElementById('pBodyStatus').value;
+      var note = document.getElementById('pTrainingNote').value.trim();
+
+      if (selectedTags.length === 0) {
+        return alert("請至少點選一項今日訓練項目！");
+      }
+
       var data = {
         playerName: currentUser.name,
         team: '大隊',
-        sleepHours: document.getElementById('pSleep').value,
-        energy: document.getElementById('pEnergy').value,
-        fatigue: document.getElementById('pFatigue').value,
-        soreArea: document.getElementById('pSore').value,
-        note: document.getElementById('pNote').value
+        trainingItems: selectedTags.join('、'),
+        shotCount: shotCount,
+        intensity: intensity,
+        bodyStatus: bodyStatus,
+        note: note
       };
-      const res = await callBackend("saveDailyStatus", data);
+
+      var btn = document.getElementById('btnSubmitTraining');
+      btn.innerText = "打卡記錄中..."; btn.disabled = true;
+
+      const res = await callBackend("saveDailyTraining", data);
+      btn.innerText = "🔥 送出今日自主訓練打卡並領取 EXP"; btn.disabled = false;
       alert(res.message);
       loadPlayerDashboard();
     }
