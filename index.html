@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M+ 籃球隊官方戰情中控台</title>
+    <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- LIFF SDK -->
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -104,7 +107,7 @@
             </div>
         </section>
 
-        <!-- 2. 等候核准專用警告畫面 -->
+        <!-- 2. 等候核准專用畫面 -->
         <section id="pendingApprovalSection" class="hidden glass-card rounded-3xl p-8 text-center space-y-4 my-auto border border-amber-500/30 max-w-md mx-auto">
             <div class="w-16 h-16 mx-auto bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center text-3xl animate-pulse">
                 ⏳
@@ -112,8 +115,8 @@
             <h3 class="text-xl font-black text-white">身分審查中</h3>
             <p class="text-xs text-slate-300 leading-relaxed">
                 您好，您的註冊申請已送出！<br>
-                為維護球團運作與隱私安全，系統已通知 <span class="text-orange-400 font-bold">球隊 BOSS 與經理</span> 進行身分核准。<br>
-                審核通過後即可正常登入使用。
+                系統已通知 <span class="text-orange-400 font-bold">球隊 BOSS 與經理</span> 進行審查。<br>
+                核准通過後即可正式登入使用。
             </p>
             <button onclick="logout()" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
                 返回登入頁
@@ -163,7 +166,7 @@
                     </div>
                 </div>
 
-                <!-- 球員專屬 -->
+                <!-- 球員專屬欄位 -->
                 <div id="formFieldsPlayer" class="space-y-3 pt-2 border-t border-slate-800/80">
                     <div>
                         <label class="text-slate-400 block mb-1 font-semibold">個人照片 URL (選填)</label>
@@ -205,7 +208,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="text-slate-400 block mb-1 font-semibold">緊急聯絡人姓名</label>
-                            <input type="text" id="regPlayerEmergencyName" placeholder="例如: 家長姓名" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                            <input type="text" id="regPlayerEmergencyName" placeholder="例如: 家長姓名" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
                         </div>
                         <div>
                             <label class="text-slate-400 block mb-1 font-semibold">緊急聯絡電話</label>
@@ -214,7 +217,7 @@
                     </div>
                 </div>
 
-                <!-- 教練專屬 -->
+                <!-- 教練專屬欄位 -->
                 <div id="formFieldsCoach" class="hidden space-y-3 pt-2 border-t border-slate-800/80">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -236,7 +239,7 @@
                     </div>
                 </div>
 
-                <!-- 經理專屬 -->
+                <!-- 經理專屬欄位 -->
                 <div id="formFieldsManager" class="hidden space-y-3 pt-2 border-t border-slate-800/80">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -258,7 +261,7 @@
                     </div>
                 </div>
 
-                <!-- 家長專屬 -->
+                <!-- 家長專屬欄位 -->
                 <div id="formFieldsParent" class="hidden space-y-3 pt-2 border-t border-slate-800/80">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
@@ -352,12 +355,12 @@
                     <input type="text" id="modalTaskTitle" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 font-bold">
                 </div>
                 <div>
-                    <label class="text-slate-400 block mb-1 font-semibold">達成數據 (例如：進球150顆、耗時30分)</label>
+                    <label class="text-slate-400 block mb-1 font-semibold">達成數據</label>
                     <input type="text" id="modalReportContent" placeholder="請填寫量化數據..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 focus:border-orange-500 text-slate-200">
                 </div>
                 <div>
                     <label class="text-slate-400 block mb-1 font-semibold">球員心得與自我檢討</label>
-                    <textarea id="modalPlayerNote" rows="2" placeholder="出手點穩定，加強最後十球抗壓..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 focus:border-orange-500 text-slate-200"></textarea>
+                    <textarea id="modalPlayerNote" rows="2" placeholder="自我檢討與心得..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 focus:border-orange-500 text-slate-200"></textarea>
                 </div>
             </div>
             <div class="flex space-x-3 pt-2">
@@ -537,14 +540,12 @@
             else if (role === 'PARENT') document.getElementById('formFieldsParent').classList.remove('hidden');
         }
 
-        // 🎯 同時通知 BOSS 與所有球隊經理
         async function notifyBossAndManagersViaLine(name, roleText, team, phone, noteDetails) {
             try {
-                // 1. 查詢所有「球隊經理」與「BOSS」的 LINE ID
                 const { data: managers } = await sb.from('users').select('line_id').in('role', ['球隊經理', '球隊ＢＯＳＳ']).not('line_id', 'is', null);
                 
                 const targetLineIds = new Set();
-                targetLineIds.add(BOSS_LINE_ID); // 確保 BOSS 必收
+                targetLineIds.add(BOSS_LINE_ID);
 
                 if (managers) {
                     managers.forEach(m => { if (m.line_id) targetLineIds.add(m.line_id.replace(/'/g, '').trim()); });
@@ -561,7 +562,6 @@
                                     `━━━━━━━━━━━━━━\n` +
                                     `⚡ 請 BOSS 或經理登入戰情室進行身分核准！`;
 
-                // 2. 逐一發送 LINE 推播
                 targetLineIds.forEach(lineId => {
                     fetch("https://api.line.me/v2/bot/message/push", {
                         method: "POST",
@@ -624,7 +624,6 @@
                 noteForAudit = `孩子：${childName} (${relation})`;
             }
 
-            // 寫入 Supabase，狀態預設為「待審核」
             const { data: newUser, error: uErr } = await sb.from('users').insert([{
                 name: name,
                 phone: phone,
@@ -661,7 +660,6 @@
                 }]);
             }
 
-            // 發送 LINE 通知 BOSS 與經理
             notifyBossAndManagersViaLine(name, roleText, team, phone, noteForAudit);
 
             alert(`🎉 您的註冊資料已送出！系統已通知 BOSS 與球隊經理進行身分核准！`);
@@ -671,7 +669,6 @@
         }
 
         function processLoginSuccess(userRecord) {
-            // 🎯 核心攔截：檢查是否已經由管理層核准
             if (userRecord.status === '待審核' && userRecord.name !== '吳俊璋' && userRecord.role.indexOf("BOSS") === -1) {
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('registerSection').classList.add('hidden');
@@ -831,7 +828,7 @@
         }
 
         // =========================================================================
-        // ⚡ 1. 主戰情室 (含 BOSS/經理 新進成員核准中樞)
+        // ⚡ 1. 主戰情室 (含 刪除球員 功能)
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
@@ -852,7 +849,7 @@
                 sb.from('schedules').select('*, schedule_rsvps(*)').order('event_date', { ascending: true }),
                 sb.from('players').select('*').order('team', { ascending: true }).order('number', { ascending: true }),
                 sb.from('users').select('*').eq('role', '家長'),
-                sb.from('users').select('*').eq('status', '待審核') // 抓取待審核新成員
+                sb.from('users').select('*').eq('status', '待審核')
             ]);
 
             const pData = pRes.data || { name: targetPlayerName, number: 7, position: '控球後衛', team: '大隊', offense: 85, defense: 90, fitness: 88, attitude: 96, agility: 89, bball_iq: 87 };
@@ -866,7 +863,7 @@
 
             let html = "";
 
-            // --- 👑 / 📊 BOSS 與 經理台專屬：新成員核准收件匣 ---
+            // 👑 / 📊 BOSS 與 經理台專屬：待審核新成員收件匣
             if (currentUser.role === "MANAGER" || currentUser.actualRole === "ADMIN") {
                 if (pendingUsers.length > 0) {
                     html += `
@@ -979,7 +976,7 @@
                 `;
             }
 
-            // --- 📋 教練主戰情室 ---
+            // --- 📋 教練主戰情室 (含【刪除球員】功能) ---
             else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
                 const teamDaList = allPlayers.filter(p => p.team === '大隊');
                 const teamXiaoList = allPlayers.filter(p => p.team === '小隊');
@@ -1005,14 +1002,16 @@
                             </div>
                         </div>
 
+                        <!-- 🏀 全隊球員陣容名冊 (含刪除按鈕) -->
                         <div class="glass-card rounded-2xl p-5 space-y-4">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                                 <h3 class="font-bold text-orange-400 text-base flex items-center space-x-2">
-                                    <span>📋</span><span>全隊球員陣容名冊與戰力</span>
+                                    <span>📋</span><span>全隊球員陣容名冊與管理</span>
                                 </h3>
                                 <span class="text-xs text-slate-400">大隊/小隊名單</span>
                             </div>
 
+                            <!-- 大隊成員展示 -->
                             <div class="space-y-2">
                                 <h4 class="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center space-x-1">
                                     <span>🏀</span><span>大隊陣容 (${teamDaList.length} 人)</span>
@@ -1036,11 +1035,17 @@
                                                         <p class="text-[11px] text-slate-400 mt-0.5">${pl.height ? pl.height + 'cm' : '178cm'} ｜ ${pl.weight ? pl.weight + 'kg' : '70kg'}</p>
                                                     </div>
                                                 </div>
-                                                <div class="text-right">
-                                                    <span class="font-num font-black text-base text-amber-400 block">OVR ${ovr}</span>
-                                                    <span class="text-[10px] font-semibold ${cIn ? (cIn.fatigue >= 4 ? 'text-red-400' : 'text-emerald-400') : 'text-slate-500'}">
-                                                        ${cIn ? `疲勞 ${cIn.fatigue}/5` : '未晨報'}
-                                                    </span>
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="text-right">
+                                                        <span class="font-num font-black text-base text-amber-400 block">OVR ${ovr}</span>
+                                                        <span class="text-[10px] font-semibold ${cIn ? (cIn.fatigue >= 4 ? 'text-red-400' : 'text-emerald-400') : 'text-slate-500'}">
+                                                            ${cIn ? `疲勞 ${cIn.fatigue}/5` : '未晨報'}
+                                                        </span>
+                                                    </div>
+                                                    <!-- 刪除球員按鈕 -->
+                                                    <button onclick="deletePlayerDirectly(${pl.id}, '${pl.name}')" class="p-2 bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white rounded-lg transition active:scale-95" title="刪除此球員">
+                                                        <i class="fas fa-trash-alt text-xs"></i>
+                                                    </button>
                                                 </div>
                                             </div>
                                         `;
@@ -1048,6 +1053,7 @@
                                 </div>
                             </div>
 
+                            <!-- 小隊成員展示 -->
                             <div class="space-y-2 pt-3 border-t border-slate-800/60">
                                 <h4 class="text-xs font-black text-blue-400 uppercase tracking-wider flex items-center space-x-1">
                                     <span>⚡</span><span>小隊青年軍陣容 (${teamXiaoList.length} 人)</span>
@@ -1071,11 +1077,17 @@
                                                         <p class="text-[11px] text-slate-400 mt-0.5">${pl.height ? pl.height + 'cm' : '170cm'} ｜ ${pl.weight ? pl.weight + 'kg' : '65kg'}</p>
                                                     </div>
                                                 </div>
-                                                <div class="text-right">
-                                                    <span class="font-num font-black text-base text-blue-400 block">OVR ${ovr}</span>
-                                                    <span class="text-[10px] font-semibold ${cIn ? (cIn.fatigue >= 4 ? 'text-red-400' : 'text-emerald-400') : 'text-slate-500'}">
-                                                        ${cIn ? `疲勞 ${cIn.fatigue}/5` : '未晨報'}
-                                                    </span>
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="text-right">
+                                                        <span class="font-num font-black text-base text-blue-400 block">OVR ${ovr}</span>
+                                                        <span class="text-[10px] font-semibold ${cIn ? (cIn.fatigue >= 4 ? 'text-red-400' : 'text-emerald-400') : 'text-slate-500'}">
+                                                            ${cIn ? `疲勞 ${cIn.fatigue}/5` : '未晨報'}
+                                                        </span>
+                                                    </div>
+                                                    <!-- 刪除球員按鈕 -->
+                                                    <button onclick="deletePlayerDirectly(${pl.id}, '${pl.name}')" class="p-2 bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white rounded-lg transition active:scale-95" title="刪除此球員">
+                                                        <i class="fas fa-trash-alt text-xs"></i>
+                                                    </button>
                                                 </div>
                                             </div>
                                         `;
@@ -1252,6 +1264,29 @@
             }
 
             container.innerHTML = html;
+        }
+
+        // =========================================================================
+        // 🗑️ 核心功能：刪除球員（離隊處置）
+        // =========================================================================
+        async function deletePlayerDirectly(playerId, playerName) {
+            const confirmMsg = `⚠️【危險操作警告】\n\n確定要將球員【${playerName}】從球隊名冊中永久刪除嗎？\n\n※ 這將會同步刪除該球員的帳號、晨報點檢與自主訓練歷史紀錄！`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                // 1. 刪除 players 資料表記錄
+                await sb.from('players').delete().eq('id', playerId);
+                // 2. 刪除 users 帳號
+                await sb.from('users').delete().eq('name', playerName);
+                // 3. 刪除晨報與任務回報
+                await sb.from('daily_checkins').delete().eq('player_name', playerName);
+                await sb.from('assignment_submissions').delete().eq('player_name', playerName);
+
+                alert(`已成功將球員【${playerName}】除名並清除相關資料！`);
+                loadDashboardOverview(); // 即時重新整理名冊
+            } catch (err) {
+                alert("刪除球員失敗：" + err.message);
+            }
         }
 
         // =========================================================================
@@ -1569,7 +1604,7 @@
                             <label class="text-xs text-slate-400 font-semibold block">昨晚睡眠時數：<span id="labelSleep" class="text-amber-400 font-bold font-num">7.5</span> 小時</label>
                             <div class="grid grid-cols-4 sm:grid-cols-7 gap-2 text-xs">
                                 ${[5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(h => `
-                                    <button type="button" onclick="selectSleep(${h})" class="sleep-btn py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 font-bold transition ${h === 7.5 ? 'border-orange-500 bg-orange-500/20 text-orange-400' : ''}" data-val="${h}">${h}h</button>
+                                    <button type="button" onclick="selectSleep(${h})" class="sleep-btn py-2 rounded-xl border border-orange-500 bg-orange-500/20 text-orange-400 font-bold transition" data-val="${h}">${h}h</button>
                                 `).join('')}
                             </div>
                         </div>
@@ -1699,6 +1734,9 @@
             if (!error) alert("已成功送達指導建議！");
         }
 
+        // =========================================================================
+        // 行程管理、課表回報
+        // =========================================================================
         function openEventModal() {
             document.getElementById('eventModal').classList.remove('hidden');
             document.getElementById('eventModal').classList.add('flex');
