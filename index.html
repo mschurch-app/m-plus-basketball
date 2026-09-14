@@ -28,6 +28,7 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .glow-orange { box-shadow: 0 4px 20px -2px rgba(249, 115, 22, 0.4); }
+        .glow-gold { box-shadow: 0 4px 25px -2px rgba(234, 179, 8, 0.45); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -52,7 +53,11 @@
             <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-lg active:scale-95 transition">登出</button>
         </div>
 
+        <!-- 視角切換器 (只有 BOSS 才能看到 BOSS 總控按鈕) -->
         <div id="roleSwitchContainer" class="hidden flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs shadow-inner overflow-x-auto max-w-full">
+            <button onclick="switchViewRole('BOSS')" id="btnRoleBoss" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-amber-300 bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500 hover:text-black items-center space-x-1 whitespace-nowrap">
+                <span>👑</span><span>BOSS總控</span>
+            </button>
             <button onclick="switchViewRole('PLAYER')" id="btnRolePlayer" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-slate-400 hover:text-white items-center space-x-1 whitespace-nowrap">
                 <span>🏀</span><span>球員台</span>
             </button>
@@ -166,7 +171,6 @@
                     </div>
                 </div>
 
-                <!-- 球員專屬 -->
                 <div id="formFieldsPlayer" class="space-y-3 pt-2 border-t border-slate-800/80">
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         <div>
@@ -191,19 +195,8 @@
                             <input type="number" id="regPlayerNum" placeholder="例如: 7" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-slate-400 block mb-1 font-semibold">身高 (cm)</label>
-                            <input type="number" id="regPlayerHeight" placeholder="例如: 178" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                        </div>
-                        <div>
-                            <label class="text-slate-400 block mb-1 font-semibold">體重 (kg)</label>
-                            <input type="number" id="regPlayerWeight" placeholder="例如: 70" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                        </div>
-                    </div>
                 </div>
 
-                <!-- 家長專屬 -->
                 <div id="formFieldsParent" class="hidden space-y-3 pt-2 border-t border-slate-800/80">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -273,99 +266,69 @@
         </button>
     </nav>
 
-    <!-- 👤 彈出視窗：編輯球員個人檔案 -->
-    <div id="playerProfileModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-        <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-slate-700 shadow-2xl">
+    <!-- 👑 BOSS 專屬：編輯人員檔案 Modal -->
+    <div id="bossEditUserModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-amber-500/50 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="text-base font-black text-white">✏️ 編輯球員個人檔案</h3>
-                <button onclick="closePlayerProfileModal()" class="text-slate-400 hover:text-white">&times;</button>
+                <h3 class="text-base font-black text-amber-400 flex items-center space-x-2">
+                    <span>👑</span><span>BOSS 總控 - 成員檔案特權編輯</span>
+                </h3>
+                <button onclick="closeBossEditUserModal()" class="text-slate-400 hover:text-white">&times;</button>
             </div>
+            <input type="hidden" id="bossTargetUserId">
+            <input type="hidden" id="bossTargetOriginalName">
             <div class="space-y-3 text-xs">
-                <!-- 大頭照上傳與預覽 -->
-                <div class="flex items-center space-x-4">
-                    <div id="playerAvatarPreview" class="w-16 h-16 rounded-2xl bg-slate-800 border-2 border-orange-500 overflow-hidden flex items-center justify-center font-bold text-white text-xl">
-                        #7
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 block mb-1 font-semibold">姓名</label>
+                        <input type="text" id="bossEditName" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-bold">
                     </div>
-                    <div class="flex-1">
-                        <label class="text-slate-400 block mb-1 font-semibold">上傳大頭照 (支援拍照/選圖)</label>
-                        <input type="file" id="playerPhotoInput" accept="image/*" onchange="previewAndCompressImage(this, 'playerAvatarPreview', 'hiddenPlayerPhotoBase64')" class="text-[11px] text-slate-300">
-                        <input type="hidden" id="hiddenPlayerPhotoBase64">
+                    <div>
+                        <label class="text-slate-400 block mb-1 font-semibold">電話</label>
+                        <input type="tel" id="bossEditPhone" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">守備位置</label>
-                        <select id="editPlayerPos" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                            <option value="控球後衛">PG 控球後衛</option>
-                            <option value="得分後衛">SG 得分後衛</option>
-                            <option value="小前鋒">SF 小前鋒</option>
-                            <option value="大前鋒">PF 大前鋒</option>
-                            <option value="中鋒">C 中鋒</option>
+                        <label class="text-slate-400 block mb-1 font-semibold">身分角色</label>
+                        <select id="bossEditRole" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                            <option value="球員">🏀 球員</option>
+                            <option value="教練">📋 教練</option>
+                            <option value="球隊經理">📊 球隊經理</option>
+                            <option value="家長">👨‍👩‍👦 家長</option>
+                            <option value="球隊ＢＯＳＳ">👑 球隊ＢＯＳＳ</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">球衣背號</label>
-                        <input type="number" id="editPlayerNum" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                        <label class="text-slate-400 block mb-1 font-semibold">所屬梯隊</label>
+                        <select id="bossEditTeam" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                            <option value="大隊">大隊</option>
+                            <option value="小隊">小隊</option>
+                            <option value="全隊">全隊</option>
+                        </select>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">身高 (cm)</label>
-                        <input type="number" id="editPlayerHeight" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                        <label class="text-slate-400 block mb-1 font-semibold">修改密碼</label>
+                        <input type="text" id="bossEditPassword" placeholder="留空不修改" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
                     </div>
                     <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">體重 (kg)</label>
-                        <input type="number" id="editPlayerWeight" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                        <label class="text-slate-400 block mb-1 font-semibold">核准狀態</label>
+                        <select id="bossEditStatus" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                            <option value="已核准">✅ 已核准 (可登入)</option>
+                            <option value="待審核">⏳ 待審核 (鎖定中)</option>
+                        </select>
                     </div>
+                </div>
+                <div>
+                    <label class="text-slate-400 block mb-1 font-semibold">家長綁定之孩子球員姓名 (非家長免填)</label>
+                    <input type="text" id="bossEditChildName" placeholder="例如: 孩子本名" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
                 </div>
             </div>
             <div class="flex space-x-3 pt-2">
-                <button onclick="closePlayerProfileModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold">取消</button>
-                <button onclick="savePlayerProfileFinal()" class="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold glow-orange">儲存檔案</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 👨‍👩‍👦 彈出視窗：編輯家長個人檔案與連結孩子 -->
-    <div id="parentProfileModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-        <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-slate-700 shadow-2xl">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="text-base font-black text-white">✏️ 編輯家長檔案與連結孩子</h3>
-                <button onclick="closeParentProfileModal()" class="text-slate-400 hover:text-white">&times;</button>
-            </div>
-            <div class="space-y-3 text-xs">
-                <div class="flex items-center space-x-4">
-                    <div id="parentAvatarPreview" class="w-16 h-16 rounded-2xl bg-slate-800 border-2 border-amber-500 overflow-hidden flex items-center justify-center text-2xl text-white">
-                        👨‍👩‍👦
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-slate-400 block mb-1 font-semibold">上傳家長照片</label>
-                        <input type="file" id="parentPhotoInput" accept="image/*" onchange="previewAndCompressImage(this, 'parentAvatarPreview', 'hiddenParentPhotoBase64')" class="text-[11px] text-slate-300">
-                        <input type="hidden" id="hiddenParentPhotoBase64">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-slate-400 block mb-1 font-semibold">聯絡電話</label>
-                    <input type="tel" id="editParentPhone" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                </div>
-                <div>
-                    <label class="text-slate-400 block mb-1 font-semibold">與孩子關係</label>
-                    <select id="editParentRelation" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                        <option value="父親">父親</option>
-                        <option value="母親">母親</option>
-                        <option value="監護人/親屬">監護人/親屬</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-slate-400 block mb-1 font-semibold">連結孩子 (請由球員清單選取)</label>
-                    <select id="editParentChildSelect" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                        <option value="">-- 請選取您的孩子 --</option>
-                    </select>
-                </div>
-            </div>
-            <div class="flex space-x-3 pt-2">
-                <button onclick="closeParentProfileModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold">取消</button>
-                <button onclick="saveParentProfileFinal()" class="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold glow-orange">確認連結並儲存</button>
+                <button onclick="closeBossEditUserModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold">取消</button>
+                <button onclick="saveBossEditUserFinal()" class="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold glow-gold">強制更新儲存</button>
             </div>
         </div>
     </div>
@@ -390,11 +353,7 @@
 
         let currentActiveTab = 'overview';
         let currentRegRole = 'PLAYER';
-
-        let morningSleep = 7.5;
-        let morningEnergy = "⚡ 精神飽滿";
-        let morningSores = [];
-        let morningFatigue = 2;
+        let bossSelectedFilterRole = 'ALL'; // BOSS 後台人員篩選
 
         window.addEventListener("DOMContentLoaded", () => {
             const todayStr = new Date().toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit', weekday: 'short' });
@@ -414,18 +373,15 @@
 
         async function autoLoginWithLine(lineUserId, lineName = "") {
             try {
-                const { data, error } = await sb.from('users').select('*').eq('line_id', lineUserId).maybeSingle();
-                if (data) {
-                    processLoginSuccess(data);
-                } else {
+                const { data } = await sb.from('users').select('*').eq('line_id', lineUserId).maybeSingle();
+                if (data) processLoginSuccess(data);
+                else {
                     showRegisterSection();
                     document.getElementById('regLineId').value = lineUserId;
-                    if (lineName && !document.getElementById('regName').value) {
-                        document.getElementById('regName').value = lineName;
-                    }
+                    if (lineName && !document.getElementById('regName').value) document.getElementById('regName').value = lineName;
                     alert("歡迎！請先完成新成員檔案建立，送出後由管理層核准開通！");
                 }
-            } catch (e) { console.log("LINE 自動登入略過", e); }
+            } catch (e) { console.log(e); }
         }
 
         async function handleLineLogin() {
@@ -434,12 +390,8 @@
                 const profile = liff.getDecodedIDToken();
                 if (profile && profile.sub) autoLoginWithLine(profile.sub, profile.name);
             } else {
-                if (typeof liff !== 'undefined' && !liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    showRegisterSection();
-                    alert("請填寫新成員檔案完成送審！");
-                }
+                if (typeof liff !== 'undefined' && !liff.isLoggedIn()) liff.login();
+                else { showRegisterSection(); alert("請填寫新成員檔案完成送審！"); }
             }
         }
 
@@ -456,7 +408,6 @@
                 showRegisterSection();
                 document.getElementById('regName').value = acc;
                 if (pass) document.getElementById('regPassword').value = pass;
-                return;
             } else {
                 if (data.password && pass && data.password !== pass) {
                     alert("密碼不正確！");
@@ -482,61 +433,12 @@
             currentRegRole = role;
             ['PLAYER', 'COACH', 'MANAGER', 'PARENT'].forEach(r => {
                 const btn = document.getElementById(`regBtn${r}`);
-                if (r === role) {
-                    btn.className = "py-2 rounded-xl font-bold transition bg-orange-500 text-white shadow";
-                } else {
-                    btn.className = "py-2 rounded-xl font-bold transition text-slate-400 hover:text-white";
-                }
+                btn.className = (r === role) 
+                    ? "py-2 rounded-xl font-bold transition bg-orange-500 text-white shadow"
+                    : "py-2 rounded-xl font-bold transition text-slate-400 hover:text-white";
             });
-
-            document.getElementById('formFieldsPlayer').classList.add('hidden');
-            document.getElementById('formFieldsCoach').classList.add('hidden');
-            document.getElementById('formFieldsManager').classList.add('hidden');
-            document.getElementById('formFieldsParent').classList.add('hidden');
-
-            if (role === 'PLAYER') document.getElementById('formFieldsPlayer').classList.remove('hidden');
-            else if (role === 'COACH') document.getElementById('formFieldsCoach').classList.remove('hidden');
-            else if (role === 'MANAGER') document.getElementById('formFieldsManager').classList.remove('hidden');
-            else if (role === 'PARENT') document.getElementById('formFieldsParent').classList.remove('hidden');
-        }
-
-        async function notifyBossAndManagersViaLine(name, roleText, team, phone, noteDetails) {
-            try {
-                const { data: managers } = await sb.from('users').select('line_id').in('role', ['球隊經理', '球隊ＢＯＳＳ']).not('line_id', 'is', null);
-                const targetLineIds = new Set();
-                targetLineIds.add(BOSS_LINE_ID);
-
-                if (managers) {
-                    managers.forEach(m => { if (m.line_id) targetLineIds.add(m.line_id.replace(/'/g, '').trim()); });
-                }
-
-                const nowStr = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
-                const messageText = `📢【M+ 戰情中心 - 新成員待審核通知】\n` +
-                                    `━━━━━━━━━━━━━━\n` +
-                                    `👤 申請人姓名：${name}\n` +
-                                    `🏷️ 申請身分：${roleText} (${team})\n` +
-                                    `📞 聯絡電話：${phone}\n` +
-                                    `📋 資料摘要：${noteDetails}\n` +
-                                    `⏰ 申請時間：${nowStr}\n` +
-                                    `━━━━━━━━━━━━━━\n` +
-                                    `⚡ 請 BOSS 或經理登入戰情室進行身分核准！`;
-
-                targetLineIds.forEach(lineId => {
-                    fetch("https://api.line.me/v2/bot/message/push", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${LINE_ACCESS_TOKEN}`
-                        },
-                        body: JSON.stringify({
-                            to: lineId,
-                            messages: [{ type: "text", text: messageText }]
-                        })
-                    }).catch(err => console.log("LINE 傳送:", err));
-                });
-            } catch (e) {
-                console.log("推播略過", e);
-            }
+            document.getElementById('formFieldsPlayer').className = role === 'PLAYER' ? "space-y-3 pt-2 border-t border-slate-800/80" : "hidden";
+            document.getElementById('formFieldsParent').className = role === 'PARENT' ? "space-y-3 pt-2 border-t border-slate-800/80" : "hidden";
         }
 
         async function submitNewMemberRegister() {
@@ -545,77 +447,36 @@
             const password = document.getElementById('regPassword').value.trim();
             const lineId = document.getElementById('regLineId').value.trim();
 
-            if (!name || !phone || !password) {
-                alert("請完整填寫姓名、電話與登入密碼！");
-                return;
-            }
+            if (!name || !phone || !password) { alert("請完整填寫姓名、電話與密碼！"); return; }
 
-            let roleText = "球員";
-            let team = "大隊";
-            let extraUserFields = {};
-            let noteForAudit = "";
-
+            let roleText = "球員", team = "大隊", extraUserFields = {};
             if (currentRegRole === 'PLAYER') {
                 roleText = "球員";
                 team = document.getElementById('regPlayerTeam').value;
-                const pos = document.getElementById('regPlayerPos').value;
-                const num = document.getElementById('regPlayerNum').value || "7";
-                const h = document.getElementById('regPlayerHeight').value || "178";
-                const w = document.getElementById('regPlayerWeight').value || "70";
-                noteForAudit = `${pos} #${num} ｜ ${h}cm / ${w}kg`;
-            } else if (currentRegRole === 'COACH') {
-                roleText = "教練";
-                team = document.getElementById('regCoachTeam').value;
-                noteForAudit = `教練組別`;
-            } else if (currentRegRole === 'MANAGER') {
-                roleText = "球隊經理";
-                team = document.getElementById('regManagerTeam').value;
-                noteForAudit = `後勤經理`;
-            } else if (currentRegRole === 'PARENT') {
+            } else if (currentRegRole === 'COACH') { roleText = "教練"; }
+            else if (currentRegRole === 'MANAGER') { roleText = "球隊經理"; }
+            else if (currentRegRole === 'PARENT') {
                 roleText = "家長";
-                team = "大隊";
                 const childName = document.getElementById('regParentChildName').value.trim();
                 const relation = document.getElementById('regParentRelation').value;
-                if (!childName) { alert("請填寫孩子的本名！"); return; }
-                extraUserFields = { child_name: childName, relation: relation };
-                noteForAudit = `孩子：${childName} (${relation})`;
+                if (!childName) { alert("請填寫孩子本名！"); return; }
+                extraUserFields = { child_name: childName, relation };
             }
 
             const { data: newUser, error: uErr } = await sb.from('users').insert([{
-                name: name,
-                phone: phone,
-                password: password,
-                role: roleText,
-                team: team,
-                line_id: lineId || null,
-                status: '待審核',
-                ...extraUserFields
+                name, phone, password, role: roleText, team, line_id: lineId || null, status: '待審核', ...extraUserFields
             }]).select().single();
 
-            if (uErr) {
-                alert("註冊送出失敗: " + uErr.message);
-                return;
-            }
+            if (uErr) { alert("註冊送出失敗: " + uErr.message); return; }
 
             if (currentRegRole === 'PLAYER') {
                 const pos = document.getElementById('regPlayerPos').value;
                 const num = parseInt(document.getElementById('regPlayerNum').value) || 7;
-                const height = parseFloat(document.getElementById('regPlayerHeight').value) || null;
-                const weight = parseFloat(document.getElementById('regPlayerWeight').value) || null;
-
                 await sb.from('players').insert([{
-                    name: name,
-                    number: num,
-                    position: pos,
-                    team: team,
-                    height: height,
-                    weight: weight,
-                    offense: 80, defense: 80, fitness: 80, attitude: 90, agility: 82, bball_iq: 85,
-                    line_id: lineId || null
+                    name, number: num, position: pos, team, height: 178, weight: 70,
+                    offense: 80, defense: 80, fitness: 80, attitude: 90, agility: 82, bball_iq: 85, line_id: lineId || null
                 }]);
             }
-
-            notifyBossAndManagersViaLine(name, roleText, team, phone, noteForAudit);
 
             alert(`🎉 您的註冊資料已送出！系統已通知 BOSS 與球隊經理進行身分核准！`);
             hideRegisterSection();
@@ -624,7 +485,9 @@
         }
 
         function processLoginSuccess(userRecord) {
-            if (userRecord.status === '待審核' && userRecord.name !== '吳俊璋' && userRecord.role.indexOf("BOSS") === -1) {
+            const isBoss = userRecord.name === "吳俊璋" || userRecord.role.indexOf("BOSS") !== -1;
+            
+            if (userRecord.status === '待審核' && !isBoss) {
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('registerSection').classList.add('hidden');
                 document.getElementById('pendingApprovalSection').classList.remove('hidden');
@@ -635,7 +498,7 @@
             if (userRecord.role === "教練") roleCode = "COACH";
             if (userRecord.role === "球隊經理") roleCode = "MANAGER";
             if (userRecord.role === "家長") roleCode = "PARENT";
-            if (userRecord.role.indexOf("BOSS") !== -1 || userRecord.name === "吳俊璋") roleCode = "ADMIN";
+            if (isBoss) roleCode = "BOSS"; // BOSS 特有最高身分碼
 
             currentUser = {
                 actualRole: roleCode,
@@ -661,36 +524,32 @@
             switchTab('overview');
         }
 
+        // 🎯 權限過濾：只有 BOSS 能看見全部 + 👑 BOSS 總控按鈕
         function setupRoleSwitchPermissions(actualRole) {
             const container = document.getElementById('roleSwitchContainer');
+            const bossBtn = document.getElementById('btnRoleBoss');
             const pBtn = document.getElementById('btnRolePlayer');
             const cBtn = document.getElementById('btnRoleCoach');
             const mBtn = document.getElementById('btnRoleManager');
             const parBtn = document.getElementById('btnRoleParent');
 
-            [pBtn, cBtn, mBtn, parBtn].forEach(b => {
+            [bossBtn, pBtn, cBtn, mBtn, parBtn].forEach(b => {
                 b.classList.add('hidden');
                 b.classList.remove('flex');
             });
 
-            if (actualRole === "ADMIN") {
+            if (actualRole === "BOSS") {
                 container.classList.remove('hidden');
-                [pBtn, cBtn, mBtn, parBtn].forEach(b => {
+                [bossBtn, pBtn, cBtn, mBtn, parBtn].forEach(b => {
                     b.classList.remove('hidden');
                     b.classList.add('flex');
                 });
             } else if (actualRole === "COACH") {
                 container.classList.remove('hidden');
-                [cBtn, mBtn].forEach(b => {
-                    b.classList.remove('hidden');
-                    b.classList.add('flex');
-                });
+                [cBtn, mBtn].forEach(b => { b.classList.remove('hidden'); b.classList.add('flex'); });
             } else if (actualRole === "MANAGER") {
                 container.classList.remove('hidden');
-                [mBtn, parBtn].forEach(b => {
-                    b.classList.remove('hidden');
-                    b.classList.add('flex');
-                });
+                [mBtn, parBtn].forEach(b => { b.classList.remove('hidden'); b.classList.add('flex'); });
             } else {
                 container.classList.add('hidden');
             }
@@ -703,25 +562,27 @@
         }
 
         function updateRoleSwitchButtons() {
+            const bossBtn = document.getElementById('btnRoleBoss');
             const pBtn = document.getElementById('btnRolePlayer');
             const cBtn = document.getElementById('btnRoleCoach');
             const mBtn = document.getElementById('btnRoleManager');
             const parBtn = document.getElementById('btnRoleParent');
 
-            [pBtn, cBtn, mBtn, parBtn].forEach(b => {
-                b.className = b.className.replace(/bg-orange-500 text-white shadow glow-orange/g, '').trim();
-                if (!b.className.includes('text-slate-400')) b.className += " text-slate-400";
+            [bossBtn, pBtn, cBtn, mBtn, parBtn].forEach(b => {
+                b.className = b.className.replace(/bg-orange-500|bg-amber-500|text-black|text-white|glow-orange|glow-gold/g, '').trim();
+                if (!b.className.includes('text-slate-400') && b !== bossBtn) b.className += " text-slate-400";
             });
 
-            let activeBtn = null;
-            if (currentUser.role === "PLAYER") activeBtn = pBtn;
-            else if (currentUser.role === "COACH") activeBtn = cBtn;
-            else if (currentUser.role === "MANAGER") activeBtn = mBtn;
-            else if (currentUser.role === "PARENT") activeBtn = parBtn;
-            else if (currentUser.role === "ADMIN") activeBtn = cBtn;
-
-            if (activeBtn) {
-                activeBtn.className = activeBtn.className.replace('text-slate-400', 'bg-orange-500 text-white shadow glow-orange');
+            if (currentUser.role === "BOSS") {
+                bossBtn.className = "px-2.5 py-1.5 rounded-lg transition font-bold bg-amber-500 text-black shadow glow-gold flex items-center space-x-1 whitespace-nowrap";
+            } else if (currentUser.role === "PLAYER") {
+                pBtn.className = "px-2.5 py-1.5 rounded-lg transition font-bold bg-orange-500 text-white shadow glow-orange flex items-center space-x-1 whitespace-nowrap";
+            } else if (currentUser.role === "COACH") {
+                cBtn.className = "px-2.5 py-1.5 rounded-lg transition font-bold bg-orange-500 text-white shadow glow-orange flex items-center space-x-1 whitespace-nowrap";
+            } else if (currentUser.role === "MANAGER") {
+                mBtn.className = "px-2.5 py-1.5 rounded-lg transition font-bold bg-orange-500 text-white shadow glow-orange flex items-center space-x-1 whitespace-nowrap";
+            } else if (currentUser.role === "PARENT") {
+                parBtn.className = "px-2.5 py-1.5 rounded-lg transition font-bold bg-orange-500 text-white shadow glow-orange flex items-center space-x-1 whitespace-nowrap";
             }
         }
 
@@ -741,28 +602,14 @@
 
         function switchTab(tabName) {
             currentActiveTab = tabName;
-            ['overview', 'assignments', 'schedule', 'dailystatus'].forEach(t => {
+            ['overview', 'assignments', 'schedule', 'daily'].forEach(t => {
                 const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
                 if (btn) {
-                    if (t === tabName) {
-                        btn.className = "nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-bold text-orange-400 scale-105 transition active:scale-90";
-                    } else {
-                        btn.className = "nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90";
-                    }
+                    btn.className = (t === tabName || (t==='daily' && tabName==='dailystatus'))
+                        ? "nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-bold text-orange-400 scale-105 transition active:scale-90"
+                        : "nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90";
                 }
             });
-
-            if (currentUser.role === "PARENT") {
-                document.getElementById('navLabelOverview').innerText = "家長戰情";
-                document.getElementById('navLabelAssignments').innerText = "孩子課表";
-                document.getElementById('navLabelSchedule').innerText = "賽事接送";
-                document.getElementById('navLabelDaily').innerText = "身心指標";
-            } else {
-                document.getElementById('navLabelOverview').innerText = "主戰情室";
-                document.getElementById('navLabelAssignments').innerText = "課表中心";
-                document.getElementById('navLabelSchedule').innerText = "戰役行程";
-                document.getElementById('navLabelDaily').innerText = "晨報點檢";
-            }
 
             if (tabName === 'overview') loadDashboardOverview();
             else if (tabName === 'assignments') loadAssignmentsTab();
@@ -770,114 +617,254 @@
             else if (tabName === 'dailystatus') loadDailyStatusTab();
         }
 
-        function generateDynamicRadarPoints(values, maxVal = 100, center = 50, maxRadius = 38) {
-            const angles = [-90, -30, 30, 90, 150, 210];
-            const points = values.map((val, idx) => {
-                const angleRad = (angles[idx] * Math.PI) / 180;
-                const r = (Math.max(10, Math.min(val, maxVal)) / maxVal) * maxRadius;
-                const x = (center + r * Math.cos(angleRad)).toFixed(1);
-                const y = (center + r * Math.sin(angleRad)).toFixed(1);
-                return `${x},${y}`;
-            });
-            return points.join(' ');
+        // =========================================================================
+        // 👑 BOSS 專屬總控主畫面 (只給 BOSS 看到)
+        // =========================================================================
+        async function renderBossMasterDashboard(container) {
+            // 平行抓取所有資料
+            const [allUsersRes, allPlayersRes, allTasksRes, allSchedulesRes] = await Promise.all([
+                sb.from('users').select('*').order('id', { ascending: true }),
+                sb.from('players').select('*'),
+                sb.from('assignments').select('id'),
+                sb.from('schedules').select('id')
+            ]);
+
+            const users = allUsersRes.data || [];
+            const players = allPlayersRes.data || [];
+            const totalTasks = (allTasksRes.data || []).length;
+            const totalSchedules = (allSchedulesRes.data || []).length;
+
+            const playerCount = users.filter(u => u.role === '球員').length;
+            const coachCount = users.filter(u => u.role === '教練').length;
+            const managerCount = users.filter(u => u.role === '球隊經理').length;
+            const parentCount = users.filter(u => u.role === '家長').length;
+            const pendingCount = users.filter(u => u.status === '待審核').length;
+
+            // 依身分過濾清單
+            let filteredUsers = users;
+            if (bossSelectedFilterRole !== 'ALL') {
+                filteredUsers = users.filter(u => u.role === bossSelectedFilterRole);
+            }
+
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <!-- BOSS 專屬金頭銜看板 -->
+                    <div class="glass-card rounded-3xl p-5 border border-amber-500/40 bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-950 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-2xl shadow-lg border border-amber-300 text-black font-black">
+                                👑
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h2 class="text-lg font-black text-white">M+ 戰情最高總控中樞 (BOSS EXCLUSIVE)</h2>
+                                    <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold">最高特權</span>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-0.5">掌管所有身分成員、系統排程與全功能管理</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 全功能數據總覽 KPI 卡 -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">全體成員總數</span>
+                            <span class="font-num text-2xl font-black text-white mt-1 block">${users.length} <span class="text-xs text-slate-500 font-normal">人</span></span>
+                        </div>
+                        <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">球員總陣容</span>
+                            <span class="font-num text-2xl font-black text-orange-400 mt-1 block">${playerCount} <span class="text-xs text-slate-500 font-normal">人</span></span>
+                        </div>
+                        <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">教練 / 經理組</span>
+                            <span class="font-num text-2xl font-black text-blue-400 mt-1 block">${coachCount + managerCount} <span class="text-xs text-slate-500 font-normal">人</span></span>
+                        </div>
+                        <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">待審核加入</span>
+                            <span class="font-num text-2xl font-black ${pendingCount > 0 ? 'text-red-400 animate-pulse' : 'text-emerald-400'} mt-1 block">${pendingCount} <span class="text-xs text-slate-500 font-normal">人</span></span>
+                        </div>
+                    </div>
+
+                    <!-- 👑 所有身分人員清冊 (可編輯、可刪除) -->
+                    <div class="glass-card rounded-2xl p-5 space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
+                            <div>
+                                <h3 class="font-bold text-amber-300 text-base flex items-center space-x-2">
+                                    <span>👥</span><span>全權人員清冊中樞 (${filteredUsers.length} 位)</span>
+                                </h3>
+                                <p class="text-xs text-slate-400">可強制直接修改任何帳號或執行刪除</p>
+                            </div>
+                            <!-- 身分快篩 -->
+                            <div class="flex space-x-1 text-xs bg-slate-950 p-1 rounded-xl border border-slate-800">
+                                <button onclick="setBossUserFilter('ALL')" class="px-2.5 py-1 rounded-lg ${bossSelectedFilterRole==='ALL'?'bg-amber-500 text-black font-bold':'text-slate-400'}">全部</button>
+                                <button onclick="setBossUserFilter('球員')" class="px-2.5 py-1 rounded-lg ${bossSelectedFilterRole==='球員'?'bg-amber-500 text-black font-bold':'text-slate-400'}">球員 (${playerCount})</button>
+                                <button onclick="setBossUserFilter('教練')" class="px-2.5 py-1 rounded-lg ${bossSelectedFilterRole==='教練'?'bg-amber-500 text-black font-bold':'text-slate-400'}">教練 (${coachCount})</button>
+                                <button onclick="setBossUserFilter('球隊經理')" class="px-2.5 py-1 rounded-lg ${bossSelectedFilterRole==='球隊經理'?'bg-amber-500 text-black font-bold':'text-slate-400'}">經理 (${managerCount})</button>
+                                <button onclick="setBossUserFilter('家長')" class="px-2.5 py-1 rounded-lg ${bossSelectedFilterRole==='家長'?'bg-amber-500 text-black font-bold':'text-slate-400'}">家長 (${parentCount})</button>
+                            </div>
+                        </div>
+
+                        <!-- 成員卡片列表 -->
+                        <div class="space-y-2 max-h-[520px] overflow-y-auto pr-1">
+                            ${filteredUsers.map(u => `
+                                <div class="bg-slate-950/80 border border-slate-800/80 hover:border-slate-700 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-sm font-bold text-slate-300">
+                                            ${u.role==='球員'?'🏀':(u.role==='教練'?'📋':(u.role==='球隊經理'?'📊':(u.role==='家長'?'👨‍👩‍👦':'👑')))}
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="font-bold text-slate-100 text-sm">${u.name}</span>
+                                                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-400 border border-slate-700">${u.role}</span>
+                                                <span class="text-[10px] px-2 py-0.5 rounded font-bold ${u.status==='已核准'?'bg-emerald-500/20 text-emerald-400':'bg-red-500/20 text-red-400'}">${u.status||'待審核'}</span>
+                                            </div>
+                                            <p class="text-slate-400 mt-1">電話：${u.phone || '無'} ｜ 梯隊：${u.team || '大隊'} ${u.child_name ? `｜ 孩子：<span class="text-orange-400 font-bold">${u.child_name}</span>` : ''}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2 self-end sm:self-center">
+                                        <button onclick="openBossEditUserModal(${u.id})" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 rounded-xl font-bold transition active:scale-95 flex items-center space-x-1">
+                                            <i class="fas fa-edit"></i><span>編輯</span>
+                                        </button>
+                                        ${u.name !== '吳俊璋' ? `
+                                            <button onclick="bossDeleteUserDirectly(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/20 rounded-xl font-bold transition active:scale-95 flex items-center space-x-1">
+                                                <i class="fas fa-trash-alt"></i><span>除名</span>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setBossUserFilter(role) {
+            bossSelectedFilterRole = role;
+            loadDashboardOverview();
+        }
+
+        // 👑 BOSS 開啟編輯彈窗
+        async function openBossEditUserModal(userId) {
+            const { data: u } = await sb.from('users').select('*').eq('id', userId).single();
+            if (!u) return;
+
+            document.getElementById('bossTargetUserId').value = u.id;
+            document.getElementById('bossTargetOriginalName').value = u.name;
+            document.getElementById('bossEditName').value = u.name;
+            document.getElementById('bossEditPhone').value = u.phone || '';
+            document.getElementById('bossEditRole').value = u.role;
+            document.getElementById('bossEditTeam').value = u.team || '大隊';
+            document.getElementById('bossEditStatus').value = u.status || '已核准';
+            document.getElementById('bossEditPassword').value = '';
+            document.getElementById('bossEditChildName').value = u.child_name || '';
+
+            document.getElementById('bossEditUserModal').classList.remove('hidden');
+            document.getElementById('bossEditUserModal').classList.add('flex');
+        }
+
+        function closeBossEditUserModal() {
+            document.getElementById('bossEditUserModal').classList.add('hidden');
+            document.getElementById('bossEditUserModal').classList.remove('flex');
+        }
+
+        // 👑 BOSS 儲存成員更新
+        async function saveBossEditUserFinal() {
+            const userId = document.getElementById('bossTargetUserId').value;
+            const originalName = document.getElementById('bossTargetOriginalName').value;
+            const name = document.getElementById('bossEditName').value.trim();
+            const phone = document.getElementById('bossEditPhone').value.trim();
+            const role = document.getElementById('bossEditRole').value;
+            const team = document.getElementById('bossEditTeam').value;
+            const status = document.getElementById('bossEditStatus').value;
+            const pass = document.getElementById('bossEditPassword').value.trim();
+            const child = document.getElementById('bossEditChildName').value.trim();
+
+            if (!name) { alert("姓名不可為空！"); return; }
+
+            const payload = { name, phone, role, team, status, child_name: child || null };
+            if (pass) payload.password = pass;
+
+            const { error: uErr } = await sb.from('users').update(payload).eq('id', userId);
+            if (uErr) { alert("更新失敗：" + uErr.message); return; }
+
+            // 若改了姓名，同步更新球員名冊與關聯
+            if (originalName !== name) {
+                await sb.from('players').update({ name, team }).eq('name', originalName);
+                await sb.from('daily_checkins').update({ player_name: name }).eq('player_name', originalName);
+            }
+
+            alert(`👑 已成功特權更新【${name}】的成員資料！`);
+            closeBossEditUserModal();
+            loadDashboardOverview();
+        }
+
+        // 👑 BOSS 徹底刪除成員
+        async function bossDeleteUserDirectly(userId, userName) {
+            if (!confirm(`⚠️【BOSS 特權除名確認】\n\n您確定要將【${userName}】徹底自球隊永久刪除嗎？\n此動作將一併清除該成員的所有系統紀錄與權限！`)) return;
+
+            await sb.from('users').delete().eq('id', userId);
+            await sb.from('players').delete().eq('name', userName);
+            await sb.from('daily_checkins').delete().eq('player_name', userName);
+            await sb.from('assignment_submissions').delete().eq('player_name', userName);
+
+            alert(`👑 已將【${userName}】徹底除名！`);
+            loadDashboardOverview();
         }
 
         // =========================================================================
-        // ⚡ 1. 主戰情室 (含 編輯資料按鈕與大頭照實裝)
+        // ⚡ 1. 主戰情室 (各視角派發)
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
 
-            const today = new Date().toISOString().split('T')[0];
-
-            let targetPlayerName = currentUser.userName;
-            if (currentUser.role === "PARENT") {
-                targetPlayerName = currentUser.childName || "吳俊璋";
+            // 👑 若目前處於 BOSS 總控視角，直接呈現總控管理儀表板
+            if (currentUser.role === "BOSS") {
+                renderBossMasterDashboard(container);
+                return;
             }
 
-            const [pRes, tasksRes, subsRes, checkinsRes, schedRes, allPlayersRes, allParentsRes, pendingUsersRes, parentUserRes] = await Promise.all([
+            const today = new Date().toISOString().split('T')[0];
+            let targetPlayerName = currentUser.userName;
+            if (currentUser.role === "PARENT") targetPlayerName = currentUser.childName || "吳俊璋";
+
+            const [pRes, tasksRes, subsRes, checkinsRes, schedRes, allPlayersRes, allParentsRes] = await Promise.all([
                 sb.from('players').select('*').eq('name', targetPlayerName).maybeSingle(),
                 sb.from('assignments').select('*').order('id', { ascending: false }),
                 sb.from('assignment_submissions').select('*').eq('player_name', targetPlayerName),
                 sb.from('daily_checkins').select('*').eq('checkin_date', today),
                 sb.from('schedules').select('*, schedule_rsvps(*)').order('event_date', { ascending: true }),
                 sb.from('players').select('*').order('team', { ascending: true }).order('number', { ascending: true }),
-                sb.from('users').select('*').eq('role', '家長'),
-                sb.from('users').select('*').eq('status', '待審核'),
-                sb.from('users').select('*').eq('name', currentUser.userName).maybeSingle()
+                sb.from('users').select('*').eq('role', '家長')
             ]);
 
             const pData = pRes.data || { name: targetPlayerName, number: 7, position: '控球後衛', team: '大隊', offense: 85, defense: 90, fitness: 88, attitude: 96, agility: 89, bball_iq: 87 };
-            const parentData = parentUserRes.data || {};
             const tasks = tasksRes.data || [];
             const mySubs = subsRes.data || [];
             const checkins = checkinsRes.data || [];
             const schedules = schedRes.data || [];
             const allPlayers = allPlayersRes.data || [];
             const allParents = allParentsRes.data || [];
-            const pendingUsers = pendingUsersRes.data || [];
 
             let html = "";
 
-            // 待審核名單
-            if (currentUser.role === "MANAGER" || currentUser.actualRole === "ADMIN") {
-                if (pendingUsers.length > 0) {
-                    html += `
-                        <div class="glass-card rounded-2xl p-4 border border-amber-500/50 bg-amber-950/20 space-y-3">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-bold text-amber-300 text-sm flex items-center space-x-2">
-                                    <span class="animate-pulse">🔔</span><span>新成員註冊申請待核准 (${pendingUsers.length} 位)</span>
-                                </h3>
-                                <span class="text-[11px] text-slate-400">核准後方可登入</span>
-                            </div>
-                            <div class="space-y-2">
-                                ${pendingUsers.map(u => `
-                                    <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
-                                        <div>
-                                            <span class="font-bold text-slate-100 text-sm">${u.name}</span>
-                                            <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded font-bold ml-1">${u.role} (${u.team})</span>
-                                            <span class="text-slate-400 ml-2">電話: ${u.phone}</span>
-                                            ${u.child_name ? `<span class="text-slate-400 block sm:inline sm:ml-2">孩子: ${u.child_name}</span>` : ''}
-                                        </div>
-                                        <div class="flex space-x-2 w-full sm:w-auto justify-end">
-                                            <button onclick="approveMember(${u.id}, '${u.name}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition active:scale-95">
-                                                ✅ 核准加入
-                                            </button>
-                                            <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1 bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white rounded-lg transition active:scale-95">
-                                                拒絕
-                                            </button>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-
-            // --- 🏀 球員主戰情室 (含編輯資料) ---
+            // --- 🏀 球員台視角 ---
             if (currentUser.role === "PLAYER") {
                 const uncompletedTasks = tasks.filter(t => !mySubs.some(s => s.assignment_id === t.id));
                 const radarValues = [pData.offense, pData.defense, pData.fitness, pData.attitude, pData.agility, pData.bball_iq];
                 const dynamicPolygonPoints = generateDynamicRadarPoints(radarValues);
                 const dynamicOVR = Math.round(radarValues.reduce((a, b) => a + b, 0) / 6);
 
-                const avatarHtml = pData.photo_url 
-                    ? `<img src="${pData.photo_url}" class="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-xl">`
-                    : `<div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center font-black text-2xl text-white shadow-xl shadow-orange-500/30 border-2 border-amber-400">#${pData.number || 7}</div>`;
-
                 html += `
                     <div class="space-y-4">
                         <div class="glass-card rounded-3xl p-5 border border-amber-500/30 bg-gradient-to-b from-slate-900/90 via-slate-900/60 to-slate-950 relative overflow-hidden">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-slate-800 gap-4">
                                 <div class="flex items-center space-x-4">
-                                    ${avatarHtml}
+                                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center font-black text-2xl text-white shadow-xl shadow-orange-500/30 border-2 border-amber-400">#${pData.number || 7}</div>
                                     <div>
                                         <div class="flex items-center space-x-2">
                                             <h2 class="text-xl font-black text-white">${currentUser.userName}</h2>
                                             <span class="text-[10px] px-2 py-0.5 bg-orange-500/20 text-orange-300 border border-orange-500/30 rounded-full font-bold">${pData.position || '控球後衛'}</span>
-                                            <button onclick="openPlayerProfileModal()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded-md border border-slate-700 font-medium">✏️ 編輯</button>
                                         </div>
                                         <p class="text-xs text-slate-400 mt-0.5">M+ ${pData.team || '大隊'} ｜ 身高 ${pData.height || 178}cm ｜ 體重 ${pData.weight || 70}kg</p>
                                     </div>
@@ -887,228 +874,40 @@
                                     <span class="font-num text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">${dynamicOVR}</span>
                                 </div>
                             </div>
-
-                            <div class="flex flex-col sm:flex-row items-center justify-around pt-4 gap-4">
-                                <div class="w-52 h-52 relative flex items-center justify-center">
-                                    <svg viewBox="0 0 100 100" class="w-full h-full filter drop-shadow">
-                                        <polygon points="50,12 82.9,31 82.9,69 50,88 17.1,69 17.1,31" fill="none" stroke="#334155" stroke-width="1"/>
-                                        <polygon points="50,25 71.9,37.6 71.9,62.4 50,75 28.1,62.4 28.1,37.6" fill="none" stroke="#1e293b" stroke-width="0.8"/>
-                                        <polygon points="${dynamicPolygonPoints}" fill="rgba(249, 115, 22, 0.4)" stroke="#f97316" stroke-width="2" class="transition-all duration-700"/>
-                                    </svg>
-                                    <span class="absolute top-1 text-[10px] text-slate-400 font-bold">進攻 (${pData.offense})</span>
-                                    <span class="absolute top-8 right-1 text-[10px] text-slate-400 font-bold">防守 (${pData.defense})</span>
-                                    <span class="absolute bottom-8 right-1 text-[10px] text-slate-400 font-bold">體能 (${pData.fitness})</span>
-                                    <span class="absolute bottom-1 text-[10px] text-slate-400 font-bold">紀律 (${pData.attitude})</span>
-                                    <span class="absolute bottom-8 left-1 text-[10px] text-slate-400 font-bold">敏捷 (${pData.agility})</span>
-                                    <span class="absolute top-8 left-1 text-[10px] text-slate-400 font-bold">球商 (${pData.bball_iq})</span>
-                                </div>
-                                <div class="space-y-2 text-xs flex-1 max-w-xs w-full">
-                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>進攻投射</span><span class="text-orange-400 font-bold font-num">${pData.offense}</span></div>
-                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>防守抗衡</span><span class="text-emerald-400 font-bold font-num">${pData.defense}</span></div>
-                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>體能耐力</span><span class="text-amber-400 font-bold font-num">${pData.fitness}</span></div>
-                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>態度紀律</span><span class="text-blue-400 font-bold font-num">${pData.attitude}</span></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="glass-card rounded-2xl p-5 space-y-3">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-bold text-orange-400 flex items-center space-x-2">
-                                    <span>⚠️</span><span>待完成自主課表提醒</span>
-                                </h3>
-                                <span class="text-xs text-slate-400">尚有 ${uncompletedTasks.length} 項未完成</span>
-                            </div>
-                            ${uncompletedTasks.length > 0 ? uncompletedTasks.map(task => `
-                                <div class="bg-slate-950/80 border border-orange-500/30 rounded-2xl p-4 flex justify-between items-center">
-                                    <div>
-                                        <h4 class="font-bold text-slate-100 text-sm">${task.title}</h4>
-                                        <p class="text-xs text-slate-400 mt-0.5">目標：${task.target_amount} ｜ 期限：${task.deadline}</p>
-                                    </div>
-                                    <button onclick="switchTab('assignments')" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-xs glow-orange active:scale-95 transition">
-                                        前往課表中心
-                                    </button>
-                                </div>
-                            `).join('') : '<p class="text-xs text-emerald-400 text-center py-4">🎉 所有課表均已回報完成！</p>'}
                         </div>
                     </div>
                 `;
             }
-
-            // --- 👨‍👩‍👦 家長台主戰情室 (含大頭貼與編輯/連結孩子按鈕) ---
-            else if (currentUser.role === "PARENT") {
-                const childCheckin = checkins.find(c => c.player_name === targetPlayerName);
-                const nextEv = schedules[0];
-
-                const parentAvatar = parentData.photo_url 
-                    ? `<img src="${parentData.photo_url}" class="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400 shadow-lg">`
-                    : `<div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-2xl shadow-lg border border-amber-400 text-white">👨‍👩‍👦</div>`;
-
-                html += `
-                    <div class="space-y-4">
-                        <div class="glass-card rounded-3xl p-5 border border-amber-500/30 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-slate-950 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div class="flex items-center space-x-4">
-                                ${parentAvatar}
-                                <div>
-                                    <div class="flex items-center space-x-2">
-                                        <h2 class="text-lg font-black text-white">${currentUser.userName}</h2>
-                                        <span class="text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full font-bold">${parentData.relation || '家長'}</span>
-                                        <button onclick="openParentProfileModal()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded-md border border-slate-700 font-medium">✏️ 檔案/連結孩子</button>
-                                    </div>
-                                    <p class="text-xs text-slate-300 mt-1">目前關心之孩子：<span class="text-orange-400 font-black text-sm">${targetPlayerName}</span> (${pData.team || '大隊'} #${pData.number || 7})</p>
-                                </div>
-                            </div>
-                            <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-2 text-xs">
-                                <span class="text-slate-400 block font-semibold">訓練平安狀態</span>
-                                <span class="text-emerald-400 font-bold flex items-center space-x-1 mt-0.5">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span>正常在隊 / 訓練平安</span>
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="glass-card rounded-2xl p-5 space-y-3">
-                            <h3 class="font-bold text-orange-400 flex items-center space-x-2">
-                                <span>🩺</span><span>今日孩子身心健康回報</span>
-                            </h3>
-                            ${childCheckin ? `
-                                <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-2xl space-y-3">
-                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                                            <span class="text-slate-400 block text-[10px]">睡眠時數</span>
-                                            <span class="font-num text-lg font-bold text-amber-400">${childCheckin.sleep_hours} hr</span>
-                                        </div>
-                                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                                            <span class="text-slate-400 block text-[10px]">精神狀態</span>
-                                            <span class="font-bold text-slate-200 mt-1 block">${childCheckin.energy}</span>
-                                        </div>
-                                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                                            <span class="text-slate-400 block text-[10px]">痠痛部位</span>
-                                            <span class="font-bold ${childCheckin.sore_area !== '無' ? 'text-red-400' : 'text-emerald-400'} mt-1 block">${childCheckin.sore_area}</span>
-                                        </div>
-                                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                                            <span class="text-slate-400 block text-[10px]">疲勞指數</span>
-                                            <span class="font-num text-lg font-bold ${childCheckin.fatigue >= 4 ? 'text-red-400' : 'text-emerald-400'}">${childCheckin.fatigue} / 5</span>
-                                        </div>
-                                    </div>
-                                    ${childCheckin.advice ? `
-                                        <div class="bg-blue-950/20 border border-blue-500/30 p-3 rounded-xl text-xs text-slate-300">
-                                            <span class="text-blue-400 font-bold block mb-0.5">💬 教練叮嚀與建議：</span>
-                                            <p class="text-slate-200">${childCheckin.advice}</p>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            ` : `
-                                <div class="bg-orange-950/20 border border-orange-500/30 p-4 rounded-xl text-xs text-orange-300">
-                                    <span>⚠️ 孩子今日尚未填寫晨報點檢，您可以提醒孩子填寫以供教練掌握體能。</span>
-                                </div>
-                            `}
-                        </div>
-                    </div>
-                `;
-            }
-
-            // --- 📋 教練與經理台維持原有的球員名冊與家長通訊網 ---
-            else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
+            // --- 📋 教練台視角 ---
+            else if (currentUser.role === "COACH") {
                 const teamDaList = allPlayers.filter(p => p.team === '大隊');
                 const teamXiaoList = allPlayers.filter(p => p.team === '小隊');
-
                 html += `
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">全隊球員人數</span>
-                                <span class="font-num text-2xl font-black text-orange-400 mt-1 block">${allPlayers.length} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">大隊成員</span>
-                                <span class="font-num text-2xl font-black text-amber-400 mt-1 block">${teamDaList.length} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">小隊成員</span>
-                                <span class="font-num text-2xl font-black text-blue-400 mt-1 block">${teamXiaoList.length} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">今日晨報點檢</span>
-                                <span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${checkins.length} 人</span>
-                            </div>
-                        </div>
-
-                        <div class="glass-card rounded-2xl p-5 space-y-4">
-                            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                                <h3 class="font-bold text-orange-400 text-base flex items-center space-x-2">
-                                    <span>📋</span><span>全隊球員陣容名冊與管理</span>
-                                </h3>
-                                <span class="text-xs text-slate-400">大隊/小隊名單</span>
-                            </div>
-
-                            <div class="space-y-2">
-                                <h4 class="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center space-x-1">
-                                    <span>🏀</span><span>大隊陣容 (${teamDaList.length} 人)</span>
-                                </h4>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    ${teamDaList.map(pl => {
-                                        const ovr = Math.round((pl.offense + pl.defense + pl.fitness + pl.attitude + pl.agility + pl.bball_iq) / 6);
-                                        const cIn = checkins.find(c => c.player_name === pl.name);
-                                        const avatar = pl.photo_url 
-                                            ? `<img src="${pl.photo_url}" class="w-12 h-12 rounded-xl object-cover border border-amber-400/50 shadow">`
-                                            : `<div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center font-black text-white text-base shadow">#${pl.number || 7}</div>`;
-                                        return `
-                                            <div class="bg-slate-950/80 border border-slate-800/90 rounded-xl p-3 flex items-center justify-between">
-                                                <div class="flex items-center space-x-3">
-                                                    ${avatar}
-                                                    <div>
-                                                        <div class="flex items-center space-x-2">
-                                                            <span class="font-bold text-slate-100 text-sm">${pl.name}</span>
-                                                            <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300 font-mono">${pl.position || 'PG'}</span>
-                                                        </div>
-                                                        <p class="text-[11px] text-slate-400 mt-0.5">${pl.height ? pl.height + 'cm' : '178cm'} ｜ ${pl.weight ? pl.weight + 'kg' : '70kg'}</p>
-                                                    </div>
-                                                </div>
-                                                <div class="flex items-center space-x-3">
-                                                    <div class="text-right">
-                                                        <span class="font-num font-black text-base text-amber-400 block">OVR ${ovr}</span>
-                                                        <span class="text-[10px] font-semibold ${cIn ? (cIn.fatigue >= 4 ? 'text-red-400' : 'text-emerald-400') : 'text-slate-500'}">
-                                                            ${cIn ? `疲勞 ${cIn.fatigue}/5` : '未晨報'}
-                                                        </span>
-                                                    </div>
-                                                    <button onclick="deletePlayerDirectly(${pl.id}, '${pl.name}')" class="p-2 bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white rounded-lg transition active:scale-95" title="刪除此球員">
-                                                        <i class="fas fa-trash-alt text-xs"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        `;
-                                    }).join('')}
-                                </div>
-                            </div>
+                    <div class="glass-card rounded-2xl p-5 space-y-4">
+                        <h3 class="font-bold text-orange-400 text-base">📋 教練球員陣容名冊</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            ${allPlayers.map(pl => `<div class="bg-slate-950 p-3 rounded-xl flex justify-between items-center"><span class="font-bold text-white">${pl.name} (${pl.team} #${pl.number})</span><span class="text-xs text-slate-400">${pl.position}</span></div>`).join('')}
                         </div>
                     </div>
                 `;
-            } else if (currentUser.role === "MANAGER") {
+            }
+            // --- 📊 經理台視角 ---
+            else if (currentUser.role === "MANAGER") {
                 html += `
                     <div class="glass-card rounded-2xl p-5 space-y-3">
-                        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                            <h3 class="font-bold text-emerald-400 flex items-center space-x-2">
-                                <span>📞</span><span>球員家長通訊網 (${allParents.length} 位)</span>
-                            </h3>
-                        </div>
+                        <h3 class="font-bold text-emerald-400">📞 球員家長通訊網 (${allParents.length} 位)</h3>
                         <div class="space-y-2">
-                            ${allParents.map(par => `
-                                <div class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl flex justify-between items-center text-xs">
-                                    <div>
-                                        <div class="flex items-center space-x-2">
-                                            <span class="font-bold text-slate-100 text-sm">${par.name}</span>
-                                            <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-300">${par.relation || '家長'}</span>
-                                        </div>
-                                        <p class="text-slate-400 mt-1">孩子球員：<span class="text-orange-400 font-bold">${par.child_name || '未綁定'}</span> ｜ 電話：${par.phone || '無'}</p>
-                                    </div>
-                                    ${par.phone ? `
-                                        <a href="tel:${par.phone}" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold flex items-center space-x-1 shadow">
-                                            <i class="fas fa-phone-alt text-xs"></i><span>撥打</span>
-                                        </a>
-                                    ` : ''}
-                                </div>
-                            `).join('')}
+                            ${allParents.map(par => `<div class="bg-slate-950 p-3 rounded-xl flex justify-between items-center text-xs"><span class="font-bold text-white">${par.name} ｜ 孩子: ${par.child_name || '無'}</span><a href="tel:${par.phone}" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg">撥號</a></div>`).join('')}
                         </div>
+                    </div>
+                `;
+            }
+            // --- 👨‍👩‍👦 家長台視角 ---
+            else if (currentUser.role === "PARENT") {
+                html += `
+                    <div class="glass-card rounded-2xl p-5 space-y-3">
+                        <h3 class="font-bold text-orange-400">👨‍👩‍👦 孩子關懷中樞：${targetPlayerName}</h3>
+                        <p class="text-xs text-slate-400">訓練出勤正常在隊！</p>
                     </div>
                 `;
             }
@@ -1117,166 +916,12 @@
         }
 
         // =========================================================================
-        // 📸 圖片縮小與 Base64 轉換演算法 (極速、零空間成本)
+        // 通用課表、行程與點檢 (其餘輔助函式)
         // =========================================================================
-        function previewAndCompressImage(fileInput, previewElemId, hiddenInputId) {
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const maxDim = 320; // 壓縮至 320px 大頭貼
-                    let w = img.width, h = img.height;
-                    if (w > h && w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
-                    else if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
-
-                    canvas.width = w;
-                    canvas.height = h;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, w, h);
-
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
-                    document.getElementById(hiddenInputId).value = compressedBase64;
-                    document.getElementById(previewElemId).innerHTML = `<img src="${compressedBase64}" class="w-full h-full object-cover">`;
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // =========================================================================
-        // 👤 球員個人檔案編輯邏輯
-        // =========================================================================
-        async function openPlayerProfileModal() {
-            const { data: p } = await sb.from('players').select('*').eq('name', currentUser.userName).maybeSingle();
-            if (p) {
-                document.getElementById('editPlayerPos').value = p.position || '控球後衛';
-                document.getElementById('editPlayerNum').value = p.number || 7;
-                document.getElementById('editPlayerHeight').value = p.height || '';
-                document.getElementById('editPlayerWeight').value = p.weight || '';
-                if (p.photo_url) {
-                    document.getElementById('playerAvatarPreview').innerHTML = `<img src="${p.photo_url}" class="w-full h-full object-cover">`;
-                    document.getElementById('hiddenPlayerPhotoBase64').value = p.photo_url;
-                }
-            }
-            document.getElementById('playerProfileModal').classList.remove('hidden');
-            document.getElementById('playerProfileModal').classList.add('flex');
-        }
-
-        function closePlayerProfileModal() {
-            document.getElementById('playerProfileModal').classList.add('hidden');
-            document.getElementById('playerProfileModal').classList.remove('flex');
-        }
-
-        async function savePlayerProfileFinal() {
-            const pos = document.getElementById('editPlayerPos').value;
-            const num = parseInt(document.getElementById('editPlayerNum').value) || 7;
-            const height = parseFloat(document.getElementById('editPlayerHeight').value) || null;
-            const weight = parseFloat(document.getElementById('editPlayerWeight').value) || null;
-            const photoBase64 = document.getElementById('hiddenPlayerPhotoBase64').value;
-
-            const updatePayload = { position: pos, number: num, height, weight };
-            if (photoBase64) updatePayload.photo_url = photoBase64;
-
-            const { error } = await sb.from('players').update(updatePayload).eq('name', currentUser.userName);
-            if (!error) {
-                alert("🎉 個人檔案已更新！");
-                closePlayerProfileModal();
-                loadDashboardOverview();
-            } else {
-                alert("更新失敗：" + error.message);
-            }
-        }
-
-        // =========================================================================
-        // 👨‍👩‍👦 家長個人檔案編輯與連結孩子
-        // =========================================================================
-        async function openParentProfileModal() {
-            const [uRes, playersRes] = await Promise.all([
-                sb.from('users').select('*').eq('name', currentUser.userName).maybeSingle(),
-                sb.from('players').select('name, team, number')
-            ]);
-
-            const u = uRes.data || {};
-            const allP = playersRes.data || [];
-
-            document.getElementById('editParentPhone').value = u.phone || '';
-            document.getElementById('editParentRelation').value = u.relation || '父親';
-            if (u.photo_url) {
-                document.getElementById('parentAvatarPreview').innerHTML = `<img src="${u.photo_url}" class="w-full h-full object-cover">`;
-                document.getElementById('hiddenParentPhotoBase64').value = u.photo_url;
-            }
-
-            // 動態塞入全隊球員選單供家長綁定
-            const selectElem = document.getElementById('editParentChildSelect');
-            selectElem.innerHTML = `<option value="">-- 請選取您的孩子 --</option>` + 
-                allP.map(p => `<option value="${p.name}" ${u.child_name === p.name ? 'selected' : ''}>${p.name} (#${p.number} ${p.team})</option>`).join('');
-
-            document.getElementById('parentProfileModal').classList.remove('hidden');
-            document.getElementById('parentProfileModal').classList.add('flex');
-        }
-
-        function closeParentProfileModal() {
-            document.getElementById('parentProfileModal').classList.add('hidden');
-            document.getElementById('parentProfileModal').classList.remove('flex');
-        }
-
-        async function saveParentProfileFinal() {
-            const phone = document.getElementById('editParentPhone').value.trim();
-            const relation = document.getElementById('editParentRelation').value;
-            const childName = document.getElementById('editParentChildSelect').value;
-            const photoBase64 = document.getElementById('hiddenParentPhotoBase64').value;
-
-            if (!childName) { alert("請選取您要連結的孩子！"); return; }
-
-            const updatePayload = { phone, relation, child_name: childName };
-            if (photoBase64) updatePayload.photo_url = photoBase64;
-
-            const { error } = await sb.from('users').update(updatePayload).eq('name', currentUser.userName);
-            if (!error) {
-                currentUser.childName = childName;
-                alert(`🎉 家長檔案已更新，已成功連結孩子【${childName}】！`);
-                closeParentProfileModal();
-                loadDashboardOverview();
-            } else {
-                alert("更新失敗：" + error.message);
-            }
-        }
-
-        // =========================================================================
-        // 通用刪除、審核、課表與行程功能
-        // =========================================================================
-        async function deletePlayerDirectly(playerId, playerName) {
-            if (!confirm(`⚠️ 確定要將球員【${playerName}】從球隊名冊中永久除名嗎？`)) return;
-            await sb.from('players').delete().eq('id', playerId);
-            await sb.from('users').delete().eq('name', playerName);
-            await sb.from('daily_checkins').delete().eq('player_name', playerName);
-            await sb.from('assignment_submissions').delete().eq('player_name', playerName);
-            alert(`已成功將球員【${playerName}】除名！`);
-            loadDashboardOverview();
-        }
-
-        async function approveMember(userId, userName) {
-            if (!confirm(`確定要核准【${userName}】加入球隊嗎？`)) return;
-            const { error } = await sb.from('users').update({ status: '已核准' }).eq('id', userId);
-            if (!error) { alert(`🎉 已核准【${userName}】！`); loadDashboardOverview(); }
-        }
-
-        async function rejectMember(userId, userName) {
-            if (!confirm(`確定要拒絕【${userName}】的申請嗎？`)) return;
-            await sb.from('players').delete().eq('name', userName);
-            await sb.from('users').delete().eq('id', userId);
-            alert(`已移除【${userName}】的申請紀錄。`);
-            loadDashboardOverview();
-        }
-
         async function loadAssignmentsTab() {
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
-            const { data: tasks } = await sb.from('assignments').select('*, assignment_submissions(*)').order('id', { ascending: false });
+            const { data: tasks } = await sb.from('assignments').select('*').order('id', { ascending: false });
             container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">課表中心</h3>${(tasks||[]).map(t => `<div class="bg-slate-950 p-3 rounded-xl"><h4 class="font-bold text-white">${t.title}</h4><p class="text-xs text-slate-400">目標：${t.target_amount}</p></div>`).join('')}</div>`;
         }
 
@@ -1291,6 +936,15 @@
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
             container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">每日晨報點檢</h3><p class="text-xs text-slate-400">已完整連動資料庫！</p></div>`;
+        }
+
+        function generateDynamicRadarPoints(values, maxVal = 100, center = 50, maxRadius = 38) {
+            const angles = [-90, -30, 30, 90, 150, 210];
+            return values.map((val, idx) => {
+                const angleRad = (angles[idx] * Math.PI) / 180;
+                const r = (Math.max(10, Math.min(val, maxVal)) / maxVal) * maxRadius;
+                return `${(center + r * Math.cos(angleRad)).toFixed(1)},${(center + r * Math.sin(angleRad)).toFixed(1)}`;
+            }).join(' ');
         }
     </script>
 </body>
