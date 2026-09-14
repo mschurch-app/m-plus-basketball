@@ -1169,67 +1169,69 @@
         }
 
         async function confirmSubmitAssignment() {
-            const assignmentId = document.getElementById('currentSubmitAssignmentId').value;
-            const notes = document.getElementById('assignNotesInput').value.trim();
-            const fileInput = document.getElementById('assignMediaInput');
-            const submitBtn = document.getElementById('btnConfirmSubmitAssign');
+    const assignmentId = document.getElementById('currentSubmitAssignmentId').value;
+    const notes = document.getElementById('assignNotesInput').value.trim();
+    const fileInput = document.getElementById('assignMediaInput');
+    const submitBtn = document.getElementById('btnConfirmSubmitAssign');
 
-            if (!assignmentId) return;
+    if (!assignmentId) return;
 
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i><span>上傳處理中...</span>`;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i><span>上傳處理中...</span>`;
 
-            let mediaUrl = null;
-            let mediaType = null;
+    let mediaUrl = null;
+    let mediaType = null;
 
-            try {
-                if (fileInput.files && fileInput.files[0]) {
-                    const file = fileInput.files[0];
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${Date.now()}_${currentUser.userName}_task.${fileExt}`;
-                    const filePath = `tasks/${fileName}`;
+    try {
+        if (fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const randomStr = Math.random().toString(36).substring(2, 8);
+            // 使用純英數命名，避免中文字造成 Invalid key
+            const safeFileName = `${Date.now()}_${randomStr}.${fileExt}`;
+            const filePath = `tasks/${safeFileName}`;
 
-                    mediaType = file.type.startsWith('video') ? 'video' : 'image';
+            mediaType = file.type.startsWith('video') ? 'video' : 'image';
 
-                    const { error: uploadErr } = await sb.storage.from('assignments').upload(filePath, file, {
-                        cacheControl: '3600',
-                        upsert: true
-                    });
+            const { error: uploadErr } = await sb.storage.from('assignments').upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: true
+            });
 
-                    if (uploadErr) {
-                        alert("檔案上傳失敗：" + uploadErr.message);
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = `<span>確認回報</span>`;
-                        return;
-                    }
-
-                    const { data: publicUrlData } = sb.storage.from('assignments').getPublicUrl(filePath);
-                    mediaUrl = publicUrlData.publicUrl;
-                }
-
-                const { error: insertErr } = await sb.from('assignment_submissions').insert([{
-                    assignment_id: parseInt(assignmentId),
-                    player_name: currentUser.userName,
-                    status: '已完成',
-                    media_url: mediaUrl,
-                    media_type: mediaType,
-                    notes: notes || null
-                }]);
-
-                if (insertErr) {
-                    alert("回報記錄失敗：" + insertErr.message);
-                } else {
-                    alert("🎉 成果已成功回報並同步！");
-                    closeSubmitAssignmentModal();
-                    loadAssignmentsTab();
-                }
-            } catch (err) {
-                alert("發生未預期錯誤：" + err.message);
-            } finally {
+            if (uploadErr) {
+                alert("檔案上傳失敗：" + uploadErr.message);
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = `<span>確認回報</span>`;
+                return;
             }
+
+            const { data: publicUrlData } = sb.storage.from('assignments').getPublicUrl(filePath);
+            mediaUrl = publicUrlData.publicUrl;
         }
+
+        const { error: insertErr } = await sb.from('assignment_submissions').insert([{
+            assignment_id: parseInt(assignmentId),
+            player_name: currentUser.userName,
+            status: '已完成',
+            media_url: mediaUrl,
+            media_type: mediaType,
+            notes: notes || null
+        }]);
+
+        if (insertErr) {
+            alert("回報記錄失敗：" + insertErr.message);
+        } else {
+            alert("🎉 成果已成功回報並同步！");
+            closeSubmitAssignmentModal();
+            loadAssignmentsTab();
+        }
+    } catch (err) {
+        alert("發生未預期錯誤：" + err.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>確認回報</span>`;
+    }
+}
 
         // 開啟檢視全隊回報名冊 Modal (教練/經理/BOSS 專屬)
         async function openViewSubmissionsModal(taskId, taskTitle) {
