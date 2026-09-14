@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M+ 籃球隊官方戰情中控台</title>
-    <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- LIFF SDK -->
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -52,7 +49,6 @@
             <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-lg active:scale-95 transition">登出</button>
         </div>
 
-        <!-- 依權限動態過濾的身分切換器 -->
         <div id="roleSwitchContainer" class="hidden flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs shadow-inner overflow-x-auto max-w-full">
             <button onclick="switchViewRole('PLAYER')" id="btnRolePlayer" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-slate-400 hover:text-white items-center space-x-1 whitespace-nowrap">
                 <span>🏀</span><span>球員台</span>
@@ -74,7 +70,6 @@
         </div>
     </header>
 
-    <!-- 主要內容區塊 -->
     <main class="w-full max-w-4xl flex-1 flex flex-col space-y-4 mb-4 pb-24">
 
         <!-- 1. 登入面板 -->
@@ -109,21 +104,36 @@
             </div>
         </section>
 
-        <!-- 2. 新進人員註冊面板 -->
+        <!-- 2. 等候核准專用警告畫面 -->
+        <section id="pendingApprovalSection" class="hidden glass-card rounded-3xl p-8 text-center space-y-4 my-auto border border-amber-500/30 max-w-md mx-auto">
+            <div class="w-16 h-16 mx-auto bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center text-3xl animate-pulse">
+                ⏳
+            </div>
+            <h3 class="text-xl font-black text-white">身分審查中</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                您好，您的註冊申請已送出！<br>
+                為維護球團運作與隱私安全，系統已通知 <span class="text-orange-400 font-bold">球隊 BOSS 與經理</span> 進行身分核准。<br>
+                審核通過後即可正常登入使用。
+            </p>
+            <button onclick="logout()" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
+                返回登入頁
+            </button>
+        </section>
+
+        <!-- 3. 新進人員註冊面板 -->
         <section id="registerSection" class="hidden glass-card rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 border border-slate-800 my-auto">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div>
                     <h2 class="text-xl font-black text-white flex items-center space-x-2">
                         <span>📝</span><span>M+ 球隊新成員註冊</span>
                     </h2>
-                    <p class="text-xs text-slate-400 mt-1">請選擇您的身分並填寫專屬檔案</p>
+                    <p class="text-xs text-slate-400 mt-1">需經管理層核准後方可開通帳號</p>
                 </div>
                 <button onclick="hideRegisterSection()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition">
                     返回登入
                 </button>
             </div>
 
-            <!-- 身分切換膠囊 -->
             <div class="grid grid-cols-4 gap-1 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 text-xs">
                 <button type="button" onclick="selectRegRole('PLAYER')" id="regBtnPLAYER" class="py-2 rounded-xl font-bold transition bg-orange-500 text-white shadow">🏀 球員</button>
                 <button type="button" onclick="selectRegRole('COACH')" id="regBtnCOACH" class="py-2 rounded-xl font-bold transition text-slate-400 hover:text-white">📋 教練</button>
@@ -131,7 +141,6 @@
                 <button type="button" onclick="selectRegRole('PARENT')" id="regBtnPARENT" class="py-2 rounded-xl font-bold transition text-slate-400 hover:text-white">👨‍👩‍👦 家長</button>
             </div>
 
-            <!-- 通用基本資料 -->
             <div class="space-y-3 text-xs">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -154,11 +163,11 @@
                     </div>
                 </div>
 
-                <!-- 🏀 專屬表單：球員 -->
+                <!-- 球員專屬 -->
                 <div id="formFieldsPlayer" class="space-y-3 pt-2 border-t border-slate-800/80">
                     <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">個人大頭貼/球員照 URL (選填)</label>
-                        <input type="url" id="regPlayerPhoto" placeholder="請貼上照片網址 (支援 Imgur / Google 照片公開連結)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                        <label class="text-slate-400 block mb-1 font-semibold">個人照片 URL (選填)</label>
+                        <input type="url" id="regPlayerPhoto" placeholder="請貼上照片公開網址" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         <div>
@@ -195,21 +204,17 @@
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="text-slate-400 block mb-1 font-semibold">緊急聯絡人 (家長姓名)</label>
-                            <input type="text" id="regPlayerEmergencyName" placeholder="例如: 爸爸姓名" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                            <label class="text-slate-400 block mb-1 font-semibold">緊急聯絡人姓名</label>
+                            <input type="text" id="regPlayerEmergencyName" placeholder="例如: 家長姓名" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
                         </div>
                         <div>
                             <label class="text-slate-400 block mb-1 font-semibold">緊急聯絡電話</label>
                             <input type="tel" id="regPlayerEmergencyPhone" placeholder="例如: 0988xxxxxx" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
                         </div>
                     </div>
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">既往傷病史 (無請填無)</label>
-                        <input type="text" id="regPlayerInjury" value="無" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                    </div>
                 </div>
 
-                <!-- 📋 專屬表單：教練 -->
+                <!-- 教練專屬 -->
                 <div id="formFieldsCoach" class="hidden space-y-3 pt-2 border-t border-slate-800/80">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -226,13 +231,12 @@
                                 <option value="總教練">總教練</option>
                                 <option value="助理教練">助理教練</option>
                                 <option value="體能訓練師">體能訓練師</option>
-                                <option value="技術教練">技術教練</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- 📊 專屬表單：球隊經理 -->
+                <!-- 經理專屬 -->
                 <div id="formFieldsManager" class="hidden space-y-3 pt-2 border-t border-slate-800/80">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -248,14 +252,13 @@
                             <select id="regManagerDuty" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
                                 <option value="全隊出勤與點檢">全隊出勤與點檢</option>
                                 <option value="裝備物資採購">裝備物資採購</option>
-                                <option value="賽事紀錄與影像">賽事紀錄與影像</option>
                                 <option value="綜合後勤">綜合後勤</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- 👨‍👩‍👦 專屬表單：家長 -->
+                <!-- 家長專屬 -->
                 <div id="formFieldsParent" class="hidden space-y-3 pt-2 border-t border-slate-800/80">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
@@ -271,7 +274,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-slate-400 block mb-1 font-semibold">孩子所屬梯隊</label>
+                            <label class="text-slate-400 block mb-1 font-semibold">孩子梯隊</label>
                             <select id="regParentTeam" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
                                 <option value="大隊">🏀 大隊</option>
                                 <option value="小隊">⚡ 小隊</option>
@@ -281,12 +284,12 @@
                 </div>
 
                 <button onclick="submitNewMemberRegister()" class="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl glow-orange transition active:scale-95 text-sm mt-4">
-                    確認送出註冊並進入戰情台
+                    送出註冊申請 (等待審核)
                 </button>
             </div>
         </section>
 
-        <!-- 3. 主操作台 -->
+        <!-- 4. 主操作台 -->
         <section id="dashboardSection" class="hidden space-y-4">
             <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center border-l-4 border-orange-500 gap-3">
                 <div class="flex items-center space-x-3">
@@ -307,13 +310,12 @@
                 </div>
             </div>
 
-            <!-- 動態內容注入區塊 -->
             <div id="tabContentContainer" class="space-y-4"></div>
         </section>
 
     </main>
 
-    <!-- 📱 底部現代毛玻璃浮動導航列 -->
+    <!-- 底部導航 -->
     <nav id="floatingNavbar" class="hidden fixed bottom-4 z-40 max-w-md w-[92%] sm:w-[420px] glass-card bg-slate-950/85 backdrop-blur-xl border border-slate-800/90 rounded-3xl px-3 py-2.5 shadow-2xl shadow-black/80 flex justify-around items-center">
         <button onclick="switchTab('overview')" id="tabBtnOverview" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-bold text-orange-400 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-bolt"></i></span>
@@ -327,13 +329,13 @@
             <span class="text-lg mb-0.5"><i class="fas fa-calendar-alt"></i></span>
             <span class="text-[10px] tracking-wider" id="navLabelSchedule">戰役行程</span>
         </button>
-        <button onclick="switchTab('dailystatus')" id="tabBtnDailystatus" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
+        <button onclick="switchTab('dailystatus')" id="tabBtnDaily" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-heartbeat"></i></span>
             <span class="text-[10px] tracking-wider" id="navLabelDaily">晨報點檢</span>
         </button>
     </nav>
 
-    <!-- 彈出對話框：自主訓練回報 -->
+    <!-- 任務上傳 Modal -->
     <div id="reportModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="glass-card rounded-3xl w-full max-w-lg p-6 space-y-4 border border-slate-700 shadow-2xl relative">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -365,7 +367,7 @@
         </div>
     </div>
 
-    <!-- 彈出對話框：新增行程 -->
+    <!-- 行程發布 Modal -->
     <div id="eventModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-slate-700 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -387,16 +389,15 @@
                         <option value="🏀 例行訓練">🏀 例行訓練</option>
                         <option value="⚔️ 正式賽事">⚔️ 正式賽事</option>
                         <option value="🏋️ 體能對抗">🏋️ 體能對抗</option>
-                        <option value="📢 隊務會議">📢 隊務會議</option>
                     </select>
                 </div>
                 <div>
                     <label class="text-slate-400 block mb-1 font-semibold">行程標題</label>
-                    <input type="text" id="evTitle" placeholder="例如: 週末錦標賽預賽" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
+                    <input type="text" id="evTitle" placeholder="例如: 週末錦標賽" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
                 </div>
                 <div>
                     <label class="text-slate-400 block mb-1 font-semibold">地點</label>
-                    <input type="text" id="evLocation" placeholder="例如: 西屯球場 / 大雅體育館" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
+                    <input type="text" id="evLocation" placeholder="例如: 西屯球場" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
                 </div>
             </div>
             <div class="flex space-x-3 pt-2">
@@ -412,12 +413,16 @@
         const SUPABASE_KEY = "sb_publishable_M1akQ21ePT5OVjpjO1kc8A_2GqObjrT";
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        const BOSS_LINE_ID = "Ub1bd5e82e545ebb5833585d8381d2eee";
+        const LINE_ACCESS_TOKEN = "9TA4Y8iCrq09SBogXiif2nasB3b1RJQek441XQSC4o1vCGRqbCrbFL46Gdrf4eHcJi0/fWJZD4ktNjiW9tlmEcv0oFzeko326iAJm7tLTic8D/64r6Y0LkChXseAl0B0zoY7Rh3Lk9M7XXBO+XBnnQdB04t89/1O/w1cDnyilFU=";
+
         let currentUser = {
             actualRole: null,
-            role: null,      // PLAYER, COACH, MANAGER, PARENT, ADMIN
+            role: null,
             userName: null,
             roleText: null,
-            childName: null
+            childName: null,
+            status: null
         };
 
         let currentActiveTab = 'overview';
@@ -455,7 +460,7 @@
                     if (lineName && !document.getElementById('regName').value) {
                         document.getElementById('regName').value = lineName;
                     }
-                    alert("歡迎！請先完成新成員檔案建立以開通戰情系統！");
+                    alert("歡迎！請先完成新成員檔案建立，送出後由管理層核准開通！");
                 }
             } catch (e) { console.log("LINE 自動登入略過", e); }
         }
@@ -470,7 +475,7 @@
                     liff.login();
                 } else {
                     showRegisterSection();
-                    alert("請直接填寫下方新成員檔案完成註冊！");
+                    alert("請填寫新成員檔案完成送審！");
                 }
             }
         }
@@ -484,7 +489,7 @@
             if (error) { alert("系統連線異常：" + error.message); return; }
 
             if (!data) {
-                alert(`查無【${acc}】的資料，為您跳轉至註冊建立檔案！`);
+                alert(`查無【${acc}】的資料，為您跳轉至註冊填寫檔案！`);
                 showRegisterSection();
                 document.getElementById('regName').value = acc;
                 if (pass) document.getElementById('regPassword').value = pass;
@@ -500,11 +505,13 @@
 
         function showRegisterSection() {
             document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('pendingApprovalSection').classList.add('hidden');
             document.getElementById('registerSection').classList.remove('hidden');
         }
 
         function hideRegisterSection() {
             document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('pendingApprovalSection').classList.add('hidden');
             document.getElementById('loginSection').classList.remove('hidden');
         }
 
@@ -530,6 +537,49 @@
             else if (role === 'PARENT') document.getElementById('formFieldsParent').classList.remove('hidden');
         }
 
+        // 🎯 同時通知 BOSS 與所有球隊經理
+        async function notifyBossAndManagersViaLine(name, roleText, team, phone, noteDetails) {
+            try {
+                // 1. 查詢所有「球隊經理」與「BOSS」的 LINE ID
+                const { data: managers } = await sb.from('users').select('line_id').in('role', ['球隊經理', '球隊ＢＯＳＳ']).not('line_id', 'is', null);
+                
+                const targetLineIds = new Set();
+                targetLineIds.add(BOSS_LINE_ID); // 確保 BOSS 必收
+
+                if (managers) {
+                    managers.forEach(m => { if (m.line_id) targetLineIds.add(m.line_id.replace(/'/g, '').trim()); });
+                }
+
+                const nowStr = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
+                const messageText = `📢【M+ 戰情中心 - 新成員待審核通知】\n` +
+                                    `━━━━━━━━━━━━━━\n` +
+                                    `👤 申請人姓名：${name}\n` +
+                                    `🏷️ 申請身分：${roleText} (${team})\n` +
+                                    `📞 聯絡電話：${phone}\n` +
+                                    `📋 資料摘要：${noteDetails}\n` +
+                                    `⏰ 申請時間：${nowStr}\n` +
+                                    `━━━━━━━━━━━━━━\n` +
+                                    `⚡ 請 BOSS 或經理登入戰情室進行身分核准！`;
+
+                // 2. 逐一發送 LINE 推播
+                targetLineIds.forEach(lineId => {
+                    fetch("https://api.line.me/v2/bot/message/push", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${LINE_ACCESS_TOKEN}`
+                        },
+                        body: JSON.stringify({
+                            to: lineId,
+                            messages: [{ type: "text", text: messageText }]
+                        })
+                    }).catch(err => console.log("LINE 傳送:", err));
+                });
+            } catch (e) {
+                console.log("推播略過", e);
+            }
+        }
+
         async function submitNewMemberRegister() {
             const name = document.getElementById('regName').value.trim();
             const phone = document.getElementById('regPhone').value.trim();
@@ -544,16 +594,26 @@
             let roleText = "球員";
             let team = "大隊";
             let extraUserFields = {};
+            let noteForAudit = "";
 
             if (currentRegRole === 'PLAYER') {
                 roleText = "球員";
                 team = document.getElementById('regPlayerTeam').value;
+                const pos = document.getElementById('regPlayerPos').value;
+                const num = document.getElementById('regPlayerNum').value || "7";
+                const h = document.getElementById('regPlayerHeight').value || "178";
+                const w = document.getElementById('regPlayerWeight').value || "70";
+                noteForAudit = `${pos} #${num} ｜ ${h}cm / ${w}kg`;
             } else if (currentRegRole === 'COACH') {
                 roleText = "教練";
                 team = document.getElementById('regCoachTeam').value;
+                const coachPos = document.getElementById('regCoachPosition').value;
+                noteForAudit = `職位：${coachPos}`;
             } else if (currentRegRole === 'MANAGER') {
                 roleText = "球隊經理";
                 team = document.getElementById('regManagerTeam').value;
+                const duty = document.getElementById('regManagerDuty').value;
+                noteForAudit = `執掌：${duty}`;
             } else if (currentRegRole === 'PARENT') {
                 roleText = "家長";
                 team = document.getElementById('regParentTeam').value;
@@ -561,8 +621,10 @@
                 const relation = document.getElementById('regParentRelation').value;
                 if (!childName) { alert("請填寫孩子的本名！"); return; }
                 extraUserFields = { child_name: childName, relation: relation };
+                noteForAudit = `孩子：${childName} (${relation})`;
             }
 
+            // 寫入 Supabase，狀態預設為「待審核」
             const { data: newUser, error: uErr } = await sb.from('users').insert([{
                 name: name,
                 phone: phone,
@@ -570,11 +632,12 @@
                 role: roleText,
                 team: team,
                 line_id: lineId || null,
+                status: '待審核',
                 ...extraUserFields
             }]).select().single();
 
             if (uErr) {
-                alert("註冊失敗: " + uErr.message);
+                alert("註冊送出失敗: " + uErr.message);
                 return;
             }
 
@@ -598,12 +661,24 @@
                 }]);
             }
 
-            alert(`🎉 恭喜【${name}】註冊成功！系統已為您開通專屬戰情室！`);
+            // 發送 LINE 通知 BOSS 與經理
+            notifyBossAndManagersViaLine(name, roleText, team, phone, noteForAudit);
+
+            alert(`🎉 您的註冊資料已送出！系統已通知 BOSS 與球隊經理進行身分核准！`);
             hideRegisterSection();
-            processLoginSuccess(newUser);
+            document.getElementById('pendingApprovalSection').classList.remove('hidden');
+            document.getElementById('loginSection').classList.add('hidden');
         }
 
         function processLoginSuccess(userRecord) {
+            // 🎯 核心攔截：檢查是否已經由管理層核准
+            if (userRecord.status === '待審核' && userRecord.name !== '吳俊璋' && userRecord.role.indexOf("BOSS") === -1) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('registerSection').classList.add('hidden');
+                document.getElementById('pendingApprovalSection').classList.remove('hidden');
+                return;
+            }
+
             let roleCode = "PLAYER";
             if (userRecord.role === "教練") roleCode = "COACH";
             if (userRecord.role === "球隊經理") roleCode = "MANAGER";
@@ -615,11 +690,13 @@
                 role: roleCode,
                 userName: userRecord.name,
                 roleText: userRecord.role,
-                childName: userRecord.child_name || null
+                childName: userRecord.child_name || null,
+                status: userRecord.status
             };
 
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('pendingApprovalSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.remove('hidden');
             document.getElementById('floatingNavbar').classList.remove('hidden');
             document.getElementById('loginStatusBadge').innerText = `${currentUser.userName} (${currentUser.roleText})`;
@@ -697,9 +774,10 @@
         }
 
         function logout() {
-            currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null };
+            currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null, status: null };
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('pendingApprovalSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('floatingNavbar').classList.add('hidden');
             document.getElementById('roleSwitchContainer').classList.add('hidden');
@@ -753,7 +831,7 @@
         }
 
         // =========================================================================
-        // ⚡ 1. 主戰情室 (含照片、教練球員名冊與經理家長聯絡名單)
+        // ⚡ 1. 主戰情室 (含 BOSS/經理 新進成員核准中樞)
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
@@ -766,15 +844,15 @@
                 targetPlayerName = currentUser.childName || "吳俊璋";
             }
 
-            // 平行抓取球員、任務、點檢、行程、所有球員與所有家長
-            const [pRes, tasksRes, subsRes, checkinsRes, schedRes, allPlayersRes, allParentsRes] = await Promise.all([
+            const [pRes, tasksRes, subsRes, checkinsRes, schedRes, allPlayersRes, allParentsRes, pendingUsersRes] = await Promise.all([
                 sb.from('players').select('*').eq('name', targetPlayerName).maybeSingle(),
                 sb.from('assignments').select('*').order('id', { ascending: false }),
                 sb.from('assignment_submissions').select('*').eq('player_name', targetPlayerName),
                 sb.from('daily_checkins').select('*').eq('checkin_date', today),
                 sb.from('schedules').select('*, schedule_rsvps(*)').order('event_date', { ascending: true }),
                 sb.from('players').select('*').order('team', { ascending: true }).order('number', { ascending: true }),
-                sb.from('users').select('*').eq('role', '家長')
+                sb.from('users').select('*').eq('role', '家長'),
+                sb.from('users').select('*').eq('status', '待審核') // 抓取待審核新成員
             ]);
 
             const pData = pRes.data || { name: targetPlayerName, number: 7, position: '控球後衛', team: '大隊', offense: 85, defense: 90, fitness: 88, attitude: 96, agility: 89, bball_iq: 87 };
@@ -784,8 +862,45 @@
             const schedules = schedRes.data || [];
             const allPlayers = allPlayersRes.data || [];
             const allParents = allParentsRes.data || [];
+            const pendingUsers = pendingUsersRes.data || [];
 
             let html = "";
+
+            // --- 👑 / 📊 BOSS 與 經理台專屬：新成員核准收件匣 ---
+            if (currentUser.role === "MANAGER" || currentUser.actualRole === "ADMIN") {
+                if (pendingUsers.length > 0) {
+                    html += `
+                        <div class="glass-card rounded-2xl p-4 border border-amber-500/50 bg-amber-950/20 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-bold text-amber-300 text-sm flex items-center space-x-2">
+                                    <span class="animate-pulse">🔔</span><span>新成員註冊申請待核准 (${pendingUsers.length} 位)</span>
+                                </h3>
+                                <span class="text-[11px] text-slate-400">核准後方可登入</span>
+                            </div>
+                            <div class="space-y-2">
+                                ${pendingUsers.map(u => `
+                                    <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+                                        <div>
+                                            <span class="font-bold text-slate-100 text-sm">${u.name}</span>
+                                            <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded font-bold ml-1">${u.role} (${u.team})</span>
+                                            <span class="text-slate-400 ml-2">電話: ${u.phone}</span>
+                                            ${u.child_name ? `<span class="text-slate-400 block sm:inline sm:ml-2">孩子: ${u.child_name}</span>` : ''}
+                                        </div>
+                                        <div class="flex space-x-2 w-full sm:w-auto justify-end">
+                                            <button onclick="approveMember(${u.id}, '${u.name}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition active:scale-95">
+                                                ✅ 核准加入
+                                            </button>
+                                            <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1 bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white rounded-lg transition active:scale-95">
+                                                拒絕
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
 
             // --- 🏀 球員主戰情室 ---
             if (currentUser.role === "PLAYER") {
@@ -794,7 +909,6 @@
                 const dynamicPolygonPoints = generateDynamicRadarPoints(radarValues);
                 const dynamicOVR = Math.round(radarValues.reduce((a, b) => a + b, 0) / 6);
 
-                // 球員個人頭像視覺
                 const avatarHtml = pData.photo_url 
                     ? `<img src="${pData.photo_url}" class="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-xl">`
                     : `<div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center font-black text-2xl text-white shadow-xl shadow-orange-500/30 border-2 border-amber-400">#${pData.number || 7}</div>`;
@@ -865,49 +979,46 @@
                 `;
             }
 
-            // --- 📋 教練主戰情室 (包含全隊球員陣容名冊與照片) ---
+            // --- 📋 教練主戰情室 ---
             else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
                 const teamDaList = allPlayers.filter(p => p.team === '大隊');
                 const teamXiaoList = allPlayers.filter(p => p.team === '小隊');
 
                 html += `
                     <div class="space-y-4">
-                        <!-- 頂部數據看板 -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
                                 <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">全隊球員人數</span>
-                                <span class="font-num text-2xl font-black text-orange-400 mt-1 block">${allPlayers.length} <span class="text-xs text-slate-500 font-normal">人</span></span>
+                                <span class="font-num text-2xl font-black text-orange-400 mt-1 block">${allPlayers.length} 人</span>
                             </div>
                             <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
                                 <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">大隊成員</span>
-                                <span class="font-num text-2xl font-black text-amber-400 mt-1 block">${teamDaList.length} <span class="text-xs text-slate-500 font-normal">人</span></span>
+                                <span class="font-num text-2xl font-black text-amber-400 mt-1 block">${teamDaList.length} 人</span>
                             </div>
                             <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
                                 <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">小隊成員</span>
-                                <span class="font-num text-2xl font-black text-blue-400 mt-1 block">${teamXiaoList.length} <span class="text-xs text-slate-500 font-normal">人</span></span>
+                                <span class="font-num text-2xl font-black text-blue-400 mt-1 block">${teamXiaoList.length} 人</span>
                             </div>
                             <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
                                 <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">今日晨報點檢</span>
-                                <span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${checkins.length} <span class="text-xs text-slate-500 font-normal">人</span></span>
+                                <span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${checkins.length} 人</span>
                             </div>
                         </div>
 
-                        <!-- 🏀 教練專屬：全隊球員戰力陣容名冊 (含照片) -->
                         <div class="glass-card rounded-2xl p-5 space-y-4">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                                 <h3 class="font-bold text-orange-400 text-base flex items-center space-x-2">
                                     <span>📋</span><span>全隊球員陣容名冊與戰力</span>
                                 </h3>
-                                <span class="text-xs text-slate-400">點擊可快速瀏覽戰力雷達</span>
+                                <span class="text-xs text-slate-400">大隊/小隊名單</span>
                             </div>
 
-                            <!-- 大隊成員展示 -->
                             <div class="space-y-2">
                                 <h4 class="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center space-x-1">
-                                    <span>🏀</span><span>大隊先發與主要輪替 (${teamDaList.length} 人)</span>
+                                    <span>🏀</span><span>大隊陣容 (${teamDaList.length} 人)</span>
                                 </h4>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    ${teamDaList.length > 0 ? teamDaList.map(pl => {
+                                    ${teamDaList.map(pl => {
                                         const ovr = Math.round((pl.offense + pl.defense + pl.fitness + pl.attitude + pl.agility + pl.bball_iq) / 6);
                                         const cIn = checkins.find(c => c.player_name === pl.name);
                                         const avatar = pl.photo_url 
@@ -933,17 +1044,16 @@
                                                 </div>
                                             </div>
                                         `;
-                                    }).join('') : '<p class="text-xs text-slate-500 py-2">目前大隊無球員名冊</p>'}
+                                    }).join('')}
                                 </div>
                             </div>
 
-                            <!-- 小隊成員展示 -->
                             <div class="space-y-2 pt-3 border-t border-slate-800/60">
                                 <h4 class="text-xs font-black text-blue-400 uppercase tracking-wider flex items-center space-x-1">
                                     <span>⚡</span><span>小隊青年軍陣容 (${teamXiaoList.length} 人)</span>
                                 </h4>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    ${teamXiaoList.length > 0 ? teamXiaoList.map(pl => {
+                                    ${teamXiaoList.map(pl => {
                                         const ovr = Math.round((pl.offense + pl.defense + pl.fitness + pl.attitude + pl.agility + pl.bball_iq) / 6);
                                         const cIn = checkins.find(c => c.player_name === pl.name);
                                         const avatar = pl.photo_url 
@@ -969,7 +1079,7 @@
                                                 </div>
                                             </div>
                                         `;
-                                    }).join('') : '<p class="text-xs text-slate-500 py-2">目前小隊無球員名冊</p>'}
+                                    }).join('')}
                                 </div>
                             </div>
                         </div>
@@ -977,7 +1087,7 @@
                 `;
             }
 
-            // --- 📊 經理主戰情室 (包含全隊家長聯絡網列表) ---
+            // --- 📊 經理主戰情室 ---
             else if (currentUser.role === "MANAGER") {
                 const totalPlayers = allPlayers.length || 1;
                 const checkedCount = checkins.length;
@@ -1003,8 +1113,8 @@
                                 <span class="font-num text-2xl font-black text-amber-400 mt-1 block">${schedules.length} 場</span>
                             </div>
                             <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">已註冊家長名冊</span>
-                                <span class="font-num text-xl font-black text-emerald-400 mt-1 block">${allParents.length} <span class="text-xs text-slate-500 font-normal">位</span></span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">已註冊家長</span>
+                                <span class="font-num text-xl font-black text-emerald-400 mt-1 block">${allParents.length} 位</span>
                             </div>
                         </div>
 
@@ -1021,13 +1131,13 @@
                             </div>
                         ` : ''}
 
-                        <!-- 👨‍👩‍👦 經理專屬：球員家長通訊與安心聯絡網 (附直撥電話按鈕) -->
+                        <!-- 家長通訊錄 -->
                         <div class="glass-card rounded-2xl p-5 space-y-3">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                                 <h3 class="font-bold text-emerald-400 flex items-center space-x-2">
-                                    <span>📞</span><span>球隊球員家長通訊網 (${allParents.length} 位)</span>
+                                    <span>📞</span><span>球員家長通訊網 (${allParents.length} 位)</span>
                                 </h3>
-                                <span class="text-xs text-slate-400">緊急聯絡一鍵撥打</span>
+                                <span class="text-xs text-slate-400">一鍵直撥電話</span>
                             </div>
                             <div class="space-y-2">
                                 ${allParents.length > 0 ? allParents.map(par => `
@@ -1049,30 +1159,11 @@
                                 `).join('') : '<p class="text-xs text-slate-500 text-center py-4">目前尚無家長註冊資料</p>'}
                             </div>
                         </div>
-
-                        <!-- 今日需關懷球員名冊 -->
-                        <div class="glass-card rounded-2xl p-5 space-y-3">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-bold text-red-400 flex items-center space-x-2">
-                                    <span>🚨</span><span>今日需關懷球員 (${warningList.length})</span>
-                                </h3>
-                                <button onclick="switchTab('dailystatus')" class="text-xs text-slate-400 hover:text-white">點檢台給建議 &rarr;</button>
-                            </div>
-                            ${warningList.length > 0 ? warningList.map(w => `
-                                <div class="bg-slate-950/80 border border-red-500/20 p-3.5 rounded-xl flex justify-between items-center text-xs">
-                                    <div>
-                                        <span class="font-bold text-slate-100 text-sm">${w.player_name}</span>
-                                        <p class="text-slate-400 mt-0.5">痠痛部位：<span class="text-red-400 font-semibold">${w.sore_area}</span> ｜ 睡眠：${w.sleep_hours}hr</p>
-                                    </div>
-                                    <span class="px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 font-bold font-num">疲勞: ${w.fatigue} / 5</span>
-                                </div>
-                            `).join('') : '<p class="text-xs text-emerald-400 text-center py-4">全隊狀態極佳，無疲勞超載球員！</p>'}
-                        </div>
                     </div>
                 `;
             }
 
-            // --- 👨‍👩‍👦 家長台主戰情室 (含照片) ---
+            // --- 👨‍👩‍👦 家長主戰情室 ---
             else if (currentUser.role === "PARENT") {
                 const childCheckin = checkins.find(c => c.player_name === targetPlayerName);
                 const nextEv = schedules[0];
@@ -1120,7 +1211,7 @@
                                             <span class="font-bold text-slate-200 mt-1 block">${childCheckin.energy}</span>
                                         </div>
                                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                                            <span class="text-slate-400 block text-[10px]">痠痛或不適</span>
+                                            <span class="text-slate-400 block text-[10px]">痠痛部位</span>
                                             <span class="font-bold ${childCheckin.sore_area !== '無' ? 'text-red-400' : 'text-emerald-400'} mt-1 block">${childCheckin.sore_area}</span>
                                         </div>
                                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
@@ -1130,14 +1221,14 @@
                                     </div>
                                     ${childCheckin.advice ? `
                                         <div class="bg-blue-950/20 border border-blue-500/30 p-3 rounded-xl text-xs text-slate-300">
-                                            <span class="text-blue-400 font-bold block mb-0.5">💬 教練給孩子的叮嚀與建議：</span>
+                                            <span class="text-blue-400 font-bold block mb-0.5">💬 教練叮嚀與建議：</span>
                                             <p class="text-slate-200">${childCheckin.advice}</p>
                                         </div>
                                     ` : ''}
                                 </div>
                             ` : `
                                 <div class="bg-orange-950/20 border border-orange-500/30 p-4 rounded-xl text-xs text-orange-300">
-                                    <span>⚠️ 孩子今日尚未填寫晨報點檢，您可以提醒孩子填寫以供教練評估體能狀況。</span>
+                                    <span>⚠️ 孩子今日尚未填寫晨報點檢，您可以提醒孩子填寫以供教練掌握體能。</span>
                                 </div>
                             `}
                         </div>
@@ -1151,38 +1242,42 @@
                                     </div>
                                     <p class="text-xs text-slate-400 mt-1">時間：${nextEv.event_date} ${nextEv.event_time} ｜ 地點：${nextEv.location}</p>
                                 </div>
-                                <div class="flex items-center space-x-2">
-                                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nextEv.location)}" target="_blank" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                                        <i class="fas fa-location-arrow text-[10px]"></i><span>球場導航</span>
-                                    </a>
-                                </div>
+                                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nextEv.location)}" target="_blank" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                                    <i class="fas fa-location-arrow text-[10px]"></i><span>球場導航</span>
+                                </a>
                             </div>
                         ` : ''}
-
-                        <div class="glass-card rounded-2xl p-5 space-y-3">
-                            <h3 class="font-bold text-orange-400 flex items-center space-x-2">
-                                <span>🎯</span><span>孩子的自主課表進度 (${tasks.length - uncompletedTasks.length}/${tasks.length} 完成)</span>
-                            </h3>
-                            ${tasks.length > 0 ? tasks.map(t => {
-                                const sub = mySubs.find(s => s.assignment_id === t.id);
-                                return `
-                                    <div class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl flex justify-between items-center text-xs">
-                                        <div>
-                                            <h4 class="font-bold text-slate-200">${t.title}</h4>
-                                            <p class="text-slate-400 text-[11px] mt-0.5">目標：${t.target_amount} ｜ 期限：${t.deadline}</p>
-                                        </div>
-                                        <span class="px-2.5 py-1 rounded-full font-bold ${sub ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}">
-                                            ${sub ? sub.review_state : '尚未完成'}
-                                        </span>
-                                    </div>
-                                `;
-                            }).join('') : '<p class="text-xs text-slate-500 text-center py-3">目前無指派課表</p>'}
-                        </div>
                     </div>
                 `;
             }
 
             container.innerHTML = html;
+        }
+
+        // =========================================================================
+        // ✅ 核心審核 API：核准或拒絕新成員
+        // =========================================================================
+        async function approveMember(userId, userName) {
+            if (!confirm(`確定要核准【${userName}】正式加入球隊嗎？`)) return;
+
+            const { error } = await sb.from('users').update({ status: '已核准' }).eq('id', userId);
+            if (!error) {
+                alert(`🎉 已核准【${userName}】！該成員現在可正式登入戰情室。`);
+                loadDashboardOverview();
+            } else {
+                alert("核准失敗: " + error.message);
+            }
+        }
+
+        async function rejectMember(userId, userName) {
+            if (!confirm(`確定要拒絕【${userName}】的加入申請並刪除紀錄嗎？`)) return;
+
+            await sb.from('players').delete().eq('name', userName);
+            const { error } = await sb.from('users').delete().eq('id', userId);
+            if (!error) {
+                alert(`已移除【${userName}】的申請紀錄。`);
+                loadDashboardOverview();
+            }
         }
 
         // =========================================================================
@@ -1217,7 +1312,7 @@
                             </button>
                         </div>
 
-                        ${allTasks.length > 0 ? allTasks.map(t => `
+                        ${allTasks.map(t => `
                             <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-3">
                                 <div class="flex justify-between items-start">
                                     <div>
@@ -1235,15 +1330,14 @@
                                             </div>
                                             <p class="text-slate-300">成果：${sub.report_content} ｜ 心得：${sub.player_note || '無'}</p>
                                             <div class="flex gap-1.5 items-center pt-1 border-t border-slate-800/80">
-                                                <button onclick="quickReview(${sub.id}, '${sub.player_name}', '動作到位，出手節奏良好！')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded">節奏良好</button>
-                                                <button onclick="quickReview(${sub.id}, '${sub.player_name}', '重心偏高，請加強沉肩抗衡！')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded">重心偏高</button>
+                                                <button onclick="quickReview(${sub.id}, '${sub.player_name}', '動作到位，節奏良好！')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded">節奏良好</button>
                                                 <button onclick="quickReview(${sub.id}, '${sub.player_name}', '體能狀態極佳，核准通過！')" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded font-bold ml-auto">核定通過</button>
                                             </div>
                                         </div>
                                     `).join('') : '<p class="text-xs text-slate-500 py-1">尚無球員繳交回報</p>'}
                                 </div>
                             </div>
-                        `).join('') : '<p class="text-xs text-slate-500 text-center py-4">目前無發布中的課表</p>'}
+                        `).join('')}
                     </div>
                 `;
             } else if (currentUser.role === "MANAGER") {
@@ -1252,7 +1346,7 @@
                         <div class="border-b border-slate-800 pb-3">
                             <h3 class="font-bold text-orange-400 text-base">📊 全隊課表完成進度追蹤</h3>
                         </div>
-                        ${allTasks.length > 0 ? allTasks.map(t => {
+                        ${allTasks.map(t => {
                             const completedNames = (t.assignment_submissions || []).map(s => s.player_name);
                             const uncompleted = allPlayers.filter(p => !completedNames.includes(p.name));
                             return `
@@ -1273,14 +1367,14 @@
                                     </div>
                                 </div>
                             `;
-                        }).join('') : '<p class="text-xs text-slate-500 text-center py-4">目前無進行中課表</p>'}
+                        }).join('')}
                     </div>
                 `;
             } else {
                 html += `
                     <div class="glass-card rounded-2xl p-5 space-y-4">
                         <h3 class="font-bold text-orange-400 text-base">${currentUser.role === 'PARENT' ? '👨‍👩‍👦 孩子的自主課表與回報進度' : '🎯 我的自主課表與成果回報'}</h3>
-                        ${allTasks.length > 0 ? allTasks.map(t => {
+                        ${allTasks.map(t => {
                             const mySub = (t.assignment_submissions || []).find(s => s.player_name === queryPlayerName);
                             return `
                                 <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-2">
@@ -1297,13 +1391,11 @@
                                             <button onclick="openReportModal('${t.id}', '${t.title}')" class="px-4 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold rounded-xl glow-orange active:scale-95 transition">
                                                 ${mySub ? '重新回報' : '點擊回報成果'}
                                             </button>
-                                        ` : `
-                                            <span class="text-xs text-slate-400 italic">${mySub ? '孩子已繳交' : '尚未繳交'}</span>
-                                        `}
+                                        ` : ''}
                                     </div>
                                 </div>
                             `;
-                        }).join('') : '<p class="text-xs text-slate-500 text-center py-4">目前沒有指派的課表</p>'}
+                        }).join('')}
                     </div>
                 `;
             }
@@ -1325,10 +1417,7 @@
             container.innerHTML = `
                 <div class="glass-card rounded-2xl p-5 space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                        <div>
-                            <h3 class="font-bold text-orange-400 text-base flex items-center space-x-2"><span>📅</span><span>球隊賽事與訓練行事曆</span></h3>
-                            <p class="text-xs text-slate-400">依最近活動優先排序</p>
-                        </div>
+                        <h3 class="font-bold text-orange-400 text-base">📅 球隊賽事與訓練行事曆</h3>
                         ${isManagerOrCoach ? `
                             <button onclick="openEventModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold rounded-xl glow-orange active:scale-95 transition">
                                 + 新增戰役行程
@@ -1336,7 +1425,7 @@
                         ` : ''}
                     </div>
 
-                    ${schedules.length > 0 ? schedules.map(ev => {
+                    ${schedules.map(ev => {
                         const attends = (ev.schedule_rsvps || []).filter(r => r.status === '出席');
                         const leaves = (ev.schedule_rsvps || []).filter(r => r.status === '請假');
                         return `
@@ -1362,7 +1451,7 @@
                                 </div>
                             </div>
                         `;
-                    }).join('') : '<p class="text-xs text-slate-500 text-center py-6">近期無活動行程</p>'}
+                    }).join('')}
                 </div>
             `;
         }
@@ -1403,8 +1492,7 @@
                         </div>
 
                         <div class="space-y-3 pt-2">
-                            <h4 class="font-bold text-slate-200 text-sm">各球員身心指標明細：</h4>
-                            ${checkedList.length > 0 ? checkedList.map(c => {
+                            ${checkedList.map(c => {
                                 const playerProfile = allPlayers.find(p => p.name === c.player_name);
                                 const avatarImg = playerProfile && playerProfile.photo_url 
                                     ? `<img src="${playerProfile.photo_url}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">`
@@ -1437,7 +1525,7 @@
                                         </div>
                                     </div>
                                 `;
-                            }).join('') : '<p class="text-xs text-slate-500 text-center py-6">今日尚無球員填寫晨報</p>'}
+                            }).join('')}
                         </div>
                     </div>
                 `;
@@ -1450,10 +1538,9 @@
                     <div class="glass-card rounded-2xl p-5 space-y-4">
                         <div class="border-b border-slate-800 pb-3">
                             <h3 class="font-bold text-orange-400 text-base">👨‍👩‍👦 【${child}】近期身心健康與體能紀錄</h3>
-                            <p class="text-xs text-slate-400">家長即時守護孩子運動健康</p>
                         </div>
                         <div class="space-y-3">
-                            ${records.length > 0 ? records.map(r => `
+                            ${records.map(r => `
                                 <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl space-y-2 text-xs">
                                     <div class="flex justify-between items-center">
                                         <span class="font-bold text-slate-200">${r.checkin_date}</span>
@@ -1466,7 +1553,7 @@
                                     </div>
                                     ${r.advice ? `<p class="text-blue-300 text-[11px] pt-1">💬 教練建議：${r.advice}</p>` : ''}
                                 </div>
-                            `).join('') : '<p class="text-xs text-slate-500 text-center py-4">尚無點檢歷史紀錄</p>'}
+                            `).join('')}
                         </div>
                     </div>
                 `;
@@ -1497,7 +1584,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label class="text-xs text-slate-400 font-semibold block">痠痛或緊繃部位 (可多選)：</label>
+                            <label class="text-xs text-slate-400 font-semibold block">痠痛部位 (可多選)：</label>
                             <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-xs">
                                 ${["無", "雙腿緊繃", "右腳踝", "左腳踝", "腰部痠痛", "右肩", "左膝", "右膝", "背部緊繃"].map(s => `
                                     <button type="button" onclick="toggleSore(this, '${s}')" class="sore-btn py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 transition ${s === '無' ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400' : ''}" data-val="${s}">${s}</button>
@@ -1515,8 +1602,8 @@
                         </div>
 
                         <div class="space-y-1">
-                            <label class="text-xs text-slate-400 font-semibold block">其他備註說明：</label>
-                            <textarea id="dailyNote" rows="2" placeholder="例如：昨晚略有失眠，需加強小腿熱敷..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:border-orange-500"></textarea>
+                            <label class="text-xs text-slate-400 font-semibold block">備註說明：</label>
+                            <textarea id="dailyNote" rows="2" placeholder="例如：加強小腿熱敷..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:border-orange-500"></textarea>
                         </div>
 
                         <button onclick="submitRefinedDailyStatus()" class="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl glow-orange active:scale-95 transition">
@@ -1612,9 +1699,6 @@
             if (!error) alert("已成功送達指導建議！");
         }
 
-        // =========================================================================
-        // 行程管理、課表回報
-        // =========================================================================
         function openEventModal() {
             document.getElementById('eventModal').classList.remove('hidden');
             document.getElementById('eventModal').classList.add('flex');
