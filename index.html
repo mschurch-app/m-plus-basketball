@@ -159,7 +159,6 @@
             <span class="text-lg mb-0.5"><i class="fas fa-bolt"></i></span>
             <span class="text-[10px] tracking-wider" id="navLabelOverview">主系統台</span>
         </button>
-        <!-- 戰術戰略分頁對全體身分開放 -->
         <button onclick="switchTab('tactics')" id="tabBtnTactics" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-chess-board"></i></span>
             <span class="text-[10px] tracking-wider">戰術戰略</span>
@@ -256,9 +255,6 @@
         const SUPABASE_URL = "https://ldsedanswynbzymyfwox.supabase.co";
         const SUPABASE_KEY = "sb_publishable_M1akQ21ePT5OVjpjO1kc8A_2GqObjrT";
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        const BOSS_LINE_ID = "Ub1bd5e82e545ebb5833585d8381d2eee";
-        const LINE_ACCESS_TOKEN = "9TA4Y8iCrq09SBogXiif2nasB3b1RJQek441XQSC4o1vCGRqbCrbFL46Gdrf4eHcJi0/fWJZD4ktNjiW9tlmEcv0oFzeko326iAJm7tLTic8D/64r6Y0LkChXseAl0B0zoY7Rh3Lk9M7XXBO+XBnnQdB04t89/1O/w1cDnyilFU=";
 
         let currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null, status: null };
         let currentActiveTab = 'overview';
@@ -798,7 +794,6 @@
             const { data: savedTactics } = await sb.from('tactics').select('*').order('id', { ascending: false });
             const list = savedTactics || [];
 
-            // 判斷是否為管理層（教練、經理、BOSS）
             const isManagement = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role) || ["COACH", "MANAGER", "BOSS"].includes(currentUser.actualRole);
 
             container.innerHTML = `
@@ -875,7 +870,6 @@
                 div.style.top = `${piece.y}%`;
                 div.innerText = piece.label;
 
-                // 只有管理層（教練/經理/BOSS）才能拖曳棋子
                 if (isEditable) {
                     bindPieceDragEvents(div, piece);
                 } else {
@@ -977,7 +971,7 @@
                     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                         <div>
                             <h3 class="font-bold text-orange-400 text-base">📅 球隊賽事與訓練行事曆</h3>
-                            <p class="text-xs text-slate-400">球員請假將即時發送 LINE 通知經理與 BOSS</p>
+                            <p class="text-xs text-slate-400">球員請假將透過資料庫自動發送 LINE 通知經理與 BOSS</p>
                         </div>
                     </div>
                     <div class="space-y-3">
@@ -1022,9 +1016,10 @@
         }
 
         async function promptPlayerLeave(scheduleId, eventTitle, eventTime, eventLocation) {
-            const reason = prompt(`請輸入請假事由（系統將即時 LINE 通知球隊經理）：`, "學校課業 / 個人事假");
+            const reason = prompt(`請輸入請假事由：`, "學校課業 / 個人事假");
             if (reason === null || !reason.trim()) return;
 
+            // 寫入 Supabase，後端 Trigger 會自動發送 LINE 通知
             await sb.from('schedule_rsvps').upsert([{
                 schedule_id: scheduleId,
                 player_name: currentUser.userName,
@@ -1033,31 +1028,7 @@
                 updated_at: new Date().toISOString()
             }], { onConflict: 'schedule_id,player_name' });
 
-            const { data: managers } = await sb.from('users').select('line_id').in('role', ['球隊經理', '球隊ＢＯＳＳ']).not('line_id', 'is', null);
-            const targetLineIds = new Set();
-            targetLineIds.add(BOSS_LINE_ID);
-            if (managers) managers.forEach(m => { if (m.line_id) targetLineIds.add(m.line_id.replace(/'/g, '').trim()); });
-
-            const nowStr = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
-            const messageText = `📢【Ｍ＋藍球隊球員系統 - 球員請假通知】\n` +
-                                `━━━━━━━━━━━━━━\n` +
-                                `👤 請假人員：${currentUser.userName}\n` +
-                                `📅 行程名稱：${eventTitle}\n` +
-                                `⏰ 時間地點：${eventTime} ｜ ${eventLocation}\n` +
-                                `📝 請假事由：${reason.trim()}\n` +
-                                `🕒 登記時間：${nowStr}\n` +
-                                `━━━━━━━━━━━━━━\n` +
-                                `請球隊經理至系統查閱最新名單！`;
-
-            targetLineIds.forEach(lineId => {
-                fetch("https://api.line.me/v2/bot/message/push", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${LINE_ACCESS_TOKEN}` },
-                    body: JSON.stringify({ to: lineId, messages: [{ type: "text", text: messageText }] })
-                }).catch(err => console.log(err));
-            });
-
-            alert(`已完成請假登記，並已發送 LINE 通知球隊經理！`);
+            alert(`已完成請假登記，系統已自動發送 LINE 通知經理與 BOSS！`);
             loadScheduleTab();
         }
 
