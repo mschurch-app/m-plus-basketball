@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>M+ 籃球隊官方戰情中控台</title>
     <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -34,10 +34,23 @@
             background: linear-gradient(rgba(15, 23, 42, 0.94), rgba(11, 15, 25, 0.98)) padding-box,
                         linear-gradient(135deg, #f59e0b, #ea580c, #475569) border-box;
         }
-        .radar-mesh {
-            stroke: rgba(255, 255, 255, 0.12);
-            stroke-dasharray: 2 2;
+        .radar-mesh { stroke: rgba(255, 255, 255, 0.12); stroke-dasharray: 2 2; }
+        
+        /* 戰術板專用球場樣式 */
+        .court-board {
+            position: relative;
+            background: #111827;
+            border: 2px solid #f97316;
+            touch-action: none;
+            user-select: none;
         }
+        .tactical-piece {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            touch-action: none;
+        }
+        .tactical-piece:active { cursor: grabbing; scale: 1.15; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-between p-3 sm:p-5">
@@ -52,7 +65,7 @@
                 <div>
                     <div class="flex items-center space-x-2">
                         <h1 class="font-black text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">M+ 戰情中心</h1>
-                        <span class="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-bold">2K ELITE</span>
+                        <span class="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-bold">PRO</span>
                     </div>
                     <p class="text-xs text-slate-400 font-medium" id="userRoleSubtitle">身分辨識中...</p>
                 </div>
@@ -60,7 +73,7 @@
             <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-lg active:scale-95 transition">登出</button>
         </div>
 
-        <!-- 視角切換器 -->
+        <!-- 多身分切換器 -->
         <div id="roleSwitchContainer" class="hidden flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs shadow-inner overflow-x-auto max-w-full">
             <button onclick="switchViewRole('BOSS')" id="btnRoleBoss" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-amber-300 bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500 hover:text-black items-center space-x-1 whitespace-nowrap">
                 <span>👑</span><span>BOSS總控</span>
@@ -87,7 +100,7 @@
 
     <main class="w-full max-w-4xl flex-1 flex flex-col space-y-4 mb-4 pb-24">
 
-        <!-- 登入面板 -->
+        <!-- 1. 登入面板 -->
         <section id="loginSection" class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center space-y-6 my-auto border border-slate-800">
             <div class="text-center space-y-2">
                 <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-orange-500/20 to-amber-500/10 rounded-2xl border border-orange-500/30 flex items-center justify-center text-3xl mb-2 text-orange-400 glow-orange">
@@ -114,7 +127,7 @@
             </div>
         </section>
 
-        <!-- 主操作台 -->
+        <!-- 2. 主操作台 -->
         <section id="dashboardSection" class="hidden space-y-4">
             <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center border-l-4 border-orange-500 gap-3">
                 <div class="flex items-center space-x-3">
@@ -122,9 +135,9 @@
                     <div>
                         <div class="flex items-center space-x-2">
                             <span class="text-xs font-bold text-slate-200" id="weatherLocation">台中市大雅區</span>
-                            <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded font-semibold" id="weatherRainProb">降雨率 30%</span>
+                            <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded font-semibold">降雨率 30%</span>
                         </div>
-                        <p class="text-xs text-slate-400 mt-0.5" id="weatherDesc">29°C 晴時多雲 ｜ 建議：戶外對抗注意水分補給</p>
+                        <p class="text-xs text-slate-400 mt-0.5">29°C 晴時多雲 ｜ 建議：戶外對抗注意水分補給</p>
                     </div>
                 </div>
                 <div class="text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800">
@@ -140,11 +153,15 @@
 
     </main>
 
-    <!-- 底部導航列 -->
+    <!-- 底部現代毛玻璃浮動導航列 -->
     <nav id="floatingNavbar" class="hidden fixed bottom-4 z-40 max-w-md w-[92%] sm:w-[420px] glass-card bg-slate-950/85 backdrop-blur-xl border border-slate-800/90 rounded-3xl px-3 py-2.5 shadow-2xl shadow-black/80 flex justify-around items-center">
         <button onclick="switchTab('overview')" id="tabBtnOverview" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-bold text-orange-400 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-bolt"></i></span>
             <span class="text-[10px] tracking-wider" id="navLabelOverview">主戰情室</span>
+        </button>
+        <button onclick="switchTab('tactics')" id="tabBtnTactics" class="hidden nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
+            <span class="text-lg mb-0.5"><i class="fas fa-chess-board"></i></span>
+            <span class="text-[10px] tracking-wider">戰術戰略</span>
         </button>
         <button onclick="switchTab('assignments')" id="tabBtnAssignments" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-bullseye"></i></span>
@@ -160,12 +177,31 @@
         </button>
     </nav>
 
-    <!-- 👤 彈出視窗：編輯球員照片與個人檔案 -->
+    <!-- 📋 現場即時點名名冊 Modal -->
+    <div id="attendanceModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-3xl w-full max-w-lg p-6 space-y-4 border border-emerald-500/40 shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3 flex-shrink-0">
+                <div>
+                    <h3 class="text-base font-black text-emerald-400 flex items-center space-x-2">
+                        <span>📋</span><span id="attModalTitle">戰役現場點名</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">點擊直接標記出席、請假或未到</p>
+                </div>
+                <button onclick="closeAttendanceModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <div id="attendanceRosterList" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
+            <div class="pt-2 border-t border-slate-800 flex justify-end flex-shrink-0">
+                <button onclick="closeAttendanceModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition">完成點名關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👤 編輯球員卡檔案 Modal -->
     <div id="playerProfileModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-amber-500/40 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 class="text-base font-black text-white flex items-center space-x-2">
-                    <span class="text-orange-400">⚡</span><span>編輯球員卡檔案與照相</span>
+                    <span class="text-orange-400">⚡</span><span>編輯球員卡檔案與照片</span>
                 </h3>
                 <button onclick="closePlayerProfileModal()" class="text-slate-400 hover:text-white">&times;</button>
             </div>
@@ -214,102 +250,35 @@
         </div>
     </div>
 
-    <!-- 👑 BOSS 編輯人員 Modal -->
-    <div id="bossEditUserModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-        <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-amber-500/50 shadow-2xl">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="text-base font-black text-amber-400 flex items-center space-x-2">
-                    <span>👑</span><span>BOSS 總控 - 成員檔案特權編輯</span>
-                </h3>
-                <button onclick="closeBossEditUserModal()" class="text-slate-400 hover:text-white">&times;</button>
-            </div>
-            <input type="hidden" id="bossTargetUserId">
-            <input type="hidden" id="bossTargetOriginalName">
-            <div class="space-y-3 text-xs">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">姓名</label>
-                        <input type="text" id="bossEditName" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-bold">
-                    </div>
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">電話</label>
-                        <input type="tel" id="bossEditPhone" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">身分角色</label>
-                        <select id="bossEditRole" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                            <option value="球員">🏀 球員</option>
-                            <option value="教練">📋 教練</option>
-                            <option value="球隊經理">📊 球隊經理</option>
-                            <option value="家長">👨‍👩‍👦 家長</option>
-                            <option value="球隊ＢＯＳＳ">👑 球隊ＢＯＳＳ</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">所屬梯隊</label>
-                        <select id="bossEditTeam" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                            <option value="大隊">大隊</option>
-                            <option value="小隊">小隊</option>
-                            <option value="全隊">全隊</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">核准狀態</label>
-                        <select id="bossEditStatus" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                            <option value="已核准">已核准</option>
-                            <option value="待審核">待審核</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">修改密碼</label>
-                        <input type="text" id="bossEditPassword" placeholder="留空不變" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-slate-400 block mb-1 font-semibold">孩子姓名 (家長身分用)</label>
-                    <input type="text" id="bossEditChildName" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                </div>
-            </div>
-            <div class="flex space-x-3 pt-2">
-                <button onclick="closeBossEditUserModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold">取消</button>
-                <button onclick="saveBossEditUserFinal()" class="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold glow-gold">強制更新儲存</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 📋 現場即時點名名冊 Modal -->
-    <div id="attendanceModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-        <div class="glass-card rounded-3xl w-full max-w-lg p-6 space-y-4 border border-emerald-500/40 shadow-2xl max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3 flex-shrink-0">
-                <div>
-                    <h3 class="text-base font-black text-emerald-400 flex items-center space-x-2">
-                        <span>📋</span><span id="attModalTitle">戰役現場點名</span>
-                    </h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">點擊直接登記出席、請假或未到</p>
-                </div>
-                <button onclick="closeAttendanceModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
-            </div>
-            <div id="attendanceRosterList" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
-            <div class="pt-2 border-t border-slate-800 flex justify-end flex-shrink-0">
-                <button onclick="closeAttendanceModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition">完成點名關閉</button>
-            </div>
-        </div>
-    </div>
-
     <!-- JavaScript 核心 -->
     <script>
         const SUPABASE_URL = "https://ldsedanswynbzymyfwox.supabase.co";
         const SUPABASE_KEY = "sb_publishable_M1akQ21ePT5OVjpjO1kc8A_2GqObjrT";
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        const BOSS_LINE_ID = "Ub1bd5e82e545ebb5833585d8381d2eee";
+        const LINE_ACCESS_TOKEN = "9TA4Y8iCrq09SBogXiif2nasB3b1RJQek441XQSC4o1vCGRqbCrbFL46Gdrf4eHcJi0/fWJZD4ktNjiW9tlmEcv0oFzeko326iAJm7tLTic8D/64r6Y0LkChXseAl0B0zoY7Rh3Lk9M7XXBO+XBnnQdB04t89/1O/w1cDnyilFU=";
+
         let currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null, status: null };
         let currentActiveTab = 'overview';
         let activeAttendanceScheduleId = null;
         let bossSelectedFilterRole = 'ALL';
+
+        // 戰術板棋子預設座標 (百分比 0~100)
+        let defaultTacticPieces = [
+            { id: "O1", label: "PG", type: "offense", x: 50, y: 78 },
+            { id: "O2", label: "SG", type: "offense", x: 20, y: 65 },
+            { id: "O3", label: "SF", type: "offense", x: 80, y: 65 },
+            { id: "O4", label: "PF", type: "offense", x: 30, y: 35 },
+            { id: "O5", label: "C",  type: "offense", x: 70, y: 35 },
+            { id: "D1", label: "X1", type: "defense", x: 50, y: 68 },
+            { id: "D2", label: "X2", type: "defense", x: 25, y: 55 },
+            { id: "D3", label: "X3", type: "defense", x: 75, y: 55 },
+            { id: "D4", label: "X4", type: "defense", x: 35, y: 28 },
+            { id: "D5", label: "X5", type: "defense", x: 65, y: 28 },
+            { id: "BALL", label: "🏀", type: "ball", x: 50, y: 84 }
+        ];
+        let currentTacticPieces = JSON.parse(JSON.stringify(defaultTacticPieces));
 
         window.addEventListener("DOMContentLoaded", () => {
             const todayStr = new Date().toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit', weekday: 'short' });
@@ -387,6 +356,13 @@
             document.getElementById('loginStatusBadge').className = "text-xs px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold";
             document.getElementById('logoutBtn').classList.remove('hidden');
             document.getElementById('userRoleSubtitle').innerText = `${currentUser.userName} (${currentUser.roleText})`;
+
+            // 戰術板導航僅提供給 教練 與 BOSS
+            if (["COACH", "BOSS"].includes(currentUser.actualRole)) {
+                document.getElementById('tabBtnTactics').classList.remove('hidden');
+            } else {
+                document.getElementById('tabBtnTactics').classList.add('hidden');
+            }
 
             setupRoleSwitchPermissions(currentUser.actualRole);
             updateRoleSwitchButtons();
@@ -468,7 +444,7 @@
 
         function switchTab(tabName) {
             currentActiveTab = tabName;
-            ['overview', 'assignments', 'schedule', 'daily'].forEach(t => {
+            ['overview', 'tactics', 'assignments', 'schedule', 'daily'].forEach(t => {
                 const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
                 if (btn) {
                     btn.className = (t === tabName || (t==='daily' && tabName==='dailystatus'))
@@ -478,6 +454,7 @@
             });
 
             if (tabName === 'overview') loadDashboardOverview();
+            else if (tabName === 'tactics') loadTacticsTab();
             else if (tabName === 'assignments') loadAssignmentsTab();
             else if (tabName === 'schedule') loadScheduleTab();
             else if (tabName === 'dailystatus') loadDailyStatusTab();
@@ -502,18 +479,15 @@
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
 
-            // 👑 1. BOSS 總控專屬主戰情室
+            // 👑 BOSS 總控專屬主戰情室
             if (currentUser.role === "BOSS") {
-                const [allUsersRes, allPlayersRes, pendingUsersRes] = await Promise.all([
+                const [allUsersRes, pendingUsersRes] = await Promise.all([
                     sb.from('users').select('*').order('id', { ascending: true }),
-                    sb.from('players').select('*'),
                     sb.from('users').select('*').eq('status', '待審核')
                 ]);
 
                 const users = allUsersRes.data || [];
-                const players = allPlayersRes.data || [];
                 const pendingUsers = pendingUsersRes.data || [];
-
                 const playerCount = users.filter(u => u.role === '球員').length;
                 const coachCount = users.filter(u => u.role === '教練').length;
                 const managerCount = users.filter(u => u.role === '球隊經理').length;
@@ -534,7 +508,7 @@
                                         <h2 class="text-lg font-black text-white">M+ 戰情最高總控中樞 (BOSS EXCLUSIVE)</h2>
                                         <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold">最高特權</span>
                                     </div>
-                                    <p class="text-xs text-slate-400 mt-0.5">掌管所有身分成員、系統排程與全功能管理</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">全權人員清冊、審核管理與系統指揮</p>
                                 </div>
                             </div>
                         </div>
@@ -565,30 +539,15 @@
                         ` : ''}
 
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">全體成員</span>
-                                <span class="font-num text-2xl font-black text-white mt-1 block">${users.length} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">球員名冊</span>
-                                <span class="font-num text-2xl font-black text-orange-400 mt-1 block">${playerCount} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">教練 / 經理</span>
-                                <span class="font-num text-2xl font-black text-blue-400 mt-1 block">${coachCount + managerCount} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">家長聯絡</span>
-                                <span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${parentCount} 位</span>
-                            </div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">全體成員</span><span class="font-num text-2xl font-black text-white mt-1 block">${users.length} 人</span></div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">球員名冊</span><span class="font-num text-2xl font-black text-orange-400 mt-1 block">${playerCount} 人</span></div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">教練/經理</span><span class="font-num text-2xl font-black text-blue-400 mt-1 block">${coachCount + managerCount} 人</span></div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">家長人數</span><span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${parentCount} 位</span></div>
                         </div>
 
-                        <!-- 全權人員總冊 -->
                         <div class="glass-card rounded-2xl p-5 space-y-4">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
-                                <div>
-                                    <h3 class="font-bold text-amber-300 text-base">👥 全權人員清冊 (${filteredUsers.length} 位)</h3>
-                                </div>
+                                <h3 class="font-bold text-amber-300 text-base">👥 全權人員清冊 (${filteredUsers.length} 位)</h3>
                                 <div class="flex space-x-1 text-xs bg-slate-950 p-1 rounded-xl border border-slate-800">
                                     <button onclick="setBossUserFilter('ALL')" class="px-2.5 py-1 rounded-lg ${bossSelectedFilterRole==='ALL'?'bg-amber-500 text-black font-bold':'text-slate-400'}">全部</button>
                                     <button onclick="setBossUserFilter('球員')" class="px-2.5 py-1 rounded-lg ${bossSelectedFilterRole==='球員'?'bg-amber-500 text-black font-bold':'text-slate-400'}">球員</button>
@@ -597,7 +556,7 @@
                                     <button onclick="setBossUserFilter('家長')" class="px-2.5 py-1 rounded-lg ${bossSelectedFilterRole==='家長'?'bg-amber-500 text-black font-bold':'text-slate-400'}">家長</button>
                                 </div>
                             </div>
-                            <div class="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                            <div class="space-y-2 max-h-[460px] overflow-y-auto pr-1">
                                 ${filteredUsers.map(u => `
                                     <div class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl flex justify-between items-center text-xs">
                                         <div>
@@ -606,8 +565,7 @@
                                             <p class="text-slate-400 mt-1">電話: ${u.phone||'無'} ｜ 梯隊: ${u.team||'大隊'} ${u.child_name?`｜ 孩子: <span class="text-orange-400 font-bold">${u.child_name}</span>`:''}</p>
                                         </div>
                                         <div class="flex space-x-2">
-                                            <button onclick="openBossEditUserModal(${u.id})" class="px-3 py-1.5 bg-slate-800 text-amber-300 rounded-xl font-bold">編輯</button>
-                                            ${u.name !== '吳俊璋' ? `<button onclick="bossDeleteUserDirectly(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-xl font-bold">除名</button>` : ''}
+                                            ${u.name !== '吳俊璋' ? `<button onclick="bossDeleteUserDirectly(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white rounded-xl font-bold transition">除名</button>` : ''}
                                         </div>
                                     </div>
                                 `).join('')}
@@ -618,7 +576,7 @@
                 return;
             }
 
-            // 抓取通用數據 (球員、排程、晨報、家長)
+            // 通用球員、排程、晨報數據
             const today = new Date().toISOString().split('T')[0];
             let targetPlayerName = currentUser.userName;
             if (currentUser.role === "PARENT") targetPlayerName = currentUser.childName || "吳俊璋";
@@ -641,7 +599,7 @@
             const allPlayers = allPlayersRes.data || [];
             const allParents = allParentsRes.data || [];
 
-            // 🏀 2. 球員台專屬主戰情室 (2K 全息金屬球員卡)
+            // 🏀 球員台視角 (2K 全息金屬球員卡)
             if (currentUser.role === "PLAYER") {
                 const uncompletedTasks = tasks.filter(t => !mySubs.some(s => s.assignment_id === t.id));
                 const radarValues = [pData.offense, pData.defense, pData.fitness, pData.attitude, pData.agility, pData.bball_iq];
@@ -649,20 +607,13 @@
                 const pointsString = polyPoints.map(p => `${p.x},${p.y}`).join(' ');
                 const dynamicOVR = Math.round(radarValues.reduce((a, b) => a + b, 0) / 6);
 
-                let tierTitle = "ALL-STAR 全明星", tierBg = "from-amber-500 to-orange-600";
-                if (dynamicOVR >= 90) { tierTitle = "HALL OF FAME 名人堂"; tierBg = "from-yellow-400 via-amber-500 to-yellow-600"; }
-                else if (dynamicOVR < 80) { tierTitle = "RISING STAR 新星"; tierBg = "from-blue-500 to-indigo-600"; }
-
                 container.innerHTML = `
                     <div class="space-y-4">
                         <div class="card-2k-border rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
                             <div class="absolute -right-6 -bottom-10 font-num text-[180px] font-black text-white/[0.03] select-none pointer-events-none">#${pData.number || 7}</div>
                             <div class="flex justify-between items-start border-b border-slate-800/80 pb-4 relative z-10">
                                 <div>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-[10px] bg-gradient-to-r ${tierBg} text-black font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow">${tierTitle}</span>
-                                        <span class="text-[11px] text-slate-400 font-bold uppercase tracking-widest">M+ BASKETBALL PRO</span>
-                                    </div>
+                                    <span class="text-[10px] bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black px-2.5 py-0.5 rounded-full uppercase">ALL-STAR</span>
                                     <h2 class="text-2xl sm:text-3xl font-black text-white tracking-wide mt-1.5 flex items-center space-x-2">
                                         <span>${pData.name}</span>
                                         <span class="text-sm font-num text-orange-400 font-bold">#${pData.number || 7}</span>
@@ -670,7 +621,7 @@
                                     <p class="text-xs text-slate-400 mt-0.5">${pData.team || '大隊'} ｜ ${pData.position || '控球後衛'} ｜ ${pData.height || 178} cm ｜ ${pData.weight || 70} kg</p>
                                 </div>
                                 <div class="flex flex-col items-center bg-gradient-to-b from-slate-900 to-slate-950 border border-amber-500/50 rounded-2xl px-4 py-2 shadow-2xl">
-                                    <span class="text-[10px] text-amber-300 font-black tracking-widest uppercase">OVR 評級</span>
+                                    <span class="text-[10px] text-amber-300 font-black tracking-widest uppercase">OVR</span>
                                     <span class="font-num text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-amber-300 via-orange-400 to-yellow-500">${dynamicOVR}</span>
                                 </div>
                             </div>
@@ -679,7 +630,7 @@
                                 <div class="md:col-span-5 flex flex-col items-center justify-center">
                                     <div class="w-48 h-56 sm:w-52 sm:h-60 rounded-3xl p-1 bg-gradient-to-tr from-amber-500 via-orange-600 to-slate-700 shadow-2xl relative group">
                                         <div class="w-full h-full rounded-[22px] bg-slate-950 overflow-hidden relative flex items-center justify-center">
-                                            ${pData.photo_url ? `<img src="${pData.photo_url}" class="w-full h-full object-cover object-top">` : `<div class="flex flex-col items-center text-slate-600"><i class="fas fa-user-astronaut text-5xl text-slate-700 mb-2"></i><span class="text-[11px] font-bold">更換個人照</span></div>`}
+                                            ${pData.photo_url ? `<img src="${pData.photo_url}" class="w-full h-full object-cover object-top">` : `<div class="flex flex-col items-center text-slate-600"><i class="fas fa-user-astronaut text-5xl text-slate-700 mb-2"></i><span class="text-[11px] font-bold">更換球員照</span></div>`}
                                             <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80 pointer-events-none"></div>
                                         </div>
                                     </div>
@@ -718,8 +669,8 @@
 
                         <div class="glass-card rounded-2xl p-5 space-y-3">
                             <div class="flex justify-between items-center">
-                                <h3 class="font-bold text-orange-400 flex items-center space-x-2"><span>⚠️</span><span>待辦課表回報</span></h3>
-                                <span class="text-xs text-slate-400">尚有 ${uncompletedTasks.length} 項未回報</span>
+                                <h3 class="font-bold text-orange-400 flex items-center space-x-2"><span>⚠️</span><span>自主訓練回報</span></h3>
+                                <span class="text-xs text-slate-400">尚有 ${uncompletedTasks.length} 項未完成</span>
                             </div>
                             ${uncompletedTasks.map(task => `
                                 <div class="bg-slate-950/80 border border-orange-500/30 rounded-2xl p-4 flex justify-between items-center">
@@ -732,7 +683,7 @@
                 `;
             }
 
-            // 📋 3. 教練台專屬主戰情室
+            // 📋 教練台視角 (全隊陣容與戰力名冊)
             else if (currentUser.role === "COACH") {
                 const teamDaList = allPlayers.filter(p => p.team === '大隊');
                 const teamXiaoList = allPlayers.filter(p => p.team === '小隊');
@@ -740,26 +691,17 @@
                 container.innerHTML = `
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">全隊球員</span>
-                                <span class="font-num text-2xl font-black text-orange-400 mt-1 block">${allPlayers.length} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">大隊成員</span>
-                                <span class="font-num text-2xl font-black text-amber-400 mt-1 block">${teamDaList.length} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">小隊成員</span>
-                                <span class="font-num text-2xl font-black text-blue-400 mt-1 block">${teamXiaoList.length} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">今日晨報點檢</span>
-                                <span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${checkins.length} 人</span>
-                            </div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">全體球員</span><span class="font-num text-2xl font-black text-orange-400 mt-1 block">${allPlayers.length} 人</span></div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">大隊主力</span><span class="font-num text-2xl font-black text-amber-400 mt-1 block">${teamDaList.length} 人</span></div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">小隊青年</span><span class="font-num text-2xl font-black text-blue-400 mt-1 block">${teamXiaoList.length} 人</span></div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">今日晨報</span><span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${checkins.length} 人</span></div>
                         </div>
 
                         <div class="glass-card rounded-2xl p-5 space-y-4">
-                            <h3 class="font-bold text-orange-400 text-base">📋 教練球員陣容名冊與管理</h3>
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                                <h3 class="font-bold text-orange-400 text-base">📋 教練球員陣容名冊與管理</h3>
+                                <button onclick="switchTab('tactics')" class="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold">進入戰術板 &rarr;</button>
+                            </div>
                             
                             <div class="space-y-2">
                                 <h4 class="text-xs font-black text-amber-400 uppercase">🏀 大隊陣容 (${teamDaList.length} 人)</h4>
@@ -788,28 +730,22 @@
                 `;
             }
 
-            // 📊 4. 經理台專屬主戰情室
+            // 📊 經理台視角 (家長通訊網與關懷)
             else if (currentUser.role === "MANAGER") {
                 const warningList = checkins.filter(c => c.fatigue >= 4 || (c.sore_area && c.sore_area !== '無'));
                 container.innerHTML = `
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">今日晨報人數</span>
-                                <span class="font-num text-2xl font-black text-orange-400 mt-1 block">${checkins.length} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">身心異常關注</span>
-                                <span class="font-num text-2xl font-black ${warningList.length>0?'text-red-400':'text-emerald-400'} mt-1 block">${warningList.length} 人</span>
-                            </div>
-                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">家長通訊網</span>
-                                <span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${allParents.length} 位</span>
-                            </div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">今日晨報人數</span><span class="font-num text-2xl font-black text-orange-400 mt-1 block">${checkins.length} 人</span></div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">身心異常關注</span><span class="font-num text-2xl font-black ${warningList.length>0?'text-red-400':'text-emerald-400'} mt-1 block">${warningList.length} 人</span></div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">家長通訊網</span><span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${allParents.length} 位</span></div>
                         </div>
 
                         <div class="glass-card rounded-2xl p-5 space-y-3">
-                            <h3 class="font-bold text-emerald-400">📞 球員家長通訊錄 (${allParents.length} 位)</h3>
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                                <h3 class="font-bold text-emerald-400">📞 球員家長通訊錄 (${allParents.length} 位)</h3>
+                                <button onclick="switchTab('schedule')" class="text-xs bg-emerald-600 text-white px-3 py-1 rounded-lg font-bold">現場點名中樞 &rarr;</button>
+                            </div>
                             <div class="space-y-2">
                                 ${allParents.map(par => `
                                     <div class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl flex justify-between items-center text-xs">
@@ -818,7 +754,7 @@
                                             <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-300 ml-1">${par.relation||'家長'}</span>
                                             <p class="text-slate-400 mt-1">孩子球員：<span class="text-orange-400 font-bold">${par.child_name||'未填寫'}</span> ｜ 電話：${par.phone||'無'}</p>
                                         </div>
-                                        ${par.phone ? `<a href="tel:${par.phone}" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl font-bold flex items-center space-x-1 shadow"><i class="fas fa-phone-alt text-xs"></i><span>撥打</span></a>` : ''}
+                                        ${par.phone ? `<a href="tel:${par.phone}" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl font-bold flex items-center space-x-1 shadow"><i class="fas fa-phone-alt text-xs"></i><span>撥打電話</span></a>` : ''}
                                     </div>
                                 `).join('')}
                             </div>
@@ -827,7 +763,7 @@
                 `;
             }
 
-            // 👨‍👩‍👦 5. 家長台專屬主戰情室
+            // 👨‍👩‍👦 家長台視角 (孩子健康與接送)
             else if (currentUser.role === "PARENT") {
                 const childCheckin = checkins.find(c => c.player_name === targetPlayerName);
                 const nextEv = schedules[0];
@@ -870,93 +806,183 @@
         }
 
         // =========================================================================
-        // BOSS 特權操作函式
+        // 🏀 2. 教練專屬互動式戰術板 (拖曳排陣、存檔、載入)
         // =========================================================================
-        function setBossUserFilter(role) {
-            bossSelectedFilterRole = role;
-            loadDashboardOverview();
+        async function loadTacticsTab() {
+            const container = document.getElementById('tabContentContainer');
+            container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
+
+            const { data: savedTactics } = await sb.from('tactics').select('*').order('id', { ascending: false });
+            const list = savedTactics || [];
+
+            container.innerHTML = `
+                <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
+                        <div>
+                            <h3 class="font-bold text-amber-400 text-base flex items-center space-x-2">
+                                <span>🏀</span><span>教練戰略戰術推演板 (Tactical Board)</span>
+                            </h3>
+                            <p class="text-xs text-slate-400">手動拖曳進攻 (🔴) / 防守 (🔵) 與球標，設定名稱一鍵存檔！</p>
+                        </div>
+                        <div class="flex items-center space-x-2 w-full sm:w-auto">
+                            <input type="text" id="tacticNameInput" placeholder="請輸入戰術名稱..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 flex-1 sm:w-44 focus:border-amber-400">
+                            <button onclick="saveCurrentTactic()" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black text-xs rounded-xl shadow glow-gold transition active:scale-95">
+                                💾 存檔戰術
+                            </button>
+                            <button onclick="resetTacticCourt()" class="px-2.5 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-700">
+                                重設
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 標準半場籃球戰術圖繪製 (SVG 底圖 + 拖曳元素) -->
+                    <div id="courtContainer" class="court-board w-full h-[380px] sm:h-[450px] rounded-2xl overflow-hidden shadow-2xl relative">
+                        <!-- 半場球場標線 (SVG) -->
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full pointer-events-none opacity-40">
+                            <!-- 外框 -->
+                            <rect x="0" y="0" width="100" height="100" fill="none" stroke="#f97316" stroke-width="0.8"/>
+                            <!-- 籃框與籃板 -->
+                            <line x1="42" y1="6" x2="58" y2="6" stroke="#f1f5f9" stroke-width="1.2"/>
+                            <circle cx="50" cy="11" r="3.2" fill="none" stroke="#ea580c" stroke-width="1"/>
+                            <!-- 禁區 (三秒區) -->
+                            <rect x="36" y="0" width="28" height="38" fill="none" stroke="#f1f5f9" stroke-width="0.8"/>
+                            <!-- 罰球線半圓 -->
+                            <path d="M 36 38 A 14 14 0 0 0 64 38" fill="none" stroke="#f1f5f9" stroke-width="0.8"/>
+                            <path d="M 36 38 A 14 14 0 0 1 64 38" fill="none" stroke="#f1f5f9" stroke-width="0.8" stroke-dasharray="2 2"/>
+                            <!-- 三分線 -->
+                            <path d="M 12 0 L 12 18 A 45 45 0 0 0 88 18 L 88 0" fill="none" stroke="#f1f5f9" stroke-width="0.8"/>
+                            <!-- 中圈弧線 -->
+                            <path d="M 35 100 A 15 15 0 0 1 65 100" fill="none" stroke="#f1f5f9" stroke-width="0.8"/>
+                        </svg>
+
+                        <!-- 動態棋子放置區 -->
+                        <div id="piecesContainer" class="absolute inset-0"></div>
+                    </div>
+
+                    <!-- 歷史戰術庫 -->
+                    <div class="space-y-2 pt-2">
+                        <h4 class="text-xs font-bold text-slate-300">📚 已存檔戰術庫 (${list.length} 套) - 點擊即刻載入場上：</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            ${list.length > 0 ? list.map(t => `
+                                <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-xs hover:border-amber-500/50 transition">
+                                    <span onclick="loadTacticIntoCourt('${t.id}')" class="font-bold text-amber-300 cursor-pointer truncate flex-1">${t.name}</span>
+                                    <button onclick="deleteTactic('${t.id}')" class="text-slate-500 hover:text-red-400 p-1 ml-1">&times;</button>
+                                </div>
+                            `).join('') : '<p class="text-xs text-slate-500 col-span-4 py-3 text-center">尚未儲存任何戰術，請排陣後輸入名稱存檔！</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            renderTacticalPieces();
         }
 
-        async function openBossEditUserModal(userId) {
-            const { data: u } = await sb.from('users').select('*').eq('id', userId).single();
-            if (!u) return;
-            document.getElementById('bossTargetUserId').value = u.id;
-            document.getElementById('bossTargetOriginalName').value = u.name;
-            document.getElementById('bossEditName').value = u.name;
-            document.getElementById('bossEditPhone').value = u.phone || '';
-            document.getElementById('bossEditRole').value = u.role;
-            document.getElementById('bossEditTeam').value = u.team || '大隊';
-            document.getElementById('bossEditStatus').value = u.status || '已核准';
-            document.getElementById('bossEditPassword').value = '';
-            document.getElementById('bossEditChildName').value = u.child_name || '';
+        // 渲染戰術板棋子並綁定觸控/滑鼠拖曳事件
+        function renderTacticalPieces() {
+            const container = document.getElementById('piecesContainer');
+            if (!container) return;
+            container.innerHTML = "";
 
-            document.getElementById('bossEditUserModal').classList.remove('hidden');
-            document.getElementById('bossEditUserModal').classList.add('flex');
+            currentTacticPieces.forEach(piece => {
+                const div = document.createElement('div');
+                div.id = `piece_${piece.id}`;
+                div.className = `tactical-piece flex items-center justify-center font-black shadow-2xl transition-transform ${
+                    piece.type === 'offense' ? 'w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-orange-500 text-white border-2 border-white/80 text-[11px]' :
+                    piece.type === 'defense' ? 'w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white border-2 border-white/80 text-[11px]' :
+                    'w-7 h-7 rounded-full bg-amber-500 border border-black text-sm'
+                }`;
+                div.style.left = `${piece.x}%`;
+                div.style.top = `${piece.y}%`;
+                div.innerText = piece.label;
+
+                // 綁定手勢與滑鼠事件
+                bindPieceDragEvents(div, piece);
+                container.appendChild(div);
+            });
         }
 
-        function closeBossEditUserModal() {
-            document.getElementById('bossEditUserModal').classList.add('hidden');
-            document.getElementById('bossEditUserModal').classList.remove('flex');
+        function bindPieceDragEvents(element, piece) {
+            let isDragging = false;
+
+            const onStart = (e) => {
+                isDragging = true;
+                e.preventDefault();
+            };
+
+            const onMove = (e) => {
+                if (!isDragging) return;
+                const court = document.getElementById('courtContainer');
+                const rect = court.getBoundingClientRect();
+
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                let xPercent = ((clientX - rect.left) / rect.width) * 100;
+                let yPercent = ((clientY - rect.top) / rect.height) * 100;
+
+                // 限制在球場內
+                xPercent = Math.max(4, Math.min(96, xPercent));
+                yPercent = Math.max(4, Math.min(96, yPercent));
+
+                piece.x = xPercent;
+                piece.y = yPercent;
+
+                element.style.left = `${xPercent}%`;
+                element.style.top = `${yPercent}%`;
+            };
+
+            const onEnd = () => { isDragging = false; };
+
+            element.addEventListener('mousedown', onStart);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onEnd);
+
+            element.addEventListener('touchstart', onStart, { passive: false });
+            window.addEventListener('touchmove', onMove, { passive: false });
+            window.addEventListener('touchend', onEnd);
         }
 
-        async function saveBossEditUserFinal() {
-            const userId = document.getElementById('bossTargetUserId').value;
-            const originalName = document.getElementById('bossTargetOriginalName').value;
-            const name = document.getElementById('bossEditName').value.trim();
-            const phone = document.getElementById('bossEditPhone').value.trim();
-            const role = document.getElementById('bossEditRole').value;
-            const team = document.getElementById('bossEditTeam').value;
-            const status = document.getElementById('bossEditStatus').value;
-            const pass = document.getElementById('bossEditPassword').value.trim();
-            const child = document.getElementById('bossEditChildName').value.trim();
+        async function saveCurrentTactic() {
+            const name = document.getElementById('tacticNameInput').value.trim();
+            if (!name) { alert("請輸入戰術名稱！"); return; }
 
-            if (!name) { alert("姓名不可為空！"); return; }
-            const payload = { name, phone, role, team, status, child_name: child || null };
-            if (pass) payload.password = pass;
+            const { error } = await sb.from('tactics').insert([{
+                name: name,
+                positions: currentTacticPieces,
+                created_by: currentUser.userName
+            }]);
 
-            await sb.from('users').update(payload).eq('id', userId);
-            if (originalName !== name) {
-                await sb.from('players').update({ name, team }).eq('name', originalName);
-                await sb.from('daily_checkins').update({ player_name: name }).eq('player_name', originalName);
+            if (!error) {
+                alert(`🎉 戰術【${name}】已成功存檔！`);
+                loadTacticsTab();
+            } else {
+                alert("存檔失敗：" + error.message);
             }
-            alert(`已更新【${name}】資料！`);
-            closeBossEditUserModal();
-            loadDashboardOverview();
         }
 
-        async function bossDeleteUserDirectly(userId, userName) {
-            if (!confirm(`確定要將【${userName}】徹底自球隊除名嗎？`)) return;
-            await sb.from('users').delete().eq('id', userId);
-            await sb.from('players').delete().eq('name', userName);
-            await sb.from('daily_checkins').delete().eq('player_name', userName);
-            await sb.from('assignment_submissions').delete().eq('player_name', userName);
-            alert(`已將【${userName}】除名！`);
-            loadDashboardOverview();
+        async function loadTacticIntoCourt(tacticId) {
+            const { data: t } = await sb.from('tactics').select('*').eq('id', tacticId).single();
+            if (t && t.positions) {
+                currentTacticPieces = t.positions;
+                renderTacticalPieces();
+                document.getElementById('tacticNameInput').value = t.name;
+            }
         }
 
-        async function approveMember(userId, userName) {
-            await sb.from('users').update({ status: '已核准' }).eq('id', userId);
-            alert(`已核准【${userName}】！`);
-            loadDashboardOverview();
+        async function deleteTactic(tacticId) {
+            if (!confirm("確定要刪除這套戰術嗎？")) return;
+            await sb.from('tactics').delete().eq('id', tacticId);
+            loadTacticsTab();
         }
 
-        async function rejectMember(userId, userName) {
-            await sb.from('users').delete().eq('id', userId);
-            await sb.from('players').delete().eq('name', userName);
-            alert(`已拒絕【${userName}】的加入申請。`);
-            loadDashboardOverview();
-        }
-
-        async function deletePlayerDirectly(playerId, playerName) {
-            if (!confirm(`確定要除名球員【${playerName}】嗎？`)) return;
-            await sb.from('players').delete().eq('id', playerId);
-            await sb.from('users').delete().eq('name', playerName);
-            alert(`球員【${playerName}】已除名！`);
-            loadDashboardOverview();
+        function resetTacticCourt() {
+            currentTacticPieces = JSON.parse(JSON.stringify(defaultTacticPieces));
+            renderTacticalPieces();
+            document.getElementById('tacticNameInput').value = "";
         }
 
         // =========================================================================
-        // 戰役行程與經理點名板
+        // 📅 3. 戰役行程與球員請假即時通知經理/BOSS
         // =========================================================================
         async function loadScheduleTab() {
             const container = document.getElementById('tabContentContainer');
@@ -969,7 +995,10 @@
             container.innerHTML = `
                 <div class="glass-card rounded-2xl p-5 space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                        <h3 class="font-bold text-orange-400 text-base">📅 球隊賽事與訓練行事曆</h3>
+                        <div>
+                            <h3 class="font-bold text-orange-400 text-base">📅 球隊賽事與訓練行事曆</h3>
+                            <p class="text-xs text-slate-400">球員請假將即時發送 LINE 通知經理與 BOSS</p>
+                        </div>
                     </div>
                     <div class="space-y-3">
                         ${schedules.map(ev => {
@@ -977,6 +1006,8 @@
                             const attends = rsvps.filter(r => r.status === '出席');
                             const leaves = rsvps.filter(r => r.status === '請假');
                             const absents = rsvps.filter(r => r.status === '未到');
+                            const myRsvp = rsvps.find(r => r.player_name === currentUser.userName);
+
                             return `
                                 <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-2xl space-y-3">
                                     <div class="flex justify-between items-start">
@@ -985,14 +1016,22 @@
                                             <h4 class="font-bold text-white text-base mt-1">${ev.title}</h4>
                                             <p class="text-xs text-slate-400">${ev.event_date} ${ev.event_time} ｜ ${ev.location}</p>
                                         </div>
+                                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}" target="_blank" class="text-xs bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-blue-400 hover:text-white flex items-center space-x-1">
+                                            <i class="fas fa-location-arrow"></i><span>導航</span>
+                                        </a>
                                     </div>
-                                    <div class="flex justify-between items-center pt-2 border-t border-slate-800/80 text-xs">
+                                    <div class="flex flex-wrap justify-between items-center pt-2 border-t border-slate-800 text-xs gap-2">
                                         <div class="space-x-2">
                                             <span class="text-emerald-400 font-bold">出席 ${attends.length}</span>
                                             <span class="text-amber-400 font-bold">請假 ${leaves.length}</span>
                                             <span class="text-red-400 font-bold">未到 ${absents.length}</span>
+                                            ${myRsvp ? `<span class="text-slate-400 ml-1">(您已登記：${myRsvp.status})</span>` : ''}
                                         </div>
-                                        ${canManage ? `<button onclick="openAttendanceModal(${ev.id}, '${ev.title}')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl font-bold">📋 現場點名板</button>` : ''}
+                                        <div class="flex space-x-2">
+                                            ${canManage ? `<button onclick="openAttendanceModal(${ev.id}, '${ev.title}')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl font-bold">📋 現場點名板</button>` : ''}
+                                            <button onclick="playerQuickRsvp(${ev.id}, '出席', '${ev.title}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold">出席</button>
+                                            <button onclick="promptPlayerLeave(${ev.id}, '${ev.title}', '${ev.event_date} ${ev.event_time}', '${ev.location}')" class="px-3 py-1 bg-slate-800 hover:bg-amber-600 text-slate-300 hover:text-white rounded-lg">請假</button>
+                                        </div>
                                     </div>
                                 </div>
                             `;
@@ -1000,6 +1039,61 @@
                     </div>
                 </div>
             `;
+        }
+
+        // 🎯 球員請假主動推播給所有經理與 BOSS
+        async function promptPlayerLeave(scheduleId, eventTitle, eventTime, eventLocation) {
+            const reason = prompt(`請輸入請假事由（系統將即時 LINE 通知球隊經理）：`, "學校課業 / 個人事假");
+            if (reason === null || !reason.trim()) return;
+
+            // 1. 寫入 Supabase
+            await sb.from('schedule_rsvps').upsert([{
+                schedule_id: scheduleId,
+                player_name: currentUser.userName,
+                status: '請假',
+                reason: reason.trim(),
+                updated_at: new Date().toISOString()
+            }], { onConflict: 'schedule_id,player_name' });
+
+            // 2. 抓取所有經理與 BOSS 的 LINE ID
+            const { data: managers } = await sb.from('users').select('line_id').in('role', ['球隊經理', '球隊ＢＯＳＳ']).not('line_id', 'is', null);
+            const targetLineIds = new Set();
+            targetLineIds.add(BOSS_LINE_ID);
+            if (managers) managers.forEach(m => { if (m.line_id) targetLineIds.add(m.line_id.replace(/'/g, '').trim()); });
+
+            const nowStr = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
+            const messageText = `📢【M+ 戰役出勤 - 球員請假通知】\n` +
+                                `━━━━━━━━━━━━━━\n` +
+                                `👤 請假人員：${currentUser.userName}\n` +
+                                `📅 行程名稱：${eventTitle}\n` +
+                                `⏰ 時間地點：${eventTime} ｜ ${eventLocation}\n` +
+                                `📝 請假事由：${reason.trim()}\n` +
+                                `🕒 登記時間：${nowStr}\n` +
+                                `━━━━━━━━━━━━━━\n` +
+                                `請球隊經理至戰情室查閱最新名單！`;
+
+            // 3. 發出 LINE 推播
+            targetLineIds.forEach(lineId => {
+                fetch("https://api.line.me/v2/bot/message/push", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${LINE_ACCESS_TOKEN}` },
+                    body: JSON.stringify({ to: lineId, messages: [{ type: "text", text: messageText }] })
+                }).catch(err => console.log(err));
+            });
+
+            alert(`已完成請假登記，並已發送 LINE 通知球隊經理！`);
+            loadScheduleTab();
+        }
+
+        async function playerQuickRsvp(scheduleId, status, eventTitle) {
+            await sb.from('schedule_rsvps').upsert([{
+                schedule_id: scheduleId,
+                player_name: currentUser.userName,
+                status: status,
+                updated_at: new Date().toISOString()
+            }], { onConflict: 'schedule_id,player_name' });
+            alert(`已登記為：${status}`);
+            loadScheduleTab();
         }
 
         async function openAttendanceModal(scheduleId, eventTitle) {
@@ -1021,13 +1115,26 @@
             rosterContainer.innerHTML = allPlayers.map(player => {
                 const currentRecord = rsvps.find(r => r.player_name === player.name);
                 const status = currentRecord ? currentRecord.status : '未標記';
+                const avatar = player.photo_url 
+                    ? `<img src="${player.photo_url}" class="w-9 h-9 rounded-xl object-cover border border-slate-700">`
+                    : `<div class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center font-bold text-xs text-orange-400">#${player.number||7}</div>`;
+
                 return `
                     <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between text-xs">
-                        <span class="font-bold text-white">${player.name} (#${player.number} ${player.team})</span>
+                        <div class="flex items-center space-x-2.5">
+                            ${avatar}
+                            <div>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="font-bold text-slate-100">${player.name}</span>
+                                    <span class="text-[10px] bg-slate-800 px-1.5 py-0.2 rounded text-amber-300 font-mono">#${player.number}</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400">${player.team} ｜ ${player.position}</span>
+                            </div>
+                        </div>
                         <div class="flex space-x-1.5">
-                            <button onclick="setPlayerAttendance('${player.name}', '出席', this)" class="px-2.5 py-1 rounded-lg font-bold ${status==='出席'?'bg-emerald-600 text-white':'bg-slate-800 text-slate-400'}">✅ 出席</button>
-                            <button onclick="setPlayerAttendance('${player.name}', '請假', this)" class="px-2.5 py-1 rounded-lg font-bold ${status==='請假'?'bg-amber-600 text-white':'bg-slate-800 text-slate-400'}">⚠️ 請假</button>
-                            <button onclick="setPlayerAttendance('${player.name}', '未到', this)" class="px-2.5 py-1 rounded-lg font-bold ${status==='未到'?'bg-red-600 text-white':'bg-slate-800 text-slate-400'}">❌ 未到</button>
+                            <button onclick="setPlayerAttendance('${player.name}', '出席', this)" class="px-2.5 py-1 rounded-lg font-bold ${status==='出席'?'bg-emerald-600 text-white shadow':'bg-slate-800 text-slate-400'}">出席</button>
+                            <button onclick="setPlayerAttendance('${player.name}', '請假', this)" class="px-2.5 py-1 rounded-lg font-bold ${status==='請假'?'bg-amber-600 text-white shadow':'bg-slate-800 text-slate-400'}">請假</button>
+                            <button onclick="setPlayerAttendance('${player.name}', '未到', this)" class="px-2.5 py-1 rounded-lg font-bold ${status==='未到'?'bg-red-600 text-white shadow':'bg-slate-800 text-slate-400'}">未到</button>
                         </div>
                     </div>
                 `;
@@ -1057,7 +1164,7 @@
         }
 
         // =========================================================================
-        // 課表與晨報點檢
+        // 課表、晨報與圖片壓縮輔助
         // =========================================================================
         async function loadAssignmentsTab() {
             const container = document.getElementById('tabContentContainer');
@@ -1067,7 +1174,7 @@
 
         async function loadDailyStatusTab() {
             const container = document.getElementById('tabContentContainer');
-            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">每日晨報點檢</h3><p class="text-xs text-slate-400">體能與身心狀態監測中樞</p></div>`;
+            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">每日晨報點檢</h3><p class="text-xs text-slate-400">身心體能指數監測中樞</p></div>`;
         }
 
         function previewAndCompressImage(fileInput, previewElemId, hiddenInputId) {
