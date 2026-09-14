@@ -7,7 +7,7 @@
     <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Client (取代慢速 GAS) -->
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- LIFF SDK -->
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -74,7 +74,7 @@
     <!-- 主要內容區塊 -->
     <main class="w-full max-w-4xl flex-1 flex flex-col space-y-4 mb-4 pb-24">
 
-        <!-- 1. 登入畫面 -->
+        <!-- 1. 登入面板 -->
         <section id="loginSection" class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center space-y-6 my-auto border border-slate-800">
             <div class="text-center space-y-2">
                 <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-orange-500/20 to-amber-500/10 rounded-2xl border border-orange-500/30 flex items-center justify-center text-3xl mb-2 text-orange-400 glow-orange">
@@ -86,7 +86,7 @@
             <div class="w-full max-w-sm space-y-4">
                 <button onclick="handleLineLogin()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center space-x-2 border border-emerald-500/30">
                     <i class="fab fa-line text-xl"></i>
-                    <span>使用 LINE 帳號登入</span>
+                    <span>使用 LINE 快速驗證</span>
                 </button>
                 <div class="relative flex py-1 items-center">
                     <div class="flex-grow border-t border-slate-800"></div>
@@ -94,14 +94,192 @@
                     <div class="flex-grow border-t border-slate-800"></div>
                 </div>
                 <input type="text" id="loginAccount" placeholder="請輸入姓名 (例如: 吳俊璋)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-orange-500 text-slate-200">
-                <input type="password" id="loginPassword" placeholder="請輸入密碼 (預設: 0986007885)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-orange-500 text-slate-200">
+                <input type="password" id="loginPassword" placeholder="請輸入密碼" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-orange-500 text-slate-200">
                 <button onclick="handleManualLogin()" class="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl glow-orange transition active:scale-95">
                     進入戰情室
+                </button>
+                <div class="pt-2 text-center">
+                    <button onclick="showRegisterSection()" class="text-xs text-orange-400 hover:text-orange-300 font-bold underline transition">
+                        尚未加入球隊？點此填寫新成員註冊表單 &rarr;
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 新進人員註冊面板 -->
+        <section id="registerSection" class="hidden glass-card rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 border border-slate-800 my-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div>
+                    <h2 class="text-xl font-black text-white flex items-center space-x-2">
+                        <span>📝</span><span>M+ 球隊新成員註冊</span>
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">請選擇您的身分並填寫專屬檔案</p>
+                </div>
+                <button onclick="hideRegisterSection()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition">
+                    返回登入
+                </button>
+            </div>
+
+            <!-- 身分切換膠囊 -->
+            <div class="grid grid-cols-4 gap-1 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 text-xs">
+                <button type="button" onclick="selectRegRole('PLAYER')" id="regBtnPLAYER" class="py-2 rounded-xl font-bold transition bg-orange-500 text-white shadow">🏀 球員</button>
+                <button type="button" onclick="selectRegRole('COACH')" id="regBtnCOACH" class="py-2 rounded-xl font-bold transition text-slate-400 hover:text-white">📋 教練</button>
+                <button type="button" onclick="selectRegRole('MANAGER')" id="regBtnMANAGER" class="py-2 rounded-xl font-bold transition text-slate-400 hover:text-white">📊 經理</button>
+                <button type="button" onclick="selectRegRole('PARENT')" id="regBtnPARENT" class="py-2 rounded-xl font-bold transition text-slate-400 hover:text-white">👨‍👩‍👦 家長</button>
+            </div>
+
+            <!-- 通用基本資料 -->
+            <div class="space-y-3 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 block mb-1 font-semibold">真實姓名 <span class="text-red-400">*</span></label>
+                        <input type="text" id="regName" placeholder="請輸入本名" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 block mb-1 font-semibold">聯絡電話 <span class="text-red-400">*</span></label>
+                        <input type="tel" id="regPhone" placeholder="例如: 0912345678" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 block mb-1 font-semibold">設定登入密碼 <span class="text-red-400">*</span></label>
+                        <input type="password" id="regPassword" placeholder="自訂登入密碼" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
+                    </div>
+                    <div id="divRegLine">
+                        <label class="text-slate-400 block mb-1 font-semibold">LINE ID (自動帶入)</label>
+                        <input type="text" id="regLineId" readonly placeholder="透過 LINE 註冊將自動填入" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-400">
+                    </div>
+                </div>
+
+                <!-- 🏀 專屬表單：球員 -->
+                <div id="formFieldsPlayer" class="space-y-3 pt-2 border-t border-slate-800/80">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">所屬梯隊</label>
+                            <select id="regPlayerTeam" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                                <option value="大隊">🏀 大隊</option>
+                                <option value="小隊">⚡ 小隊</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">守備位置</label>
+                            <select id="regPlayerPos" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                                <option value="控球後衛">PG 控球後衛</option>
+                                <option value="得分後衛">SG 得分後衛</option>
+                                <option value="小前鋒">SF 小前鋒</option>
+                                <option value="大前鋒">PF 大前鋒</option>
+                                <option value="中鋒">C 中鋒</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="text-slate-400 block mb-1 font-semibold">期望背號</label>
+                            <input type="number" id="regPlayerNum" placeholder="例如: 7" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">身高 (cm)</label>
+                            <input type="number" id="regPlayerHeight" placeholder="例如: 178" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">體重 (kg)</label>
+                            <input type="number" id="regPlayerWeight" placeholder="例如: 70" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">緊急聯絡人 (家長姓名)</label>
+                            <input type="text" id="regPlayerEmergencyName" placeholder="例如: 爸爸姓名" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">緊急聯絡電話</label>
+                            <input type="tel" id="regPlayerEmergencyPhone" placeholder="例如: 0988xxxxxx" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-slate-400 block mb-1 font-semibold">既往傷病史 (無請填無)</label>
+                        <input type="text" id="regPlayerInjury" value="無" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                    </div>
+                </div>
+
+                <!-- 📋 專屬表單：教練 -->
+                <div id="formFieldsCoach" class="hidden space-y-3 pt-2 border-t border-slate-800/80">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">主要執教梯隊</label>
+                            <select id="regCoachTeam" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                                <option value="大隊">🏀 大隊</option>
+                                <option value="小隊">⚡ 小隊</option>
+                                <option value="全隊">🔥 全隊總協同</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">執教職位</label>
+                            <select id="regCoachPosition" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                                <option value="總教練">總教練</option>
+                                <option value="助理教練">助理教練</option>
+                                <option value="體能訓練師">體能訓練師</option>
+                                <option value="技術教練">技術教練</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 📊 專屬表單：球隊經理 -->
+                <div id="formFieldsManager" class="hidden space-y-3 pt-2 border-t border-slate-800/80">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">主要負責梯隊</label>
+                            <select id="regManagerTeam" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                                <option value="大隊">🏀 大隊</option>
+                                <option value="小隊">⚡ 小隊</option>
+                                <option value="全隊">全隊綜合行政</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">負責範疇</label>
+                            <select id="regManagerDuty" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                                <option value="全隊出勤與點檢">全隊出勤與點檢</option>
+                                <option value="裝備物資採購">裝備物資採購</option>
+                                <option value="賽事紀錄與影像">賽事紀錄與影像</option>
+                                <option value="綜合後勤">綜合後勤</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 👨‍👩‍👦 專屬表單：家長 -->
+                <div id="formFieldsParent" class="hidden space-y-3 pt-2 border-t border-slate-800/80">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">孩子球員本名 <span class="text-red-400">*</span></label>
+                            <input type="text" id="regParentChildName" placeholder="例如: 孩子姓名" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">與孩子關係</label>
+                            <select id="regParentRelation" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                                <option value="父親">父親</option>
+                                <option value="母親">母親</option>
+                                <option value="監護人/親屬">監護人/親屬</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1 font-semibold">孩子所屬梯隊</label>
+                            <select id="regParentTeam" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                                <option value="大隊">🏀 大隊</option>
+                                <option value="小隊">⚡ 小隊</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="submitNewMemberRegister()" class="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl glow-orange transition active:scale-95 text-sm mt-4">
+                    確認送出註冊並進入戰情台
                 </button>
             </div>
         </section>
 
-        <!-- 2. 主操作台 -->
+        <!-- 3. 主操作台 -->
         <section id="dashboardSection" class="hidden space-y-4">
             <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center border-l-4 border-orange-500 gap-3">
                 <div class="flex items-center space-x-3">
@@ -223,7 +401,6 @@
 
     <!-- JavaScript 核心 (Supabase 直連) -->
     <script>
-        // Supabase 直連金鑰
         const SUPABASE_URL = "https://ldsedanswynbzymyfwox.supabase.co";
         const SUPABASE_KEY = "sb_publishable_M1akQ21ePT5OVjpjO1kc8A_2GqObjrT";
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -236,6 +413,7 @@
         };
 
         let currentActiveTab = 'overview';
+        let currentRegRole = 'PLAYER';
 
         let morningSleep = 7.5;
         let morningEnergy = "⚡ 精神飽滿";
@@ -253,27 +431,40 @@
             liff.init({ liffId: "2011574321-QGPq8PoR" }).then(() => {
                 if (liff.isLoggedIn()) {
                     const profile = liff.getDecodedIDToken();
-                    if (profile && profile.sub) autoLoginWithLine(profile.sub);
+                    if (profile && profile.sub) autoLoginWithLine(profile.sub, profile.name);
                 }
             }).catch(err => console.log("LIFF Init Error:", err));
         }
 
-        async function autoLoginWithLine(lineUserId) {
+        async function autoLoginWithLine(lineUserId, lineName = "") {
             try {
-                const { data, error } = await sb.from('users').select('*').eq('line_id', lineUserId).single();
+                const { data, error } = await sb.from('users').select('*').eq('line_id', lineUserId).maybeSingle();
                 if (data) {
                     processLoginSuccess(data);
+                } else {
+                    // 若 LINE 查無此人，自動導向註冊頁面並帶入 LINE ID
+                    showRegisterSection();
+                    document.getElementById('regLineId').value = lineUserId;
+                    if (lineName && !document.getElementById('regName').value) {
+                        document.getElementById('regName').value = lineName;
+                    }
+                    alert("歡迎！請先完成新成員檔案建立以開通戰情系統！");
                 }
-            } catch (e) { console.log("LINE 自動登入跳過", e); }
+            } catch (e) { console.log("LINE 自動登入略過", e); }
         }
 
         async function handleLineLogin() {
             if (typeof liff !== 'undefined' && liff.isInClient()) {
                 if (!liff.isLoggedIn()) { liff.login(); return; }
                 const profile = liff.getDecodedIDToken();
-                if (profile && profile.sub) autoLoginWithLine(profile.sub);
+                if (profile && profile.sub) autoLoginWithLine(profile.sub, profile.name);
             } else {
-                alert("請直接在下方輸入姓名登入測試！");
+                if (typeof liff !== 'undefined' && !liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    showRegisterSection();
+                    alert("請直接填寫下方新成員檔案完成註冊！");
+                }
             }
         }
 
@@ -282,31 +473,17 @@
             const pass = document.getElementById('loginPassword').value.trim();
             if (!acc) { alert("請輸入姓名！"); return; }
 
-            // 毫秒級 SQL 查詢
             const { data, error } = await sb.from('users').select('*').eq('name', acc).maybeSingle();
             
-            if (error) {
-                alert("資料庫連線異常：" + error.message);
-                return;
-            }
+            if (error) { alert("資料庫連線異常：" + error.message); return; }
 
             if (!data) {
-                // 如果還沒有帳號，自動建立球員帳號
-                const { data: newUser, error: insertErr } = await sb.from('users').insert([{
-                    name: acc,
-                    password: pass || '123456',
-                    role: '球員',
-                    team: '大隊'
-                }]).select().single();
-
-                await sb.from('players').insert([{
-                    name: acc,
-                    number: 7,
-                    position: '控球後衛',
-                    team: '大隊'
-                }]);
-
-                processLoginSuccess(newUser);
+                // 查無帳號直接導向註冊
+                alert(`查無【${acc}】的資料，為您跳轉至註冊建立檔案！`);
+                showRegisterSection();
+                document.getElementById('regName').value = acc;
+                if (pass) document.getElementById('regPassword').value = pass;
+                return;
             } else {
                 if (data.password && pass && data.password !== pass) {
                     alert("密碼不正確！");
@@ -314,6 +491,116 @@
                 }
                 processLoginSuccess(data);
             }
+        }
+
+        // ==========================================
+        // 註冊表單切換與送出邏輯
+        // ==========================================
+        function showRegisterSection() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('registerSection').classList.remove('hidden');
+        }
+
+        function hideRegisterSection() {
+            document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+        }
+
+        function selectRegRole(role) {
+            currentRegRole = role;
+            ['PLAYER', 'COACH', 'MANAGER', 'PARENT'].forEach(r => {
+                const btn = document.getElementById(`regBtn${r}`);
+                if (r === role) {
+                    btn.className = "py-2 rounded-xl font-bold transition bg-orange-500 text-white shadow";
+                } else {
+                    btn.className = "py-2 rounded-xl font-bold transition text-slate-400 hover:text-white";
+                }
+            });
+
+            // 隱藏全部身分專屬欄位
+            document.getElementById('formFieldsPlayer').classList.add('hidden');
+            document.getElementById('formFieldsCoach').classList.add('hidden');
+            document.getElementById('formFieldsManager').classList.add('hidden');
+            document.getElementById('formFieldsParent').classList.add('hidden');
+
+            // 顯示當前選取身分
+            if (role === 'PLAYER') document.getElementById('formFieldsPlayer').classList.remove('hidden');
+            else if (role === 'COACH') document.getElementById('formFieldsCoach').classList.remove('hidden');
+            else if (role === 'MANAGER') document.getElementById('formFieldsManager').classList.remove('hidden');
+            else if (role === 'PARENT') document.getElementById('formFieldsParent').classList.remove('hidden');
+        }
+
+        async function submitNewMemberRegister() {
+            const name = document.getElementById('regName').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const lineId = document.getElementById('regLineId').value.trim();
+
+            if (!name || !phone || !password) {
+                alert("請完整填寫姓名、電話與登入密碼！");
+                return;
+            }
+
+            let roleText = "球員";
+            let team = "大隊";
+            let extraUserFields = {};
+
+            if (currentRegRole === 'PLAYER') {
+                roleText = "球員";
+                team = document.getElementById('regPlayerTeam').value;
+            } else if (currentRegRole === 'COACH') {
+                roleText = "教練";
+                team = document.getElementById('regCoachTeam').value;
+            } else if (currentRegRole === 'MANAGER') {
+                roleText = "球隊經理";
+                team = document.getElementById('regManagerTeam').value;
+            } else if (currentRegRole === 'PARENT') {
+                roleText = "家長";
+                team = document.getElementById('regParentTeam').value;
+                const childName = document.getElementById('regParentChildName').value.trim();
+                const relation = document.getElementById('regParentRelation').value;
+                if (!childName) { alert("請填寫孩子的本名！"); return; }
+                extraUserFields = { child_name: childName, relation: relation };
+            }
+
+            // 寫入 users 資料表
+            const { data: newUser, error: uErr } = await sb.from('users').insert([{
+                name: name,
+                phone: phone,
+                password: password,
+                role: roleText,
+                team: team,
+                line_id: lineId || null,
+                ...extraUserFields
+            }]).select().single();
+
+            if (uErr) {
+                alert("註冊失敗: " + uErr.message);
+                return;
+            }
+
+            // 若為球員，同步寫入 players 名冊
+            if (currentRegRole === 'PLAYER') {
+                const pos = document.getElementById('regPlayerPos').value;
+                const num = parseInt(document.getElementById('regPlayerNum').value) || 7;
+                const height = parseFloat(document.getElementById('regPlayerHeight').value) || null;
+                const weight = parseFloat(document.getElementById('regPlayerWeight').value) || null;
+
+                await sb.from('players').insert([{
+                    name: name,
+                    number: num,
+                    position: pos,
+                    team: team,
+                    height: height,
+                    weight: weight,
+                    offense: 80, defense: 80, fitness: 80, attitude: 90, agility: 82, bball_iq: 85,
+                    line_id: lineId || null
+                }]);
+            }
+
+            alert(`🎉 恭喜【${name}】註冊成功！系統已為您開通專屬戰情室！`);
+            hideRegisterSection();
+            processLoginSuccess(newUser);
         }
 
         function processLoginSuccess(userRecord) {
@@ -330,6 +617,7 @@
             };
 
             document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('registerSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.remove('hidden');
             document.getElementById('floatingNavbar').classList.remove('hidden');
             document.getElementById('loginStatusBadge').innerText = `${currentUser.userName} (${currentUser.roleText})`;
@@ -370,6 +658,7 @@
         function logout() {
             currentUser = { actualRole: null, role: null, userName: null, roleText: null };
             document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('registerSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('floatingNavbar').classList.add('hidden');
             document.getElementById('roleSwitchContainer').classList.add('hidden');
@@ -411,7 +700,7 @@
         }
 
         // =========================================================================
-        // ⚡ 1. 主戰情室 (PostgreSQL 毫秒直查)
+        // ⚡ 1. 主戰情室
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
@@ -419,7 +708,6 @@
 
             const today = new Date().toISOString().split('T')[0];
 
-            // 平行快速查詢
             const [pRes, tasksRes, subsRes, checkinsRes, schedRes] = await Promise.all([
                 sb.from('players').select('*').eq('name', currentUser.userName).maybeSingle(),
                 sb.from('assignments').select('*').order('id', { ascending: false }),
@@ -436,7 +724,6 @@
 
             let html = "";
 
-            // --- 🏀 球員主戰情室 ---
             if (currentUser.role === "PLAYER") {
                 const uncompletedTasks = tasks.filter(t => !mySubs.some(s => s.assignment_id === t.id));
                 const radarValues = [pData.offense, pData.defense, pData.fitness, pData.attitude, pData.agility, pData.bball_iq];
@@ -456,7 +743,7 @@
                                             <h2 class="text-xl font-black text-white">${currentUser.userName}</h2>
                                             <span class="text-[10px] px-2 py-0.5 bg-orange-500/20 text-orange-300 border border-orange-500/30 rounded-full font-bold">${pData.position || '控球後衛'}</span>
                                         </div>
-                                        <p class="text-xs text-slate-400 mt-0.5">M+ ${pData.team || '大隊'} ｜ SQL 即時同步</p>
+                                        <p class="text-xs text-slate-400 mt-0.5">M+ ${pData.team || '大隊'} ｜ 梯隊直通</p>
                                     </div>
                                 </div>
                                 <div class="bg-slate-950/80 border border-amber-500/40 rounded-2xl px-4 py-2 text-center shadow-lg">
@@ -509,10 +796,7 @@
                         </div>
                     </div>
                 `;
-            }
-
-            // --- 📊 經理主戰情室 ---
-            else if (currentUser.role === "MANAGER") {
+            } else if (currentUser.role === "MANAGER") {
                 const totalPlayers = 10;
                 const checkedCount = checkins.length;
                 const rate = Math.round((checkedCount / totalPlayers) * 100);
@@ -574,10 +858,7 @@
                         </div>
                     </div>
                 `;
-            }
-
-            // --- 📋 教練主戰情室 ---
-            else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
+            } else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
                 html += `
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -993,7 +1274,7 @@
         }
 
         // =========================================================================
-        // 行程管理、課表回報 (Supabase 秒寫)
+        // 行程管理、課表回報
         // =========================================================================
         function openEventModal() {
             document.getElementById('eventModal').classList.remove('hidden');
