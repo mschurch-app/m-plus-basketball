@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Ｍ＋藍球隊球員系統</title>
-    <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- LIFF SDK -->
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -35,7 +32,6 @@
                         linear-gradient(135deg, #f59e0b, #ea580c, #475569) border-box;
         }
         .radar-mesh { stroke: rgba(255, 255, 255, 0.12); stroke-dasharray: 2 2; }
-        
         .court-board {
             position: relative;
             background: #111827;
@@ -181,7 +177,7 @@
         </button>
     </nav>
 
-    <!-- ✨ 新成員註冊申請 Modal -->
+    <!-- ✨ 註冊 Modal -->
     <div id="registerModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-orange-500/40 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -220,7 +216,7 @@
         </div>
     </div>
 
-    <!-- ➕ 新增行程 Modal (教練/經理/BOSS 專屬) -->
+    <!-- ➕ 發布行程 Modal -->
     <div id="createScheduleModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-orange-500/40 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -567,7 +563,7 @@
         }
 
         // =========================================================================
-        // ⚡ 1. 完整身分主控台 (含經理台審核人員權限)
+        // ⚡ 1. 完整身分主控台 (含家長台孩子數據卡片、教練晨報監控)
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
@@ -689,7 +685,7 @@
             const allParents = allParentsRes.data || [];
             const pendingMembers = pendingMembersRes.data || [];
 
-            // 🏀 球員台視角
+            // 🏀 球員台視角 (2K 戰神卡)
             if (currentUser.role === "PLAYER") {
                 const uncompletedTasks = tasks.filter(t => !mySubs.some(s => s.assignment_id === t.id));
                 const radarValues = [pData.offense, pData.defense, pData.fitness, pData.attitude, pData.agility, pData.bball_iq];
@@ -762,9 +758,13 @@
                             <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">全體球員</span><span class="font-num text-2xl font-black text-orange-400 mt-1 block">${allPlayers.length} 人</span></div>
                             <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">大隊主力</span><span class="font-num text-2xl font-black text-amber-400 mt-1 block">${teamDaList.length} 人</span></div>
                             <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">今日晨報</span><span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${checkins.length} 人</span></div>
+                            <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">待審核成員</span><span class="font-num text-2xl font-black text-blue-400 mt-1 block">${pendingMembers.length} 人</span></div>
                         </div>
                         <div class="glass-card rounded-2xl p-5 space-y-4">
-                            <h3 class="font-bold text-orange-400 text-base">📋 教練球員陣容名冊與管理</h3>
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                                <h3 class="font-bold text-orange-400 text-base">📋 教練球員陣容名冊與管理</h3>
+                                <button onclick="switchTab('assignments')" class="text-xs text-amber-400 font-bold hover:underline">前往課表中心派發 ➔</button>
+                            </div>
                             <div class="space-y-2">
                                 ${teamDaList.map(pl => `
                                     <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
@@ -778,11 +778,10 @@
                 `;
             }
 
-            // 📊 經理台視角 (支援經理審核註冊新成員)
+            // 📊 經理台視角 (支援經理審核)
             else if (currentUser.role === "MANAGER") {
                 container.innerHTML = `
                     <div class="space-y-4">
-                        <!-- 經理審核新成員專區 -->
                         ${pendingMembers.length > 0 ? `
                             <div class="glass-card rounded-2xl p-4 border border-emerald-500/50 bg-emerald-950/20 space-y-3">
                                 <div class="flex justify-between items-center">
@@ -812,7 +811,7 @@
                         <div class="grid grid-cols-2 gap-3">
                             <button onclick="switchTab('tactics')" class="glass-card p-4 rounded-2xl border border-amber-500/30 flex items-center space-x-3 text-left">
                                 <span class="text-2xl p-2 bg-amber-500/20 text-amber-400 rounded-xl">🏀</span>
-                                <div><h4 class="font-bold text-white text-sm">戰術戰略複習板</h4><p class="text-[11px] text-slate-400">查看已存檔戰術</p></div>
+                                <div><h4 class="font-bold text-white text-sm">戰術戰略推演板</h4><p class="text-[11px] text-slate-400">推演與存檔戰術</p></div>
                             </button>
                             <button onclick="switchTab('schedule')" class="glass-card p-4 rounded-2xl border border-emerald-500/30 flex items-center space-x-3 text-left">
                                 <span class="text-2xl p-2 bg-emerald-500/20 text-emerald-400 rounded-xl">📋</span>
@@ -835,13 +834,45 @@
                 `;
             }
 
-            // 👨‍👩‍👦 家長台視角
+            // 👨‍👩‍👦 家長台視角 (補齊孩子健康與訓練實質數據)
             else if (currentUser.role === "PARENT") {
+                const childCheckin = checkins.find(c => c.player_name === targetPlayerName);
+                const childSubs = mySubs.filter(s => s.player_name === targetPlayerName);
+
                 container.innerHTML = `
                     <div class="space-y-4">
                         <div class="glass-card rounded-3xl p-5 border border-amber-500/30 bg-gradient-to-r from-slate-900 to-slate-950">
-                            <h2 class="text-lg font-black text-white">家長安心關懷中樞</h2>
-                            <p class="text-xs text-slate-300 mt-1">目前鎖定關心孩子：<span class="text-orange-400 font-black text-sm">${targetPlayerName}</span> (${pData.team} #${pData.number})</p>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h2 class="text-lg font-black text-white">家長安心關懷中樞</h2>
+                                    <p class="text-xs text-slate-300 mt-1">目前鎖定關心孩子：<span class="text-orange-400 font-black text-sm">${targetPlayerName}</span> (${pData.team} #${pData.number})</p>
+                                </div>
+                                <span class="text-xs px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold">即時同步</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="glass-card rounded-2xl p-4 border border-slate-800">
+                                <h4 class="text-xs text-slate-400 font-bold">今日身心點檢</h4>
+                                ${childCheckin ? `
+                                    <p class="text-sm font-bold text-emerald-400 mt-2">✓ 今日已完成晨報</p>
+                                    <p class="text-xs text-slate-300 mt-1">睡眠 ${childCheckin.sleep_hours} 小時 ｜ 疲勞 ${childCheckin.fatigue}/5</p>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">痠痛部位：${childCheckin.sore_area || '無'}</p>
+                                ` : `
+                                    <p class="text-sm font-bold text-amber-400 mt-2">尚未填寫今日晨報</p>
+                                    <p class="text-xs text-slate-500 mt-1">請提醒孩子進行晨檢回報</p>
+                                `}
+                            </div>
+                            <div class="glass-card rounded-2xl p-4 border border-slate-800">
+                                <h4 class="text-xs text-slate-400 font-bold">自主訓練進度</h4>
+                                <p class="font-num text-2xl font-black text-orange-400 mt-2">${childSubs.length} / ${tasks.length}</p>
+                                <p class="text-xs text-slate-400 mt-1">已完成自主課表項數</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4 border border-slate-800">
+                            <h4 class="text-xs text-slate-300 font-bold mb-2">孩子身型與能力概況</h4>
+                            <p class="text-xs text-slate-400">守備位置：<span class="text-white">${pData.position}</span> ｜ 身高：<span class="text-white">${pData.height || 178} cm</span> ｜ 體重：<span class="text-white">${pData.weight || 70} kg</span></p>
                         </div>
                     </div>
                 `;
@@ -857,7 +888,7 @@
 
             const { data: savedTactics } = await sb.from('tactics').select('*').order('id', { ascending: false });
             const list = savedTactics || [];
-            const isManagement = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role) || ["COACH", "MANAGER", "BOSS"].includes(currentUser.actualRole);
+            const isManagement = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role);
 
             container.innerHTML = `
                 <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
@@ -874,7 +905,9 @@
                                 <button onclick="saveCurrentTactic()" class="px-3.5 py-1.5 bg-amber-500 text-black font-black text-xs rounded-xl shadow">存檔</button>
                                 <button onclick="resetTacticCourt()" class="px-2.5 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs">重設</button>
                             </div>
-                        ` : ''}
+                        ` : `
+                            <button onclick="resetTacticCourt()" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold">還原預設陣型</button>
+                        `}
                     </div>
                     <div id="courtContainer" class="court-board w-full h-[380px] sm:h-[450px] rounded-2xl overflow-hidden shadow-2xl relative">
                         <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full pointer-events-none opacity-40">
@@ -949,7 +982,7 @@
             const { data: t } = await sb.from('tactics').select('*').eq('id', tacticId).single();
             if (t && t.positions) {
                 currentTacticPieces = t.positions;
-                const isManagement = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role) || ["COACH", "MANAGER", "BOSS"].includes(currentUser.actualRole);
+                const isManagement = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role);
                 renderTacticalPieces(isManagement);
                 const nameInput = document.getElementById('tacticNameInput');
                 if (nameInput) nameInput.value = t.name;
@@ -964,7 +997,7 @@
 
         function resetTacticCourt() {
             currentTacticPieces = JSON.parse(JSON.stringify(defaultTacticPieces));
-            const isManagement = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role) || ["COACH", "MANAGER", "BOSS"].includes(currentUser.actualRole);
+            const isManagement = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role);
             renderTacticalPieces(isManagement);
         }
 
@@ -982,7 +1015,7 @@
 
             const tasks = tasksRes.data || [];
             const mySubs = subsRes.data || [];
-            const isCoachOrBoss = (currentUser.role === "COACH" || currentUser.role === "BOSS") || (currentUser.actualRole === "COACH" || currentUser.actualRole === "BOSS");
+            const isCoachOrBoss = (currentUser.role === "COACH" || currentUser.role === "BOSS");
 
             container.innerHTML = `
                 <div class="space-y-4">
@@ -1074,7 +1107,7 @@
 
             const { data: list } = await sb.from('schedules').select('*, schedule_rsvps(*)').order('event_date', { ascending: true });
             const schedules = list || [];
-            const canManage = ["MANAGER", "COACH", "BOSS"].includes(currentUser.role) || ["MANAGER", "COACH", "BOSS"].includes(currentUser.actualRole);
+            const canManage = ["MANAGER", "COACH", "BOSS"].includes(currentUser.role);
 
             container.innerHTML = `
                 <div class="glass-card rounded-2xl p-5 space-y-4">
@@ -1372,7 +1405,6 @@
             }
         }
 
-        // 審核成員專用函式 (經理/BOSS 共同使用)
         async function approveMember(id, name, role) {
             const { error } = await sb.from('users').update({ status: '已核准' }).eq('id', id);
             if (error) {
