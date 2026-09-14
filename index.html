@@ -40,7 +40,7 @@
                 <div>
                     <div class="flex items-center space-x-2">
                         <h1 class="font-black text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">M+ 戰情中心</h1>
-                        <span class="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-bold">PRO 2.6</span>
+                        <span class="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-bold">PRO 2.8</span>
                     </div>
                     <p class="text-xs text-slate-400 font-medium" id="userRoleSubtitle">身分辨識中...</p>
                 </div>
@@ -68,7 +68,7 @@
     </header>
 
     <!-- 主要內容區塊 -->
-    <main class="w-full max-w-4xl flex-1 flex flex-col space-y-4 mb-6">
+    <main class="w-full max-w-4xl flex-1 flex flex-col space-y-4 mb-4 pb-24">
 
         <!-- 1. 登入畫面 -->
         <section id="loginSection" class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center space-y-6 my-auto border border-slate-800">
@@ -99,7 +99,6 @@
 
         <!-- 2. 主操作台 -->
         <section id="dashboardSection" class="hidden space-y-4">
-            <!-- 天氣與隊魂 -->
             <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center border-l-4 border-orange-500 gap-3">
                 <div class="flex items-center space-x-3">
                     <div class="text-3xl p-2 bg-slate-800/80 rounded-xl border border-slate-700/60">🌤️</div>
@@ -119,27 +118,31 @@
                 </div>
             </div>
 
-            <!-- 功能分頁導航條 -->
-            <div class="flex space-x-2 overflow-x-auto hide-scrollbar pb-1">
-                <button onclick="switchTab('overview')" id="tabBtnOverview" class="px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-xs whitespace-nowrap glow-orange flex items-center space-x-1.5 active:scale-95 transition">
-                    <span>⚡</span><span>主戰情室</span>
-                </button>
-                <button onclick="switchTab('assignments')" id="tabBtnAssignments" class="px-4 py-2.5 bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-medium rounded-xl text-xs whitespace-nowrap border border-slate-800 flex items-center space-x-1.5 active:scale-95 transition">
-                    <span>🎯</span><span>課表中心</span>
-                </button>
-                <button onclick="switchTab('schedule')" id="tabBtnSchedule" class="px-4 py-2.5 bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-medium rounded-xl text-xs whitespace-nowrap border border-slate-800 flex items-center space-x-1.5 active:scale-95 transition">
-                    <span>📅</span><span>戰役行程</span>
-                </button>
-                <button onclick="switchTab('dailystatus')" id="tabBtnDailystatus" class="px-4 py-2.5 bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-medium rounded-xl text-xs whitespace-nowrap border border-slate-800 flex items-center space-x-1.5 active:scale-95 transition">
-                    <span>📋</span><span>晨報點檢</span>
-                </button>
-            </div>
-
-            <!-- 內容注入區塊 -->
+            <!-- 動態內容注入區塊 -->
             <div id="tabContentContainer" class="space-y-4"></div>
         </section>
 
     </main>
+
+    <!-- 📱 底部現代毛玻璃浮動導航列 -->
+    <nav id="floatingNavbar" class="hidden fixed bottom-4 z-40 max-w-md w-[92%] sm:w-[420px] glass-card bg-slate-950/85 backdrop-blur-xl border border-slate-800/90 rounded-3xl px-3 py-2.5 shadow-2xl shadow-black/80 flex justify-around items-center">
+        <button onclick="switchTab('overview')" id="tabBtnOverview" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-bold text-orange-400 transition active:scale-90">
+            <span class="text-lg mb-0.5"><i class="fas fa-bolt"></i></span>
+            <span class="text-[10px] tracking-wider">主戰情室</span>
+        </button>
+        <button onclick="switchTab('assignments')" id="tabBtnAssignments" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
+            <span class="text-lg mb-0.5"><i class="fas fa-bullseye"></i></span>
+            <span class="text-[10px] tracking-wider">課表中心</span>
+        </button>
+        <button onclick="switchTab('schedule')" id="tabBtnSchedule" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
+            <span class="text-lg mb-0.5"><i class="fas fa-calendar-alt"></i></span>
+            <span class="text-[10px] tracking-wider">戰役行程</span>
+        </button>
+        <button onclick="switchTab('dailystatus')" id="tabBtnDailystatus" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
+            <span class="text-lg mb-0.5"><i class="fas fa-heartbeat"></i></span>
+            <span class="text-[10px] tracking-wider">晨報點檢</span>
+        </button>
+    </nav>
 
     <!-- 彈出對話框：自主訓練回報 -->
     <div id="reportModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
@@ -224,11 +227,6 @@
         </div>
     </div>
 
-    <!-- 頁尾 -->
-    <footer class="text-center text-xs text-slate-600 py-2 font-mono">
-        M+ Basketball Intelligence System &copy; 2026.
-    </footer>
-
     <!-- JavaScript 核心 -->
     <script>
         const API_ENDPOINT = "https://script.google.com/macros/s/AKfycbxAX6z1idXFUFIRYEAj07WIManJfwOvk-P1mRLhyTn6Ewfv_ZcmhOSsT2kxqDAoxpOWFA/exec"; 
@@ -244,7 +242,6 @@
         let selectedFileBase64 = "";
         let selectedFileName = "";
 
-        // 晨報點檢狀態變數
         let morningSleep = 7.5;
         let morningEnergy = "⚡ 精神飽滿";
         let morningSores = [];
@@ -310,6 +307,7 @@
 
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('floatingNavbar').classList.remove('hidden');
             document.getElementById('loginStatusBadge').innerText = `${currentUser.userName} (${currentUser.roleText})`;
             document.getElementById('loginStatusBadge').className = "text-xs px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold";
             document.getElementById('logoutBtn').classList.remove('hidden');
@@ -349,6 +347,7 @@
             currentUser = { actualRole: null, role: null, userName: null, roleText: null };
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('floatingNavbar').classList.add('hidden');
             document.getElementById('roleSwitchContainer').classList.add('hidden');
             document.getElementById('loginStatusBadge').innerText = "未登入";
             document.getElementById('loginStatusBadge').className = "text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium";
@@ -361,9 +360,11 @@
             ['overview', 'assignments', 'schedule', 'dailystatus'].forEach(t => {
                 const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
                 if (btn) {
-                    btn.className = (t === tabName) 
-                        ? "px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-xs whitespace-nowrap glow-orange flex items-center space-x-1.5 active:scale-95 transition" 
-                        : "px-4 py-2.5 bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-medium rounded-xl text-xs whitespace-nowrap border border-slate-800 flex items-center space-x-1.5 active:scale-95 transition";
+                    if (t === tabName) {
+                        btn.className = "nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-bold text-orange-400 scale-105 transition active:scale-90";
+                    } else {
+                        btn.className = "nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90";
+                    }
                 }
             });
 
@@ -373,16 +374,31 @@
             else if (tabName === 'dailystatus') loadDailyStatusTab();
         }
 
+        // 核心幾何演算法：依據 6 維真實數據生成真實 SVG 六角多邊形
+        function generateDynamicRadarPoints(values, maxVal = 100, center = 50, maxRadius = 38) {
+            // 6 個軸向角度 (從正上方 12 點鐘開始逆時針分配: 270, 330, 30, 90, 150, 210 度)
+            const angles = [-90, -30, 30, 90, 150, 210];
+            const points = values.map((val, idx) => {
+                const angleRad = (angles[idx] * Math.PI) / 180;
+                const r = (Math.max(10, Math.min(val, maxVal)) / maxVal) * maxRadius;
+                const x = (center + r * Math.cos(angleRad)).toFixed(1);
+                const y = (center + r * Math.sin(angleRad)).toFixed(1);
+                return `${x},${y}`;
+            });
+            return points.join(' ');
+        }
+
         // =========================================================================
-        // ⚡ 1. 主戰情室 (Dashboard Overview) - 修復經理台與教練台儀表板
+        // ⚡ 1. 主戰情室 (Dashboard Overview) - 動態真實雷達圖連動
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
 
-            // 同步抓取總覽數據與球員名單
-            const [overviewRes, playersRes] = await Promise.all([
+            // 同步抓取戰情數據、球員評估雷達數據與名冊
+            const [overviewRes, radarRes, playersRes] = await Promise.all([
                 callApi("getDashboardData", { role: currentUser.role, playerName: currentUser.userName }),
+                callApi("getPlayerRadarData", { name: currentUser.userName }),
                 callApi("getPlayerList", {})
             ]);
 
@@ -402,13 +418,33 @@
 
             let html = "";
 
-            // --- 🏀 1. 球員台主戰情室 ---
+            // --- 🏀 球員台主戰情室 ---
             if (currentUser.role === "PLAYER") {
                 const unsubmittedTasks = (data.myAssignments || []).filter(t => !t.mySubmission);
 
+                // 從後端 Evaluations 數據計算 6 項真實分數 (滿分100)
+                let rData = radarRes.data;
+                let offense = 80, defense = 80, fitness = 80, attitude = 90, agility = 82, bballIQ = 85;
+                let coachNote = "「持續磨練外線穩定度，加強左手切入抗衡！」";
+
+                if (rData) {
+                    // 若後端為 1-5 分制，自動換算為百分制
+                    offense = Math.round((rData.offense || 4) * 20);
+                    defense = Math.round((rData.defense || 4) * 20);
+                    fitness = Math.round((rData.fitness || 4) * 20);
+                    attitude = Math.round((rData.attitude || 4.5) * 20);
+                    agility = Math.min(98, Math.round(fitness * 0.95 + 5));
+                    bballIQ = Math.min(99, Math.round((offense + defense) / 2));
+                    if (rData.note) coachNote = `「教練期許：${rData.note}」`;
+                }
+
+                const radarValues = [offense, defense, fitness, attitude, agility, bballIQ];
+                const dynamicPolygonPoints = generateDynamicRadarPoints(radarValues);
+                const dynamicOVR = Math.round(radarValues.reduce((a, b) => a + b, 0) / 6);
+
                 html += `
                     <div class="space-y-4">
-                        <!-- 球員動態戰力卡 + 六角雷達圖 -->
+                        <!-- 球員動態戰力卡 + 真實六角雷達圖 -->
                         <div class="glass-card rounded-3xl p-5 border border-amber-500/30 bg-gradient-to-b from-slate-900/90 via-slate-900/60 to-slate-950 relative overflow-hidden">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-slate-800 gap-4">
                                 <div class="flex items-center space-x-4">
@@ -424,32 +460,39 @@
                                     </div>
                                 </div>
                                 <div class="bg-slate-950/80 border border-amber-500/40 rounded-2xl px-4 py-2 text-center shadow-lg">
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">戰力評級 (OVR)</span>
-                                    <span class="font-num text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">88</span>
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">綜合戰力 (OVR)</span>
+                                    <span class="font-num text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">${dynamicOVR}</span>
                                 </div>
                             </div>
 
                             <div class="flex flex-col sm:flex-row items-center justify-around pt-4 gap-4">
-                                <div class="w-48 h-48 relative flex items-center justify-center">
-                                    <svg viewBox="0 0 100 100" class="w-full h-full">
-                                        <polygon points="50,10 85,30 85,70 50,90 15,70 15,30" fill="none" stroke="#334155" stroke-width="1"/>
-                                        <polygon points="50,25 72,38 72,62 50,75 28,62 28,38" fill="none" stroke="#1e293b" stroke-width="1"/>
-                                        <polygon points="50,16 80,34 78,66 50,86 20,67 21,34" fill="rgba(249, 115, 22, 0.35)" stroke="#f97316" stroke-width="2"/>
+                                <!-- 真實 SVG 動態向量雷達圖 -->
+                                <div class="w-52 h-52 relative flex items-center justify-center">
+                                    <svg viewBox="0 0 100 100" class="w-full h-full filter drop-shadow">
+                                        <!-- 外圈滿分基準網格 -->
+                                        <polygon points="50,12 82.9,31 82.9,69 50,88 17.1,69 17.1,31" fill="none" stroke="#334155" stroke-width="1"/>
+                                        <polygon points="50,25 71.9,37.6 71.9,62.4 50,75 28.1,62.4 28.1,37.6" fill="none" stroke="#1e293b" stroke-width="0.8"/>
+                                        <polygon points="50,37 61,43.8 61,56.2 50,63 39,56.2 39,43.8" fill="none" stroke="#0f172a" stroke-width="0.5"/>
+                                        <!-- 動態數值多邊形 -->
+                                        <polygon points="${dynamicPolygonPoints}" fill="rgba(249, 115, 22, 0.4)" stroke="#f97316" stroke-width="2" class="transition-all duration-700"/>
                                     </svg>
-                                    <span class="absolute top-0 text-[10px] text-slate-400">進攻</span>
-                                    <span class="absolute top-7 right-0 text-[10px] text-slate-400">防守</span>
-                                    <span class="absolute bottom-7 right-0 text-[10px] text-slate-400">體能</span>
-                                    <span class="absolute bottom-0 text-[10px] text-slate-400">紀律</span>
-                                    <span class="absolute bottom-7 left-0 text-[10px] text-slate-400">敏捷</span>
-                                    <span class="absolute top-7 left-0 text-[10px] text-slate-400">球商</span>
+                                    <span class="absolute top-1 text-[10px] text-slate-400 font-bold">進攻 (${offense})</span>
+                                    <span class="absolute top-8 right-1 text-[10px] text-slate-400 font-bold">防守 (${defense})</span>
+                                    <span class="absolute bottom-8 right-1 text-[10px] text-slate-400 font-bold">體能 (${fitness})</span>
+                                    <span class="absolute bottom-1 text-[10px] text-slate-400 font-bold">紀律 (${attitude})</span>
+                                    <span class="absolute bottom-8 left-1 text-[10px] text-slate-400 font-bold">敏捷 (${agility})</span>
+                                    <span class="absolute top-8 left-1 text-[10px] text-slate-400 font-bold">球商 (${bballIQ})</span>
                                 </div>
-                                <div class="space-y-2 text-xs flex-1 max-w-xs">
-                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>進攻投射</span><span class="text-orange-400 font-bold font-num">85</span></div>
-                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>防守對抗</span><span class="text-emerald-400 font-bold font-num">90</span></div>
-                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>折返敏捷</span><span class="text-purple-400 font-bold font-num">89</span></div>
-                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>戰術球商</span><span class="text-blue-400 font-bold font-num">87</span></div>
+
+                                <div class="space-y-2 text-xs flex-1 max-w-xs w-full">
+                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>進攻投射</span><span class="text-orange-400 font-bold font-num">${offense}</span></div>
+                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>防守抗衡</span><span class="text-emerald-400 font-bold font-num">${defense}</span></div>
+                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>體能耐力</span><span class="text-amber-400 font-bold font-num">${fitness}</span></div>
+                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>態度紀律</span><span class="text-blue-400 font-bold font-num">${attitude}</span></div>
+                                    <div class="flex justify-between border-b border-slate-800/80 pb-1"><span>敏捷反應</span><span class="text-purple-400 font-bold font-num">${agility}</span></div>
                                 </div>
                             </div>
+                            <p class="text-[11px] text-slate-400 italic text-center mt-3 pt-2 border-t border-slate-800/80">${coachNote}</p>
                         </div>
 
                         <!-- 待完成自主課表提醒 -->
@@ -467,16 +510,16 @@
                                         <p class="text-xs text-slate-400 mt-0.5">目標要求：${task.targetAmount} ｜ 期限：${task.deadline}</p>
                                     </div>
                                     <button onclick="switchTab('assignments')" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-xs glow-orange active:scale-95 transition">
-                                        前往課表中心回報
+                                        前往課表中心
                                     </button>
                                 </div>
-                            `).join('') : '<p class="text-xs text-emerald-400 text-center py-4">🎉 所有課表均已回報完成，保持極佳狀態！</p>'}
+                            `).join('') : '<p class="text-xs text-emerald-400 text-center py-4">🎉 所有課表均已回報完成！</p>'}
                         </div>
                     </div>
                 `;
             }
 
-            // --- 📊 2. 經理台主戰情室（完整後勤監控儀表板） ---
+            // --- 📊 經理台主戰情室 ---
             else if (currentUser.role === "MANAGER") {
                 const checkins = data.todayCheckins || [];
                 const totalPlayersCount = allPlayers.length || 1;
@@ -490,13 +533,11 @@
                     avgFatigue = (checkins.reduce((sum, c) => sum + (Number(c.fatigue) || 0), 0) / checkedCount).toFixed(1);
                 }
 
-                // 篩選痠痛或疲勞 >= 4 的異常名單
                 const warningList = checkins.filter(c => c.fatigue >= 4 || (c.sore && c.sore !== '無'));
                 const nextEvent = (data.schedules && data.schedules.length > 0) ? data.schedules[0] : null;
 
                 html += `
                     <div class="space-y-4">
-                        <!-- 數據四宮格 -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
                                 <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">晨報回報率</span>
@@ -520,7 +561,6 @@
                             </div>
                         </div>
 
-                        <!-- 下一場即將登場活動 -->
                         ${nextEvent ? `
                             <div class="glass-card rounded-2xl p-4 border border-orange-500/30 bg-gradient-to-r from-orange-950/20 via-slate-900 to-slate-950 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                 <div>
@@ -538,13 +578,12 @@
                             </div>
                         ` : ''}
 
-                        <!-- 生理異常與高疲勞警示關注卡 -->
                         <div class="glass-card rounded-2xl p-5 space-y-3">
                             <div class="flex justify-between items-center">
                                 <h3 class="font-bold text-red-400 flex items-center space-x-2">
                                     <span>🚨</span><span>今日需關懷球員名單 (${warningList.length})</span>
                                 </h3>
-                                <button onclick="switchTab('dailystatus')" class="text-xs text-slate-400 hover:text-white">前往點檢台給予建議 &rarr;</button>
+                                <button onclick="switchTab('dailystatus')" class="text-xs text-slate-400 hover:text-white">點檢台給建議 &rarr;</button>
                             </div>
                             ${warningList.length > 0 ? warningList.map(w => `
                                 <div class="bg-slate-950/80 border border-red-500/20 p-3.5 rounded-xl flex justify-between items-center text-xs">
@@ -556,27 +595,11 @@
                                 </div>
                             `).join('') : '<p class="text-xs text-emerald-400 text-center py-4">全隊今日狀態極佳，無疲勞超載球員！</p>'}
                         </div>
-
-                        <!-- 近期請假通報 -->
-                        <div class="glass-card rounded-2xl p-5 space-y-3">
-                            <h3 class="font-bold text-orange-400 flex items-center space-x-2">
-                                <span>📢</span><span>近期請假動態</span>
-                            </h3>
-                            ${(data.recentLeaves && data.recentLeaves.length > 0) ? data.recentLeaves.slice(0, 3).map(l => `
-                                <div class="bg-slate-950/80 p-3 rounded-xl text-xs space-y-1 border-l-2 border-red-500">
-                                    <div class="flex justify-between">
-                                        <span class="font-bold text-red-300">${l.playerName} - 請假</span>
-                                        <span class="text-slate-500 font-mono text-[10px]">${l.time}</span>
-                                    </div>
-                                    <p class="text-slate-300">${l.eventTitle} (${l.eventDate}) ｜ 事由：${l.reason || '無'}</p>
-                                </div>
-                            `).join('') : '<p class="text-xs text-slate-500 text-center py-3">近期無請假通報</p>'}
-                        </div>
                     </div>
                 `;
             }
 
-            // --- 📋 3. 教練台主戰情室 ---
+            // --- 📋 教練台主戰情室 ---
             else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
                 const tasks = data.allAssignments || [];
                 let totalSubmissionsCount = 0;
