@@ -68,6 +68,7 @@
             <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-lg active:scale-95 transition">登出</button>
         </div>
 
+        <!-- 多身分切換器 -->
         <div id="roleSwitchContainer" class="hidden flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs shadow-inner overflow-x-auto max-w-full">
             <button onclick="switchViewRole('BOSS')" id="btnRoleBoss" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-amber-300 bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500 hover:text-black items-center space-x-1 whitespace-nowrap">
                 <span>👑</span><span>BOSS總控</span>
@@ -176,9 +177,9 @@
         </button>
     </nav>
 
-    <!-- ✨ 註冊 Modal -->
+    <!-- ✨ 註冊申請 Modal (支援球員選背號位置、教練強制上傳照片) -->
     <div id="registerModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-        <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-orange-500/40 shadow-2xl">
+        <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-orange-500/40 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 class="text-base font-black text-white flex items-center space-x-2">
                     <span class="text-orange-400">✨</span><span>Ｍ＋藍球隊 - 新成員註冊申請</span>
@@ -192,17 +193,51 @@
                 </div>
                 <div>
                     <label class="text-slate-400 block mb-1 font-semibold">選擇身分權限</label>
-                    <select id="regRole" onchange="toggleRegChildField()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200">
+                    <select id="regRole" onchange="toggleRegExtraFields()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 font-bold">
                         <option value="球員">🏀 球員</option>
-                        <option value="教練">📋 教練</option>
+                        <option value="教練">📋 教練 (需上傳照片認證)</option>
                         <option value="球隊經理">📊 球隊經理</option>
                         <option value="家長">👨‍👩‍👦 家長</option>
                     </select>
                 </div>
+
+                <!-- 教練專屬：強制照片認證欄位 -->
+                <div id="regCoachPhotoContainer" class="hidden p-3 bg-slate-950 rounded-2xl border border-amber-500/40 space-y-2">
+                    <label class="text-amber-300 font-bold block flex items-center space-x-1.5">
+                        <i class="fas fa-id-card"></i><span>教練本人或證照照片認證 (必填)</span>
+                    </label>
+                    <div class="flex items-center space-x-3">
+                        <div id="coachPhotoPreview" class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            <i class="fas fa-camera text-slate-600 text-xl"></i>
+                        </div>
+                        <input type="file" id="regCoachPhotoInput" accept="image/*" onchange="previewCoachRegisterPhoto(this)" class="text-[11px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-amber-500 file:text-black file:font-bold">
+                    </div>
+                </div>
+
+                <!-- 球員專屬欄位：背號與守備位置 -->
+                <div id="regPlayerContainer" class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-slate-400 block mb-1 font-semibold">球衣背號 (選填)</label>
+                        <input type="number" id="regPlayerNumber" placeholder="例如: 7" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 block mb-1 font-semibold">守備位置</label>
+                        <select id="regPlayerPosition" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                            <option value="控球後衛">PG 控球後衛</option>
+                            <option value="得分後衛">SG 得分後衛</option>
+                            <option value="小前鋒">SF 小前鋒</option>
+                            <option value="大前鋒">PF 大前鋒</option>
+                            <option value="中鋒">C 中鋒</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 家長專屬欄位：孩子姓名 -->
                 <div id="regChildContainer" class="hidden">
                     <label class="text-slate-400 block mb-1 font-semibold">孩子姓名 (球員)</label>
                     <input type="text" id="regChildName" placeholder="請輸入您孩子的球員姓名" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200">
                 </div>
+
                 <div>
                     <label class="text-slate-400 block mb-1 font-semibold">聯絡電話</label>
                     <input type="text" id="regPhone" placeholder="0912-345678" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200">
@@ -210,7 +245,7 @@
             </div>
             <div class="flex space-x-3 pt-2">
                 <button onclick="closeRegisterModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold">取消</button>
-                <button onclick="submitRegisterApplication()" class="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold glow-orange">送出註冊申請</button>
+                <button onclick="submitRegisterApplication()" id="btnSubmitReg" class="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold glow-orange">送出註冊申請</button>
             </div>
         </div>
     </div>
@@ -389,6 +424,51 @@
         let activeAttendanceScheduleId = null;
         let bossSelectedFilterRole = 'ALL';
         let currentLineUserId = null;
+        let coachRegPhotoUrl = null;
+
+        // 專業訓練快捷預設模組庫
+        const proDrillTemplates = {
+            "shooting_1": {
+                title: "外線定點投籃 200 顆（5點位）",
+                target: "底角、45度、弧頂各40顆，進球率需達65%以上",
+                notes: "需錄製底角連續出手至少10顆之影片，注意下肢起跳與出手跟隨動作。"
+            },
+            "shooting_2": {
+                title: "急停中距離跳投特訓 100 顆",
+                target: "左右兩翼運球一次急停跳投各50顆",
+                notes: "要求動作連貫不減速，身體起跳垂直不前傾。"
+            },
+            "shooting_3": {
+                title: "抗壓罰球模擬特訓 50 顆",
+                target: "每組10顆共5組，單組未達8顆罰折返跑1趟",
+                notes: "模擬比賽末節高壓心率，調整呼吸與出手節奏。"
+            },
+            "dribble_1": {
+                title: "雙球節奏變向推進特訓",
+                target: "全場雙球同時/交替運球各5趟",
+                notes: "頭部抬起不看球，重心壓低，維持腳步穩定推進。"
+            },
+            "dribble_2": {
+                title: "換手+胯下+背後複合運球 300 次",
+                target: "三種組合動作各100次，強調破壞性爆發變向",
+                notes: "拍攝一組完整連續變向運球影片上傳。"
+            },
+            "fitness_1": {
+                title: "爆發力深蹲跳 + 摸板跳 50 次",
+                target: "深蹲爆發跳25次 + 連續助跑摸板25次",
+                notes: "著地時膝蓋微彎緩衝，強調落地瞬間的二次起跳反應。"
+            },
+            "fitness_2": {
+                title: "防守滑步 + 全場折返跑（自殺棒）",
+                target: "全場自殺棒4趟，每趟限制在32秒內完成",
+                notes: "核心收緊，滑步不交叉，雙手維持干擾範圍。"
+            },
+            "iq_1": {
+                title: "擋拆（Pick & Roll）走位戰術演練",
+                target: "演練順下（Roll）與外拆（Pop）投籃各10組",
+                notes: "錄影檢視掩護角度與持球者判斷傳球時機。"
+            }
+        };
 
         let defaultTacticPieces = [
             { id: "O1", label: "PG", type: "offense", x: 50, y: 78 },
@@ -653,14 +733,17 @@
                                 <div class="space-y-2">
                                     ${pendingUsers.map(u => `
                                         <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
-                                            <div>
-                                                <span class="font-bold text-white">${u.name}</span>
-                                                <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded ml-1 font-bold">${u.role}</span>
-                                                <span class="text-slate-400 ml-2">電話: ${u.phone||'無'}</span>
+                                            <div class="flex items-center space-x-3">
+                                                ${u.photo_url ? `<img src="${u.photo_url}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">` : ''}
+                                                <div>
+                                                    <span class="font-bold text-white text-sm">${u.name}</span>
+                                                    <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded ml-1 font-bold">${u.role}</span>
+                                                    <p class="text-slate-400 mt-0.5">電話: ${u.phone||'無'} ${u.child_name ? `｜ 孩子: ${u.child_name}` : ''}</p>
+                                                </div>
                                             </div>
                                             <div class="flex space-x-2">
-                                                <button onclick="approveMember(${u.id}, '${u.name}', '${u.role}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold">核准</button>
-                                                <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1 bg-red-600 text-white rounded-lg font-bold">拒絕</button>
+                                                <button onclick="approveMember(${u.id}, '${u.name}', '${u.role}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold">核准</button>
+                                                <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 rounded-xl font-bold">拒絕</button>
                                             </div>
                                         </div>
                                     `).join('')}
@@ -689,10 +772,13 @@
                             <div class="space-y-2 max-h-[460px] overflow-y-auto pr-1">
                                 ${filteredUsers.map(u => `
                                     <div class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl flex justify-between items-center text-xs">
-                                        <div>
-                                            <span class="font-bold text-slate-100 text-sm">${u.name}</span>
-                                            <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-400 border border-slate-700 ml-1">${u.role}</span>
-                                            <p class="text-slate-400 mt-1">電話: ${u.phone||'無'} ｜ 梯隊: ${u.team||'大隊'} ${u.child_name?`｜ 孩子: <span class="text-orange-400 font-bold">${u.child_name}</span>`:''}</p>
+                                        <div class="flex items-center space-x-3">
+                                            ${u.photo_url ? `<img src="${u.photo_url}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">` : ''}
+                                            <div>
+                                                <span class="font-bold text-slate-100 text-sm">${u.name}</span>
+                                                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-400 border border-slate-700 ml-1">${u.role}</span>
+                                                <p class="text-slate-400 mt-1">電話: ${u.phone||'無'} ｜ 梯隊: ${u.team||'大隊'} ${u.child_name?`｜ 孩子: <span class="text-orange-400 font-bold">${u.child_name}</span>`:''}</p>
+                                            </div>
                                         </div>
                                         <div class="flex space-x-2">
                                             ${u.name !== '吳俊璋' ? `<button onclick="bossDeleteUserDirectly(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white rounded-xl font-bold transition">除名</button>` : ''}
@@ -839,10 +925,13 @@
                                 <div class="space-y-2">
                                     ${pendingMembers.map(u => `
                                         <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
-                                            <div>
-                                                <span class="font-bold text-white text-sm">${u.name}</span>
-                                                <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded ml-1 font-bold">${u.role}</span>
-                                                <p class="text-slate-400 mt-1">電話: ${u.phone||'未填寫'} ${u.child_name?`｜ 孩子: <span class="text-orange-400 font-bold">${u.child_name}</span>`:''}</p>
+                                            <div class="flex items-center space-x-3">
+                                                ${u.photo_url ? `<img src="${u.photo_url}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">` : ''}
+                                                <div>
+                                                    <span class="font-bold text-white text-sm">${u.name}</span>
+                                                    <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded ml-1 font-bold">${u.role}</span>
+                                                    <p class="text-slate-400 mt-0.5">電話: ${u.phone||'未填寫'} ${u.child_name?`｜ 孩子: <span class="text-orange-400 font-bold">${u.child_name}</span>`:''}</p>
+                                                </div>
                                             </div>
                                             <div class="flex space-x-2">
                                                 <button onclick="approveMember(${u.id}, '${u.name}', '${u.role}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition shadow">核准加入</button>
@@ -1048,7 +1137,7 @@
         }
 
         // =========================================================================
-        // 🎯 3. 課表中心 (完整整合：教練審閱球員成果與球員回報)
+        // 🎯 3. 課表中心 (專業教練派發套版 + 自訂微調)
         // =========================================================================
         async function loadAssignmentsTab() {
             const container = document.getElementById('tabContentContainer');
@@ -1068,15 +1157,50 @@
             container.innerHTML = `
                 <div class="space-y-4">
                     ${isCoachOrBoss ? `
-                        <div class="glass-card rounded-2xl p-5 border border-amber-500/40 space-y-3 bg-gradient-to-r from-amber-950/20 to-slate-900">
-                            <h3 class="font-bold text-amber-300 text-sm flex items-center space-x-2">
-                                <span>📋</span><span>教練端：發布自主訓練課表任務</span>
-                            </h3>
-                            <div class="space-y-2.5 text-xs">
-                                <input type="text" id="newTaskTitle" placeholder="任務標題 (例如: 每日運球特訓 300次)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                                <input type="text" id="newTaskTarget" placeholder="完成目標 (例如: 左右手各 150 次)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                                <button onclick="coachCreateAssignment()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black rounded-xl shadow glow-gold transition">
-                                    🚀 發布任務給全體球員
+                        <div class="glass-card rounded-3xl p-5 border border-amber-500/40 space-y-3 bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-950">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                                <h3 class="font-bold text-amber-300 text-sm flex items-center space-x-2">
+                                    <span>📋</span><span>教練專業自主課表派發中樞</span>
+                                </h3>
+                                <span class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">教練權限</span>
+                            </div>
+
+                            <!-- 專業快捷選單 -->
+                            <div>
+                                <label class="text-slate-400 block mb-1 text-[11px] font-semibold">快速帶入專業訓練課表範本：</label>
+                                <select onchange="applyProDrillTemplate(this.value)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-amber-300 font-bold focus:border-amber-500">
+                                    <option value="">-- 請選擇專業預設項目（亦可直接自訂）--</option>
+                                    <optgroup label="🎯 投籃專項 (Shooting)">
+                                        <option value="shooting_1">外線定點投籃 200 顆（5點位）</option>
+                                        <option value="shooting_2">急停中距離跳投特訓 100 顆</option>
+                                        <option value="shooting_3">抗壓罰球模擬特訓 50 顆</option>
+                                    </optgroup>
+                                    <optgroup label="⚡ 控球與敏捷 (Ball-Handling)">
+                                        <option value="dribble_1">雙球節奏變向推進特訓</option>
+                                        <option value="dribble_2">換手+胯下+背後複合運球 300 次</option>
+                                    </optgroup>
+                                    <optgroup label="🏋️ 核心體能與爆發力 (Conditioning)">
+                                        <option value="fitness_1">爆發力深蹲跳 + 摸板跳 50 次</option>
+                                        <option value="fitness_2">防守滑步 + 全場折返跑（自殺棒）</option>
+                                    </optgroup>
+                                    <optgroup label="🧠 戰術與球商 (Basketball IQ)">
+                                        <option value="iq_1">擋拆（Pick & Roll）走位戰術演練</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <!-- 自訂與微調欄位 -->
+                            <div class="space-y-2 text-xs">
+                                <div>
+                                    <label class="text-slate-400 block mb-1 font-semibold">課表任務名稱</label>
+                                    <input type="text" id="newTaskTitle" placeholder="例如: 外線定點投籃 200 顆" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                                </div>
+                                <div>
+                                    <label class="text-slate-400 block mb-1 font-semibold">訓練完成目標與驗證標準</label>
+                                    <input type="text" id="newTaskTarget" placeholder="例如: 底角、45度、弧頂各40顆，進球率需達65%以上" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                                </div>
+                                <button onclick="coachCreateAssignment()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black rounded-xl shadow glow-gold transition active:scale-95 flex items-center justify-center space-x-1 mt-2">
+                                    <i class="fas fa-paper-plane"></i><span>立即發布任務給全體球員</span>
                                 </button>
                             </div>
                         </div>
@@ -1135,6 +1259,13 @@
             `;
         }
 
+        function applyProDrillTemplate(key) {
+            if (!key || !proDrillTemplates[key]) return;
+            const t = proDrillTemplates[key];
+            document.getElementById('newTaskTitle').value = t.title;
+            document.getElementById('newTaskTarget').value = t.target;
+        }
+
         async function coachCreateAssignment() {
             const title = document.getElementById('newTaskTitle').value.trim();
             const target = document.getElementById('newTaskTarget').value.trim();
@@ -1149,7 +1280,7 @@
             if (error) {
                 alert("發布失敗：" + error.message);
             } else {
-                alert("🎉 訓練課表任務已成功發布！");
+                alert("🎉 專業訓練課表任務已成功發布！全體球員已同步接收。");
                 loadAssignmentsTab();
             }
         }
@@ -1169,71 +1300,69 @@
         }
 
         async function confirmSubmitAssignment() {
-    const assignmentId = document.getElementById('currentSubmitAssignmentId').value;
-    const notes = document.getElementById('assignNotesInput').value.trim();
-    const fileInput = document.getElementById('assignMediaInput');
-    const submitBtn = document.getElementById('btnConfirmSubmitAssign');
+            const assignmentId = document.getElementById('currentSubmitAssignmentId').value;
+            const notes = document.getElementById('assignNotesInput').value.trim();
+            const fileInput = document.getElementById('assignMediaInput');
+            const submitBtn = document.getElementById('btnConfirmSubmitAssign');
 
-    if (!assignmentId) return;
+            if (!assignmentId) return;
 
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i><span>上傳處理中...</span>`;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i><span>上傳處理中...</span>`;
 
-    let mediaUrl = null;
-    let mediaType = null;
+            let mediaUrl = null;
+            let mediaType = null;
 
-    try {
-        if (fileInput.files && fileInput.files[0]) {
-            const file = fileInput.files[0];
-            const fileExt = file.name.split('.').pop().toLowerCase();
-            const randomStr = Math.random().toString(36).substring(2, 8);
-            // 使用純英數命名，避免中文字造成 Invalid key
-            const safeFileName = `${Date.now()}_${randomStr}.${fileExt}`;
-            const filePath = `tasks/${safeFileName}`;
+            try {
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    const fileExt = file.name.split('.').pop().toLowerCase();
+                    const randomStr = Math.random().toString(36).substring(2, 8);
+                    const safeFileName = `${Date.now()}_${randomStr}.${fileExt}`;
+                    const filePath = `tasks/${safeFileName}`;
 
-            mediaType = file.type.startsWith('video') ? 'video' : 'image';
+                    mediaType = file.type.startsWith('video') ? 'video' : 'image';
 
-            const { error: uploadErr } = await sb.storage.from('assignments').upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: true
-            });
+                    const { error: uploadErr } = await sb.storage.from('assignments').upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
 
-            if (uploadErr) {
-                alert("檔案上傳失敗：" + uploadErr.message);
+                    if (uploadErr) {
+                        alert("檔案上傳失敗：" + uploadErr.message);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = `<span>確認回報</span>`;
+                        return;
+                    }
+
+                    const { data: publicUrlData } = sb.storage.from('assignments').getPublicUrl(filePath);
+                    mediaUrl = publicUrlData.publicUrl;
+                }
+
+                const { error: insertErr } = await sb.from('assignment_submissions').insert([{
+                    assignment_id: parseInt(assignmentId),
+                    player_name: currentUser.userName,
+                    status: '已完成',
+                    media_url: mediaUrl,
+                    media_type: mediaType,
+                    notes: notes || null
+                }]);
+
+                if (insertErr) {
+                    alert("回報記錄失敗：" + insertErr.message);
+                } else {
+                    alert("🎉 成果已成功回報並同步！");
+                    closeSubmitAssignmentModal();
+                    loadAssignmentsTab();
+                }
+            } catch (err) {
+                alert("發生未預期錯誤：" + err.message);
+            } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = `<span>確認回報</span>`;
-                return;
             }
-
-            const { data: publicUrlData } = sb.storage.from('assignments').getPublicUrl(filePath);
-            mediaUrl = publicUrlData.publicUrl;
         }
 
-        const { error: insertErr } = await sb.from('assignment_submissions').insert([{
-            assignment_id: parseInt(assignmentId),
-            player_name: currentUser.userName,
-            status: '已完成',
-            media_url: mediaUrl,
-            media_type: mediaType,
-            notes: notes || null
-        }]);
-
-        if (insertErr) {
-            alert("回報記錄失敗：" + insertErr.message);
-        } else {
-            alert("🎉 成果已成功回報並同步！");
-            closeSubmitAssignmentModal();
-            loadAssignmentsTab();
-        }
-    } catch (err) {
-        alert("發生未預期錯誤：" + err.message);
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>確認回報</span>`;
-    }
-}
-
-        // 開啟檢視全隊回報名冊 Modal (教練/經理/BOSS 專屬)
         async function openViewSubmissionsModal(taskId, taskTitle) {
             document.getElementById('viewSubsModalTitle').innerText = `【${taskTitle}】回報成果`;
             const container = document.getElementById('submissionsListContainer');
@@ -1553,31 +1682,98 @@
             }
         }
 
-        // 註冊與其他輔助函式
-        function openRegisterModal() { document.getElementById('registerModal').classList.remove('hidden'); document.getElementById('registerModal').classList.add('flex'); }
-        function closeRegisterModal() { document.getElementById('registerModal').classList.add('hidden'); document.getElementById('registerModal').classList.remove('flex'); }
-        function toggleRegChildField() {
+        // 註冊表單動態切換（支援教練照片、球員背號位置、家長小孩姓名）
+        function toggleRegExtraFields() {
             const role = document.getElementById('regRole').value;
             const childContainer = document.getElementById('regChildContainer');
-            if (role === '家長') childContainer.classList.remove('hidden');
-            else childContainer.classList.add('hidden');
+            const playerContainer = document.getElementById('regPlayerContainer');
+            const coachContainer = document.getElementById('regCoachPhotoContainer');
+
+            childContainer.classList.add('hidden');
+            playerContainer.classList.add('hidden');
+            coachContainer.classList.add('hidden');
+
+            if (role === '家長') {
+                childContainer.classList.remove('hidden');
+            } else if (role === '球員') {
+                playerContainer.classList.remove('hidden');
+            } else if (role === '教練') {
+                coachContainer.classList.remove('hidden');
+            }
         }
+
+        function openRegisterModal() { 
+            document.getElementById('registerModal').classList.remove('hidden'); 
+            document.getElementById('registerModal').classList.add('flex');
+            toggleRegExtraFields();
+        }
+        function closeRegisterModal() { 
+            document.getElementById('registerModal').classList.add('hidden'); 
+            document.getElementById('registerModal').classList.remove('flex'); 
+        }
+
+        function previewCoachRegisterPhoto(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('coachPhotoPreview').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
         async function submitRegisterApplication() {
             const name = document.getElementById('regName').value.trim();
             const role = document.getElementById('regRole').value;
             const phone = document.getElementById('regPhone').value.trim();
             const childName = document.getElementById('regChildName').value.trim();
+            const pNumber = parseInt(document.getElementById('regPlayerNumber').value) || 0;
+            const pPosition = document.getElementById('regPlayerPosition').value || '控球後衛';
+            const coachPhotoFile = document.getElementById('regCoachPhotoInput').files[0];
+            const btn = document.getElementById('btnSubmitReg');
 
             if (!name) { alert("請填寫姓名！"); return; }
             if (!phone) { alert("請填寫聯絡電話！"); return; }
 
-            const newUserPayload = { name, role, phone, status: '待審核', line_id: currentLineUserId || null };
+            // 教練註冊防呆：強制要求上傳照片認證
+            if (role === '教練' && !coachPhotoFile) {
+                alert("⚠️ 教練身分註冊必須上傳本人照片或教練證照以供核驗！");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "資料上傳中...";
+
+            let coachPhotoUrl = null;
+            if (role === '教練' && coachPhotoFile) {
+                try {
+                    const ext = coachPhotoFile.name.split('.').pop().toLowerCase();
+                    const randStr = Math.random().toString(36).substring(2, 8);
+                    const path = `coaches/${Date.now()}_${randStr}.${ext}`;
+                    const { error: upErr } = await sb.storage.from('assignments').upload(path, coachPhotoFile, { upsert: true });
+                    if (!upErr) {
+                        const { data: pubData } = sb.storage.from('assignments').getPublicUrl(path);
+                        coachPhotoUrl = pubData.publicUrl;
+                    }
+                } catch(e) { console.error(e); }
+            }
+
+            const newUserPayload = { 
+                name, role, phone, status: '待審核', 
+                line_id: currentLineUserId || null,
+                photo_url: coachPhotoUrl || null
+            };
             if (role === '家長') newUserPayload.child_name = childName;
 
+            sessionStorage.setItem(`pending_player_${name}`, JSON.stringify({ number: pNumber, position: pPosition }));
+
             const { error } = await sb.from('users').insert([newUserPayload]);
+            btn.disabled = false;
+            btn.innerText = "送出註冊申請";
+
             if (error) alert("註冊申請送出失敗：" + error.message);
             else { 
-                alert("🎉 註冊申請已成功送出！系統已自動發送 LINE 通知經理與 BOSS，請靜候核准。"); 
+                alert("🎉 註冊申請已成功送出！系統已自動發送 LINE 通知經理與 BOSS 進行審核。"); 
                 closeRegisterModal(); 
             }
         }
@@ -1592,10 +1788,15 @@
             if (role === '球員') {
                 const { data: existingPlayer } = await sb.from('players').select('*').eq('name', name).maybeSingle();
                 if (!existingPlayer) {
+                    let savedPref = null;
+                    try { savedPref = JSON.parse(sessionStorage.getItem(`pending_player_${name}`)); } catch(e){}
+                    const chosenNumber = savedPref ? savedPref.number : 7;
+                    const chosenPos = savedPref ? savedPref.position : '控球後衛';
+
                     await sb.from('players').insert([{
                         name: name,
-                        number: 0,
-                        position: '控球後衛',
+                        number: chosenNumber,
+                        position: chosenPos,
                         team: '大隊',
                         height: 175,
                         weight: 68,
