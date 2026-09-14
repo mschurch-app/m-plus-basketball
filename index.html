@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>M+ 籃球隊官方戰情中控台</title>
+    <title>Ｍ＋藍球隊球員系統</title>
     <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -64,7 +64,7 @@
                 </div>
                 <div>
                     <div class="flex items-center space-x-2">
-                        <h1 class="font-black text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">M+ 戰情中心</h1>
+                        <h1 class="font-black text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">Ｍ＋藍球隊球員系統</h1>
                         <span class="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-bold">PRO</span>
                     </div>
                     <p class="text-xs text-slate-400 font-medium" id="userRoleSubtitle">身分辨識中...</p>
@@ -106,7 +106,7 @@
                 <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-orange-500/20 to-amber-500/10 rounded-2xl border border-orange-500/30 flex items-center justify-center text-3xl mb-2 text-orange-400 glow-orange">
                     🛡️
                 </div>
-                <h2 class="text-2xl font-black tracking-wide text-white">M+ 戰情系統驗證</h2>
+                <h2 class="text-2xl font-black tracking-wide text-white">Ｍ＋藍球隊球員系統</h2>
                 <p class="text-xs text-slate-400">專屬多權限分流中控作戰台</p>
             </div>
             <div class="w-full max-w-sm space-y-4">
@@ -122,7 +122,7 @@
                 <input type="text" id="loginAccount" placeholder="請輸入姓名 (例如: 吳俊璋)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-orange-500 text-slate-200">
                 <input type="password" id="loginPassword" placeholder="請輸入密碼" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-orange-500 text-slate-200">
                 <button onclick="handleManualLogin()" class="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl glow-orange transition active:scale-95">
-                    進入戰情室
+                    進入系統
                 </button>
             </div>
         </section>
@@ -157,7 +157,7 @@
     <nav id="floatingNavbar" class="hidden fixed bottom-4 z-40 max-w-md w-[92%] sm:w-[420px] glass-card bg-slate-950/85 backdrop-blur-xl border border-slate-800/90 rounded-3xl px-3 py-2.5 shadow-2xl shadow-black/80 flex justify-around items-center">
         <button onclick="switchTab('overview')" id="tabBtnOverview" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-bold text-orange-400 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-bolt"></i></span>
-            <span class="text-[10px] tracking-wider" id="navLabelOverview">主戰情室</span>
+            <span class="text-[10px] tracking-wider" id="navLabelOverview">主系統台</span>
         </button>
         <button onclick="switchTab('tactics')" id="tabBtnTactics" class="hidden nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-chess-board"></i></span>
@@ -264,7 +264,6 @@
         let activeAttendanceScheduleId = null;
         let bossSelectedFilterRole = 'ALL';
 
-        // 戰術板棋子預設座標 (百分比 0~100)
         let defaultTacticPieces = [
             { id: "O1", label: "PG", type: "offense", x: 50, y: 78 },
             { id: "O2", label: "SG", type: "offense", x: 20, y: 65 },
@@ -357,7 +356,6 @@
             document.getElementById('logoutBtn').classList.remove('hidden');
             document.getElementById('userRoleSubtitle').innerText = `${currentUser.userName} (${currentUser.roleText})`;
 
-            // 戰術板導航僅提供給 教練 與 BOSS
             if (["COACH", "BOSS"].includes(currentUser.actualRole)) {
                 document.getElementById('tabBtnTactics').classList.remove('hidden');
             } else {
@@ -473,13 +471,13 @@
         }
 
         // =========================================================================
-        // ⚡ 1. 主戰情室 (完整五大身分分派)
+        // ⚡ 1. 主系統台 (完整五大身分分派)
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
 
-            // 👑 BOSS 總控專屬主戰情室
+            // 👑 BOSS 總控主畫面
             if (currentUser.role === "BOSS") {
                 const [allUsersRes, pendingUsersRes] = await Promise.all([
                     sb.from('users').select('*').order('id', { ascending: true }),
@@ -505,38 +503,13 @@
                                 <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-2xl shadow-lg border border-amber-300 text-black font-black">👑</div>
                                 <div>
                                     <div class="flex items-center space-x-2">
-                                        <h2 class="text-lg font-black text-white">M+ 戰情最高總控中樞 (BOSS EXCLUSIVE)</h2>
+                                        <h2 class="text-lg font-black text-white">Ｍ＋藍球隊球員系統 (BOSS 總控中樞)</h2>
                                         <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold">最高特權</span>
                                     </div>
                                     <p class="text-xs text-slate-400 mt-0.5">全權人員清冊、審核管理與系統指揮</p>
                                 </div>
                             </div>
                         </div>
-
-                        ${pendingUsers.length > 0 ? `
-                            <div class="glass-card rounded-2xl p-4 border border-amber-500/50 bg-amber-950/20 space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <h3 class="font-bold text-amber-300 text-sm flex items-center space-x-2">
-                                        <span class="animate-pulse">🔔</span><span>新成員註冊申請待核准 (${pendingUsers.length} 位)</span>
-                                    </h3>
-                                </div>
-                                <div class="space-y-2">
-                                    ${pendingUsers.map(u => `
-                                        <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
-                                            <div>
-                                                <span class="font-bold text-white">${u.name}</span>
-                                                <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded ml-1 font-bold">${u.role}</span>
-                                                <span class="text-slate-400 ml-2">電話: ${u.phone}</span>
-                                            </div>
-                                            <div class="flex space-x-2">
-                                                <button onclick="approveMember(${u.id}, '${u.name}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold">核准</button>
-                                                <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1 bg-red-600 text-white rounded-lg font-bold">拒絕</button>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
 
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">全體成員</span><span class="font-num text-2xl font-black text-white mt-1 block">${users.length} 人</span></div>
@@ -576,7 +549,6 @@
                 return;
             }
 
-            // 通用球員、排程、晨報數據
             const today = new Date().toISOString().split('T')[0];
             let targetPlayerName = currentUser.userName;
             if (currentUser.role === "PARENT") targetPlayerName = currentUser.childName || "吳俊璋";
@@ -683,7 +655,7 @@
                 `;
             }
 
-            // 📋 教練台視角 (全隊陣容與戰力名冊)
+            // 📋 教練台視角
             else if (currentUser.role === "COACH") {
                 const teamDaList = allPlayers.filter(p => p.team === '大隊');
                 const teamXiaoList = allPlayers.filter(p => p.team === '小隊');
@@ -730,7 +702,7 @@
                 `;
             }
 
-            // 📊 經理台視角 (家長通訊網與關懷)
+            // 📊 經理台視角
             else if (currentUser.role === "MANAGER") {
                 const warningList = checkins.filter(c => c.fatigue >= 4 || (c.sore_area && c.sore_area !== '無'));
                 container.innerHTML = `
@@ -763,7 +735,7 @@
                 `;
             }
 
-            // 👨‍👩‍👦 家長台視角 (孩子健康與接送)
+            // 👨‍👩‍👦 家長台視角
             else if (currentUser.role === "PARENT") {
                 const childCheckin = checkins.find(c => c.player_name === targetPlayerName);
                 const nextEv = schedules[0];
@@ -806,7 +778,7 @@
         }
 
         // =========================================================================
-        // 🏀 2. 教練專屬互動式戰術板 (拖曳排陣、存檔、載入)
+        // 🏀 2. 教練專屬互動式戰術板
         // =========================================================================
         async function loadTacticsTab() {
             const container = document.getElementById('tabContentContainer');
@@ -835,31 +807,20 @@
                         </div>
                     </div>
 
-                    <!-- 標準半場籃球戰術圖繪製 (SVG 底圖 + 拖曳元素) -->
                     <div id="courtContainer" class="court-board w-full h-[380px] sm:h-[450px] rounded-2xl overflow-hidden shadow-2xl relative">
-                        <!-- 半場球場標線 (SVG) -->
                         <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full pointer-events-none opacity-40">
-                            <!-- 外框 -->
                             <rect x="0" y="0" width="100" height="100" fill="none" stroke="#f97316" stroke-width="0.8"/>
-                            <!-- 籃框與籃板 -->
                             <line x1="42" y1="6" x2="58" y2="6" stroke="#f1f5f9" stroke-width="1.2"/>
                             <circle cx="50" cy="11" r="3.2" fill="none" stroke="#ea580c" stroke-width="1"/>
-                            <!-- 禁區 (三秒區) -->
                             <rect x="36" y="0" width="28" height="38" fill="none" stroke="#f1f5f9" stroke-width="0.8"/>
-                            <!-- 罰球線半圓 -->
                             <path d="M 36 38 A 14 14 0 0 0 64 38" fill="none" stroke="#f1f5f9" stroke-width="0.8"/>
                             <path d="M 36 38 A 14 14 0 0 1 64 38" fill="none" stroke="#f1f5f9" stroke-width="0.8" stroke-dasharray="2 2"/>
-                            <!-- 三分線 -->
                             <path d="M 12 0 L 12 18 A 45 45 0 0 0 88 18 L 88 0" fill="none" stroke="#f1f5f9" stroke-width="0.8"/>
-                            <!-- 中圈弧線 -->
                             <path d="M 35 100 A 15 15 0 0 1 65 100" fill="none" stroke="#f1f5f9" stroke-width="0.8"/>
                         </svg>
-
-                        <!-- 動態棋子放置區 -->
                         <div id="piecesContainer" class="absolute inset-0"></div>
                     </div>
 
-                    <!-- 歷史戰術庫 -->
                     <div class="space-y-2 pt-2">
                         <h4 class="text-xs font-bold text-slate-300">📚 已存檔戰術庫 (${list.length} 套) - 點擊即刻載入場上：</h4>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -877,7 +838,6 @@
             renderTacticalPieces();
         }
 
-        // 渲染戰術板棋子並綁定觸控/滑鼠拖曳事件
         function renderTacticalPieces() {
             const container = document.getElementById('piecesContainer');
             if (!container) return;
@@ -895,7 +855,6 @@
                 div.style.top = `${piece.y}%`;
                 div.innerText = piece.label;
 
-                // 綁定手勢與滑鼠事件
                 bindPieceDragEvents(div, piece);
                 container.appendChild(div);
             });
@@ -903,24 +862,17 @@
 
         function bindPieceDragEvents(element, piece) {
             let isDragging = false;
-
-            const onStart = (e) => {
-                isDragging = true;
-                e.preventDefault();
-            };
-
+            const onStart = (e) => { isDragging = true; e.preventDefault(); };
             const onMove = (e) => {
                 if (!isDragging) return;
                 const court = document.getElementById('courtContainer');
                 const rect = court.getBoundingClientRect();
-
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
                 let xPercent = ((clientX - rect.left) / rect.width) * 100;
                 let yPercent = ((clientY - rect.top) / rect.height) * 100;
 
-                // 限制在球場內
                 xPercent = Math.max(4, Math.min(96, xPercent));
                 yPercent = Math.max(4, Math.min(96, yPercent));
 
@@ -930,13 +882,11 @@
                 element.style.left = `${xPercent}%`;
                 element.style.top = `${yPercent}%`;
             };
-
             const onEnd = () => { isDragging = false; };
 
             element.addEventListener('mousedown', onStart);
             window.addEventListener('mousemove', onMove);
             window.addEventListener('mouseup', onEnd);
-
             element.addEventListener('touchstart', onStart, { passive: false });
             window.addEventListener('touchmove', onMove, { passive: false });
             window.addEventListener('touchend', onEnd);
@@ -1041,12 +991,10 @@
             `;
         }
 
-        // 🎯 球員請假主動推播給所有經理與 BOSS
         async function promptPlayerLeave(scheduleId, eventTitle, eventTime, eventLocation) {
             const reason = prompt(`請輸入請假事由（系統將即時 LINE 通知球隊經理）：`, "學校課業 / 個人事假");
             if (reason === null || !reason.trim()) return;
 
-            // 1. 寫入 Supabase
             await sb.from('schedule_rsvps').upsert([{
                 schedule_id: scheduleId,
                 player_name: currentUser.userName,
@@ -1055,14 +1003,13 @@
                 updated_at: new Date().toISOString()
             }], { onConflict: 'schedule_id,player_name' });
 
-            // 2. 抓取所有經理與 BOSS 的 LINE ID
             const { data: managers } = await sb.from('users').select('line_id').in('role', ['球隊經理', '球隊ＢＯＳＳ']).not('line_id', 'is', null);
             const targetLineIds = new Set();
             targetLineIds.add(BOSS_LINE_ID);
             if (managers) managers.forEach(m => { if (m.line_id) targetLineIds.add(m.line_id.replace(/'/g, '').trim()); });
 
             const nowStr = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
-            const messageText = `📢【M+ 戰役出勤 - 球員請假通知】\n` +
+            const messageText = `📢【Ｍ＋藍球隊球員系統 - 球員請假通知】\n` +
                                 `━━━━━━━━━━━━━━\n` +
                                 `👤 請假人員：${currentUser.userName}\n` +
                                 `📅 行程名稱：${eventTitle}\n` +
@@ -1070,9 +1017,8 @@
                                 `📝 請假事由：${reason.trim()}\n` +
                                 `🕒 登記時間：${nowStr}\n` +
                                 `━━━━━━━━━━━━━━\n` +
-                                `請球隊經理至戰情室查閱最新名單！`;
+                                `請球隊經理至系統查閱最新名單！`;
 
-            // 3. 發出 LINE 推播
             targetLineIds.forEach(lineId => {
                 fetch("https://api.line.me/v2/bot/message/push", {
                     method: "POST",
@@ -1164,7 +1110,7 @@
         }
 
         // =========================================================================
-        // 課表、晨報與圖片壓縮輔助
+        // 課表與晨報點檢
         // =========================================================================
         async function loadAssignmentsTab() {
             const container = document.getElementById('tabContentContainer');
@@ -1174,7 +1120,7 @@
 
         async function loadDailyStatusTab() {
             const container = document.getElementById('tabContentContainer');
-            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">每日晨報點檢</h3><p class="text-xs text-slate-400">身心體能指數監測中樞</p></div>`;
+            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">每日晨報點檢</h3><p class="text-xs text-slate-400">體能與身心狀態監測中樞</p></div>`;
         }
 
         function previewAndCompressImage(fileInput, previewElemId, hiddenInputId) {
@@ -1231,6 +1177,43 @@
             await sb.from('players').update(updatePayload).eq('name', currentUser.userName);
             alert("球員卡已更新！");
             closePlayerProfileModal();
+            loadDashboardOverview();
+        }
+
+        // BOSS 相關輔助函式
+        function setBossUserFilter(role) {
+            bossSelectedFilterRole = role;
+            loadDashboardOverview();
+        }
+
+        async function bossDeleteUserDirectly(userId, userName) {
+            if (!confirm(`確定要將【${userName}】徹底自球隊除名嗎？`)) return;
+            await sb.from('users').delete().eq('id', userId);
+            await sb.from('players').delete().eq('name', userName);
+            await sb.from('daily_checkins').delete().eq('player_name', userName);
+            await sb.from('assignment_submissions').delete().eq('player_name', userName);
+            alert(`已將【${userName}】除名！`);
+            loadDashboardOverview();
+        }
+
+        async function approveMember(userId, userName) {
+            await sb.from('users').update({ status: '已核准' }).eq('id', userId);
+            alert(`已核准【${userName}】！`);
+            loadDashboardOverview();
+        }
+
+        async function rejectMember(userId, userName) {
+            await sb.from('users').delete().eq('id', userId);
+            await sb.from('players').delete().eq('name', userName);
+            alert(`已拒絕【${userName}】的加入申請。`);
+            loadDashboardOverview();
+        }
+
+        async function deletePlayerDirectly(playerId, playerName) {
+            if (!confirm(`確定要除名球員【${playerName}】嗎？`)) return;
+            await sb.from('players').delete().eq('id', playerId);
+            await sb.from('users').delete().eq('name', playerName);
+            alert(`球員【${playerName}】已除名！`);
             loadDashboardOverview();
         }
     </script>
