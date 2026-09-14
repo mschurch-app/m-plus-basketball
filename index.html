@@ -159,7 +159,8 @@
             <span class="text-lg mb-0.5"><i class="fas fa-bolt"></i></span>
             <span class="text-[10px] tracking-wider" id="navLabelOverview">主系統台</span>
         </button>
-        <button onclick="switchTab('tactics')" id="tabBtnTactics" class="hidden nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
+        <!-- 戰術戰略分頁對全體身分開放 -->
+        <button onclick="switchTab('tactics')" id="tabBtnTactics" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-chess-board"></i></span>
             <span class="text-[10px] tracking-wider">戰術戰略</span>
         </button>
@@ -356,12 +357,6 @@
             document.getElementById('logoutBtn').classList.remove('hidden');
             document.getElementById('userRoleSubtitle').innerText = `${currentUser.userName} (${currentUser.roleText})`;
 
-            if (["COACH", "BOSS"].includes(currentUser.actualRole)) {
-                document.getElementById('tabBtnTactics').classList.remove('hidden');
-            } else {
-                document.getElementById('tabBtnTactics').classList.add('hidden');
-            }
-
             setupRoleSwitchPermissions(currentUser.actualRole);
             updateRoleSwitchButtons();
             switchTab('overview');
@@ -477,7 +472,6 @@
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
 
-            // 👑 BOSS 總控主畫面
             if (currentUser.role === "BOSS") {
                 const [allUsersRes, pendingUsersRes] = await Promise.all([
                     sb.from('users').select('*').order('id', { ascending: true }),
@@ -571,7 +565,7 @@
             const allPlayers = allPlayersRes.data || [];
             const allParents = allParentsRes.data || [];
 
-            // 🏀 球員台視角 (2K 全息金屬球員卡)
+            // 🏀 球員台視角
             if (currentUser.role === "PLAYER") {
                 const uncompletedTasks = tasks.filter(t => !mySubs.some(s => s.assignment_id === t.id));
                 const radarValues = [pData.offense, pData.defense, pData.fitness, pData.attitude, pData.agility, pData.bball_iq];
@@ -713,10 +707,27 @@
                             <div class="glass-card rounded-2xl p-3.5 text-center border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">家長通訊網</span><span class="font-num text-2xl font-black text-emerald-400 mt-1 block">${allParents.length} 位</span></div>
                         </div>
 
+                        <!-- 經理專屬快捷操作列 -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="switchTab('tactics')" class="glass-card p-4 rounded-2xl border border-amber-500/30 flex items-center space-x-3 text-left hover:border-amber-400 transition">
+                                <span class="text-2xl p-2 bg-amber-500/20 text-amber-400 rounded-xl">🏀</span>
+                                <div>
+                                    <h4 class="font-bold text-white text-sm">戰術戰略複習板</h4>
+                                    <p class="text-[11px] text-slate-400">點擊查看已存檔戰術</p>
+                                </div>
+                            </button>
+                            <button onclick="switchTab('schedule')" class="glass-card p-4 rounded-2xl border border-emerald-500/30 flex items-center space-x-3 text-left hover:border-emerald-400 transition">
+                                <span class="text-2xl p-2 bg-emerald-500/20 text-emerald-400 rounded-xl">📋</span>
+                                <div>
+                                    <h4 class="font-bold text-white text-sm">現場點名中樞</h4>
+                                    <p class="text-[11px] text-slate-400">快速登記賽事出席</p>
+                                </div>
+                            </button>
+                        </div>
+
                         <div class="glass-card rounded-2xl p-5 space-y-3">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                                 <h3 class="font-bold text-emerald-400">📞 球員家長通訊錄 (${allParents.length} 位)</h3>
-                                <button onclick="switchTab('schedule')" class="text-xs bg-emerald-600 text-white px-3 py-1 rounded-lg font-bold">現場點名中樞 &rarr;</button>
                             </div>
                             <div class="space-y-2">
                                 ${allParents.map(par => `
@@ -778,7 +789,7 @@
         }
 
         // =========================================================================
-        // 🏀 2. 教練專屬互動式戰術板
+        // 🏀 2. 戰術戰略板 (球員、家長「唯讀檢視」，教練、經理、BOSS「可操作存檔」)
         // =========================================================================
         async function loadTacticsTab() {
             const container = document.getElementById('tabContentContainer');
@@ -787,24 +798,33 @@
             const { data: savedTactics } = await sb.from('tactics').select('*').order('id', { ascending: false });
             const list = savedTactics || [];
 
+            // 判斷是否為管理層（教練、經理、BOSS）
+            const isManagement = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role) || ["COACH", "MANAGER", "BOSS"].includes(currentUser.actualRole);
+
             container.innerHTML = `
                 <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
                         <div>
                             <h3 class="font-bold text-amber-400 text-base flex items-center space-x-2">
-                                <span>🏀</span><span>教練戰略戰術推演板 (Tactical Board)</span>
+                                <span>🏀</span><span>戰術戰略推演板 (Tactical Board)</span>
                             </h3>
-                            <p class="text-xs text-slate-400">手動拖曳進攻 (🔴) / 防守 (🔵) 與球標，設定名稱一鍵存檔！</p>
+                            <p class="text-xs text-slate-400">${isManagement ? '您可以拖曳棋子並將戰術存檔，供全隊隨時複習！' : '【球員/家長複習模式】您可以點擊下方戰術庫載入檢視戰術站位！'}</p>
                         </div>
-                        <div class="flex items-center space-x-2 w-full sm:w-auto">
-                            <input type="text" id="tacticNameInput" placeholder="請輸入戰術名稱..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 flex-1 sm:w-44 focus:border-amber-400">
-                            <button onclick="saveCurrentTactic()" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black text-xs rounded-xl shadow glow-gold transition active:scale-95">
-                                💾 存檔戰術
-                            </button>
-                            <button onclick="resetTacticCourt()" class="px-2.5 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-700">
-                                重設
-                            </button>
-                        </div>
+                        ${isManagement ? `
+                            <div class="flex items-center space-x-2 w-full sm:w-auto">
+                                <input type="text" id="tacticNameInput" placeholder="請輸入戰術名稱..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 flex-1 sm:w-44 focus:border-amber-400">
+                                <button onclick="saveCurrentTactic()" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black text-xs rounded-xl shadow glow-gold transition active:scale-95">
+                                    💾 存檔戰術
+                                </button>
+                                <button onclick="resetTacticCourt()" class="px-2.5 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-700">
+                                    重設
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="text-xs bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-amber-300 font-bold">
+                                👁️ 檢視與複習模式
+                            </div>
+                        `}
                     </div>
 
                     <div id="courtContainer" class="court-board w-full h-[380px] sm:h-[450px] rounded-2xl overflow-hidden shadow-2xl relative">
@@ -822,23 +842,23 @@
                     </div>
 
                     <div class="space-y-2 pt-2">
-                        <h4 class="text-xs font-bold text-slate-300">📚 已存檔戰術庫 (${list.length} 套) - 點擊即刻載入場上：</h4>
+                        <h4 class="text-xs font-bold text-slate-300">📚 已存檔戰術庫 (${list.length} 套) - 點擊即刻載入場上複習：</h4>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             ${list.length > 0 ? list.map(t => `
                                 <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-xs hover:border-amber-500/50 transition">
                                     <span onclick="loadTacticIntoCourt('${t.id}')" class="font-bold text-amber-300 cursor-pointer truncate flex-1">${t.name}</span>
-                                    <button onclick="deleteTactic('${t.id}')" class="text-slate-500 hover:text-red-400 p-1 ml-1">&times;</button>
+                                    ${isManagement ? `<button onclick="deleteTactic('${t.id}')" class="text-slate-500 hover:text-red-400 p-1 ml-1">&times;</button>` : ''}
                                 </div>
-                            `).join('') : '<p class="text-xs text-slate-500 col-span-4 py-3 text-center">尚未儲存任何戰術，請排陣後輸入名稱存檔！</p>'}
+                            `).join('') : '<p class="text-xs text-slate-500 col-span-4 py-3 text-center">尚未儲存任何戰術！</p>'}
                         </div>
                     </div>
                 </div>
             `;
 
-            renderTacticalPieces();
+            renderTacticalPieces(isManagement);
         }
 
-        function renderTacticalPieces() {
+        function renderTacticalPieces(isEditable) {
             const container = document.getElementById('piecesContainer');
             if (!container) return;
             container.innerHTML = "";
@@ -855,7 +875,13 @@
                 div.style.top = `${piece.y}%`;
                 div.innerText = piece.label;
 
-                bindPieceDragEvents(div, piece);
+                // 只有管理層（教練/經理/BOSS）才能拖曳棋子
+                if (isEditable) {
+                    bindPieceDragEvents(div, piece);
+                } else {
+                    div.style.cursor = 'default';
+                }
+
                 container.appendChild(div);
             });
         }
@@ -914,8 +940,10 @@
             const { data: t } = await sb.from('tactics').select('*').eq('id', tacticId).single();
             if (t && t.positions) {
                 currentTacticPieces = t.positions;
-                renderTacticalPieces();
-                document.getElementById('tacticNameInput').value = t.name;
+                const isManagement = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role) || ["COACH", "MANAGER", "BOSS"].includes(currentUser.actualRole);
+                renderTacticalPieces(isManagement);
+                const nameInput = document.getElementById('tacticNameInput');
+                if (nameInput) nameInput.value = t.name;
             }
         }
 
@@ -927,12 +955,14 @@
 
         function resetTacticCourt() {
             currentTacticPieces = JSON.parse(JSON.stringify(defaultTacticPieces));
-            renderTacticalPieces();
-            document.getElementById('tacticNameInput').value = "";
+            const isManagement = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role) || ["COACH", "MANAGER", "BOSS"].includes(currentUser.actualRole);
+            renderTacticalPieces(isManagement);
+            const nameInput = document.getElementById('tacticNameInput');
+            if (nameInput) nameInput.value = "";
         }
 
         // =========================================================================
-        // 📅 3. 戰役行程與球員請假即時通知經理/BOSS
+        // 📅 3. 戰役行程與請假通知
         // =========================================================================
         async function loadScheduleTab() {
             const container = document.getElementById('tabContentContainer');
@@ -1120,7 +1150,7 @@
 
         async function loadDailyStatusTab() {
             const container = document.getElementById('tabContentContainer');
-            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">每日晨報點檢</h3><p class="text-xs text-slate-400">體能與身心狀態監測中樞</p></div>`;
+            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">每日晨報點檢</h3><p class="text-xs text-slate-400">身心體能指數監測中樞</p></div>`;
         }
 
         function previewAndCompressImage(fileInput, previewElemId, hiddenInputId) {
@@ -1180,7 +1210,7 @@
             loadDashboardOverview();
         }
 
-        // BOSS 相關輔助函式
+        // BOSS 與一般輔助函式
         function setBossUserFilter(role) {
             bossSelectedFilterRole = role;
             loadDashboardOverview();
