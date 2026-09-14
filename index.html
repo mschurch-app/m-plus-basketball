@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M+ 籃球隊官方戰情中控台</title>
-    <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- LIFF SDK -->
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -29,8 +26,6 @@
         }
         .glow-orange { box-shadow: 0 4px 25px -2px rgba(249, 115, 22, 0.45); }
         .glow-gold { box-shadow: 0 6px 30px -3px rgba(234, 179, 8, 0.55); }
-        
-        /* 2K 電競卡片外框特調光澤 */
         .card-2k-border {
             border: 1.5px solid transparent;
             background: linear-gradient(rgba(15, 23, 42, 0.94), rgba(11, 15, 25, 0.98)) padding-box,
@@ -62,7 +57,6 @@
             <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-lg active:scale-95 transition">登出</button>
         </div>
 
-        <!-- 視角切換器 -->
         <div id="roleSwitchContainer" class="hidden flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs shadow-inner overflow-x-auto max-w-full">
             <button onclick="switchViewRole('BOSS')" id="btnRoleBoss" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-amber-300 bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500 hover:text-black items-center space-x-1 whitespace-nowrap">
                 <span>👑</span><span>BOSS總控</span>
@@ -89,7 +83,7 @@
 
     <main class="w-full max-w-4xl flex-1 flex flex-col space-y-4 mb-4 pb-24">
 
-        <!-- 1. 登入面板 -->
+        <!-- 登入面板 -->
         <section id="loginSection" class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center space-y-6 my-auto border border-slate-800">
             <div class="text-center space-y-2">
                 <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-orange-500/20 to-amber-500/10 rounded-2xl border border-orange-500/30 flex items-center justify-center text-3xl mb-2 text-orange-400 glow-orange">
@@ -116,9 +110,8 @@
             </div>
         </section>
 
-        <!-- 2. 主操作台 -->
+        <!-- 主操作台 -->
         <section id="dashboardSection" class="hidden space-y-4">
-            <!-- 天氣卡 -->
             <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center border-l-4 border-orange-500 gap-3">
                 <div class="flex items-center space-x-3">
                     <div class="text-3xl p-2 bg-slate-800/80 rounded-xl border border-slate-700/60">🌤️</div>
@@ -163,57 +156,68 @@
         </button>
     </nav>
 
-    <!-- 👤 彈出視窗：編輯球員照片與個人檔案 -->
-    <div id="playerProfileModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-        <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-amber-500/40 shadow-2xl">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="text-base font-black text-white flex items-center space-x-2">
-                    <span class="text-orange-400">⚡</span><span>編輯球員卡檔案與照相</span>
-                </h3>
-                <button onclick="closePlayerProfileModal()" class="text-slate-400 hover:text-white">&times;</button>
+    <!-- 📋 經理專屬：現場即時點名名冊 Modal -->
+    <div id="attendanceModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-3xl w-full max-w-lg p-6 space-y-4 border border-emerald-500/40 shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3 flex-shrink-0">
+                <div>
+                    <h3 class="text-base font-black text-emerald-400 flex items-center space-x-2">
+                        <span>📋</span><span id="attModalTitle">戰役現場點名</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5" id="attModalSubtitle">點擊按鈕直接登記出缺席狀態</p>
+                </div>
+                <button onclick="closeAttendanceModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
             </div>
-            <div class="space-y-4 text-xs">
-                <!-- 大頭照即時預覽與壓縮直傳 -->
-                <div class="flex items-center space-x-4 bg-slate-950 p-3 rounded-2xl border border-slate-800">
-                    <div id="playerAvatarPreview" class="w-20 h-20 rounded-2xl bg-slate-900 border-2 border-orange-500/80 overflow-hidden flex items-center justify-center shadow-lg">
-                        <span class="font-num text-2xl font-black text-slate-500">#--</span>
-                    </div>
-                    <div class="flex-1 space-y-2">
-                        <label class="text-slate-300 font-bold block">球員照更換 (支援拍照/選圖)</label>
-                        <input type="file" id="playerPhotoInput" accept="image/*" onchange="previewAndCompressImage(this, 'playerAvatarPreview', 'hiddenPlayerPhotoBase64')" class="text-[11px] text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-orange-500/20 file:text-orange-400 file:font-bold">
-                        <input type="hidden" id="hiddenPlayerPhotoBase64">
-                    </div>
+            
+            <!-- 點名名單清單容器 -->
+            <div id="attendanceRosterList" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                <!-- 動態注入球員清單 -->
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 flex justify-end flex-shrink-0">
+                <button onclick="closeAttendanceModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition">
+                    完成點名關閉
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 行程發布 Modal -->
+    <div id="eventModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-black text-white">📅 發布戰役行程</h3>
+                <button onclick="closeEventModal()" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="text-slate-400 block mb-1 font-semibold">活動日期</label>
+                    <input type="date" id="evDate" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">守備位置</label>
-                        <select id="editPlayerPos" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                            <option value="控球後衛">PG 控球後衛</option>
-                            <option value="得分後衛">SG 得分後衛</option>
-                            <option value="小前鋒">SF 小前鋒</option>
-                            <option value="大前鋒">PF 大前鋒</option>
-                            <option value="中鋒">C 中鋒</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">球衣背號</label>
-                        <input type="number" id="editPlayerNum" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                    </div>
+                <div>
+                    <label class="text-slate-400 block mb-1 font-semibold">時間</label>
+                    <input type="text" id="evTime" placeholder="例如: 19:00 - 21:00" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">身高 (cm)</label>
-                        <input type="number" id="editPlayerHeight" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                    </div>
-                    <div>
-                        <label class="text-slate-400 block mb-1 font-semibold">體重 (kg)</label>
-                        <input type="number" id="editPlayerWeight" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
-                    </div>
+                <div>
+                    <label class="text-slate-400 block mb-1 font-semibold">活動類型</label>
+                    <select id="evType" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
+                        <option value="🏀 例行訓練">🏀 例行訓練</option>
+                        <option value="⚔️ 正式賽事">⚔️ 正式賽事</option>
+                        <option value="🏋️ 體能對抗">🏋️ 體能對抗</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-slate-400 block mb-1 font-semibold">行程標題</label>
+                    <input type="text" id="evTitle" placeholder="例如: 週末錦標賽" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
+                </div>
+                <div>
+                    <label class="text-slate-400 block mb-1 font-semibold">地點</label>
+                    <input type="text" id="evLocation" placeholder="例如: 西屯球場" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200">
                 </div>
             </div>
             <div class="flex space-x-3 pt-2">
-                <button onclick="closePlayerProfileModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold">取消</button>
-                <button onclick="savePlayerProfileFinal()" class="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold glow-orange">確認更新球員卡</button>
+                <button onclick="closeEventModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold">取消</button>
+                <button onclick="saveScheduleEventFinal()" class="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold glow-orange">確認發布</button>
             </div>
         </div>
     </div>
@@ -224,16 +228,9 @@
         const SUPABASE_KEY = "sb_publishable_M1akQ21ePT5OVjpjO1kc8A_2GqObjrT";
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let currentUser = {
-            actualRole: null,
-            role: null,
-            userName: null,
-            roleText: null,
-            childName: null,
-            status: null
-        };
-
+        let currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null, status: null };
         let currentActiveTab = 'overview';
+        let activeAttendanceScheduleId = null;
 
         window.addEventListener("DOMContentLoaded", () => {
             const todayStr = new Date().toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit', weekday: 'short' });
@@ -289,7 +286,6 @@
 
         function processLoginSuccess(userRecord) {
             const isBoss = userRecord.name === "吳俊璋" || userRecord.role.indexOf("BOSS") !== -1;
-            
             let roleCode = "PLAYER";
             if (userRecord.role === "教練") roleCode = "COACH";
             if (userRecord.role === "球隊經理") roleCode = "MANAGER";
@@ -408,333 +404,249 @@
             else if (tabName === 'dailystatus') loadDailyStatusTab();
         }
 
-        // 核心幾何演算法：產生動態六角座標陣列
-        function calculateRadarPolygon(values, maxVal = 100, center = 60, maxRadius = 45) {
-            const angles = [-90, -30, 30, 90, 150, 210];
-            return values.map((val, idx) => {
-                const angleRad = (angles[idx] * Math.PI) / 180;
-                const r = (Math.max(12, Math.min(val, maxVal)) / maxVal) * maxRadius;
-                return {
-                    x: (center + r * Math.cos(angleRad)).toFixed(1),
-                    y: (center + r * Math.sin(angleRad)).toFixed(1)
-                };
-            });
-        }
-
         // =========================================================================
-        // ⚡ 1. 主戰情室 (全新 2K 電競炫砲球員卡實裝)
+        // ⚡ 1. 主戰情室
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
 
-            let targetPlayerName = currentUser.userName;
-            if (currentUser.role === "PARENT") targetPlayerName = currentUser.childName || "吳俊璋";
-
-            const [pRes, tasksRes, subsRes] = await Promise.all([
-                sb.from('players').select('*').eq('name', targetPlayerName).maybeSingle(),
-                sb.from('assignments').select('*').order('id', { ascending: false }),
-                sb.from('assignment_submissions').select('*').eq('player_name', targetPlayerName)
+            const [pRes, tasksRes] = await Promise.all([
+                sb.from('players').select('*').eq('name', currentUser.userName).maybeSingle(),
+                sb.from('assignments').select('*').order('id', { ascending: false })
             ]);
 
-            const pData = pRes.data || { 
-                name: targetPlayerName, number: 7, position: '控球後衛', team: '大隊', 
-                height: 178, weight: 70, photo_url: null,
-                offense: 86, defense: 90, fitness: 88, attitude: 96, agility: 89, bball_iq: 87 
-            };
-            const tasks = tasksRes.data || [];
-            const mySubs = subsRes.data || [];
+            const pData = pRes.data || { name: currentUser.userName, number: 7, position: '控球後衛', team: '大隊', height: 178, weight: 70, offense: 85, defense: 90, fitness: 88, attitude: 96, agility: 89, bball_iq: 87 };
 
-            let html = "";
+            container.innerHTML = `
+                <div class="card-2k-border rounded-3xl p-5 shadow-2xl">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-xl font-black text-white">${currentUser.userName} <span class="text-orange-400 font-num">#${pData.number}</span></h2>
+                            <p class="text-xs text-slate-400 mt-1">${pData.team} ｜ ${pData.position} ｜ ${pData.height}cm / ${pData.weight}kg</p>
+                        </div>
+                        <span class="text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30 px-3 py-1 rounded-full font-bold">戰情待命</span>
+                    </div>
+                </div>
+            `;
+        }
 
-            // --- 🏀 球員台視角 (2K 典藏卡旗艦視覺) ---
-            if (currentUser.role === "PLAYER") {
-                const uncompletedTasks = tasks.filter(t => !mySubs.some(s => s.assignment_id === t.id));
-                const radarValues = [pData.offense, pData.defense, pData.fitness, pData.attitude, pData.agility, pData.bball_iq];
-                const polyPoints = calculateRadarPolygon(radarValues);
-                const pointsString = polyPoints.map(p => `${p.x},${p.y}`).join(' ');
-                const dynamicOVR = Math.round(radarValues.reduce((a, b) => a + b, 0) / 6);
+        // =========================================================================
+        // 📅 2. 戰役行程與經理現場點名中樞
+        // =========================================================================
+        async function loadScheduleTab() {
+            const container = document.getElementById('tabContentContainer');
+            container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
 
-                // 球員卡等級評定
-                let tierTitle = "ALL-STAR 全明星";
-                let tierBg = "from-amber-500 to-orange-600";
-                if (dynamicOVR >= 90) { tierTitle = "HALL OF FAME 名人堂"; tierBg = "from-yellow-400 via-amber-500 to-yellow-600"; }
-                else if (dynamicOVR < 80) { tierTitle = "RISING STAR 新星"; tierBg = "from-blue-500 to-indigo-600"; }
+            const { data: list } = await sb.from('schedules').select('*, schedule_rsvps(*)').order('event_date', { ascending: true });
+            const schedules = list || [];
+            
+            // 判斷是否為具有點名權限的身分 (經理、教練、BOSS)
+            const canManageAttendance = ["MANAGER", "COACH", "BOSS"].includes(currentUser.role) || ["MANAGER", "COACH", "BOSS"].includes(currentUser.actualRole);
 
-                html += `
-                    <div class="space-y-4">
-                        <!-- 2K Holographic Player Card -->
-                        <div class="card-2k-border rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
-                            <!-- 背景大型背號水印 -->
-                            <div class="absolute -right-6 -bottom-10 font-num text-[180px] font-black text-white/[0.03] select-none pointer-events-none">
-                                #${pData.number || 7}
-                            </div>
+            container.innerHTML = `
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <div>
+                            <h3 class="font-bold text-orange-400 text-base flex items-center space-x-2">
+                                <span>📅</span><span>球隊賽事與訓練行事曆</span>
+                            </h3>
+                            <p class="text-xs text-slate-400">經理與教練可針對每場活動執行現場點名</p>
+                        </div>
+                        ${canManageAttendance ? `
+                            <button onclick="openEventModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold rounded-xl glow-orange active:scale-95 transition">
+                                + 發布行程
+                            </button>
+                        ` : ''}
+                    </div>
 
-                            <!-- 卡片頂部資訊列 -->
-                            <div class="flex justify-between items-start border-b border-slate-800/80 pb-4 relative z-10">
-                                <div>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-[10px] bg-gradient-to-r ${tierBg} text-black font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow">
-                                            ${tierTitle}
-                                        </span>
-                                        <span class="text-[11px] text-slate-400 font-bold uppercase tracking-widest">
-                                            M+ BASKETBALL PRO
-                                        </span>
-                                    </div>
-                                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-wide mt-1.5 flex items-center space-x-2">
-                                        <span>${pData.name}</span>
-                                        <span class="text-sm font-num text-orange-400 font-bold">#${pData.number || 7}</span>
-                                    </h2>
-                                    <p class="text-xs text-slate-400 mt-0.5">
-                                        ${pData.team || '大隊'} ｜ ${pData.position || '控球後衛'} ｜ ${pData.height || 178} cm ｜ ${pData.weight || 70} kg
-                                    </p>
-                                </div>
+                    <div class="space-y-3">
+                        ${schedules.length > 0 ? schedules.map(ev => {
+                            const rsvps = ev.schedule_rsvps || [];
+                            const attends = rsvps.filter(r => r.status === '出席');
+                            const leaves = rsvps.filter(r => r.status === '請假');
+                            const absents = rsvps.filter(r => r.status === '未到');
 
-                                <!-- OVR 核心徽章 -->
-                                <div class="flex flex-col items-center bg-gradient-to-b from-slate-900 to-slate-950 border border-amber-500/50 rounded-2xl px-4 py-2 shadow-2xl">
-                                    <span class="text-[10px] text-amber-300 font-black tracking-widest uppercase">OVR 評級</span>
-                                    <span class="font-num text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-amber-300 via-orange-400 to-yellow-500">
-                                        ${dynamicOVR}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- 卡片主體：真人照片 + 電競賽博雷達 -->
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center pt-5 relative z-10">
-                                
-                                <!-- 球員照展示區 (左側 5 格) -->
-                                <div class="md:col-span-5 flex flex-col items-center justify-center">
-                                    <div class="w-48 h-56 sm:w-52 sm:h-60 rounded-3xl p-1 bg-gradient-to-tr from-amber-500 via-orange-600 to-slate-700 shadow-2xl relative group">
-                                        <div class="w-full h-full rounded-[22px] bg-slate-950 overflow-hidden relative flex items-center justify-center">
-                                            ${pData.photo_url ? `
-                                                <img src="${pData.photo_url}" class="w-full h-full object-cover object-top transition duration-500 group-hover:scale-105">
-                                            ` : `
-                                                <div class="flex flex-col items-center justify-center text-slate-600 space-y-2">
-                                                    <i class="fas fa-user-astronaut text-5xl text-slate-700"></i>
-                                                    <span class="text-[11px] font-bold">點選下方更換大頭照</span>
-                                                </div>
-                                            `}
-                                            <!-- 覆蓋漸層金屬光 -->
-                                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80 pointer-events-none"></div>
-                                            <span class="absolute bottom-2 left-3 text-[10px] font-num font-black text-amber-400/90 tracking-widest uppercase">M+ OFFICIAL</span>
+                            return `
+                                <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-2xl space-y-3">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-xs px-2 py-0.5 rounded font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">${ev.event_type}</span>
+                                                <h4 class="font-bold text-slate-100 text-sm sm:text-base">${ev.title}</h4>
+                                            </div>
+                                            <p class="text-xs text-slate-400 mt-1">時間：${ev.event_date} ${ev.event_time} ｜ 地點：${ev.location}</p>
                                         </div>
+                                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}" target="_blank" class="text-xs bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-blue-400 hover:text-white flex items-center space-x-1">
+                                            <i class="fas fa-location-arrow"></i><span>導航</span>
+                                        </a>
                                     </div>
-                                    <button onclick="openPlayerProfileModal()" class="mt-3 px-4 py-1.5 bg-slate-800/90 hover:bg-slate-700 border border-amber-500/30 text-amber-300 rounded-xl text-xs font-bold transition active:scale-95 flex items-center space-x-1.5 shadow">
-                                        <i class="fas fa-camera"></i><span>更換球員照 / 編輯身材</span>
-                                    </button>
-                                </div>
 
-                                <!-- 電競全息雷達圖 (中間 4 格) -->
-                                <div class="md:col-span-4 flex items-center justify-center">
-                                    <div class="w-60 h-60 relative flex items-center justify-center">
-                                        <svg viewBox="0 0 120 120" class="w-full h-full filter drop-shadow-[0_0_15px_rgba(249,115,22,0.35)]">
-                                            <defs>
-                                                <!-- 多邊形亮彩漸層 -->
-                                                <radialGradient id="radarGlow" cx="50%" cy="50%" r="50%">
-                                                    <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.6"/>
-                                                    <stop offset="100%" stop-color="#ea580c" stop-opacity="0.25"/>
-                                                </radialGradient>
-                                            </defs>
-                                            <!-- 背景同心刻度網格 -->
-                                            <polygon points="60,15 99,37.5 99,82.5 60,105 21,82.5 21,37.5" fill="none" stroke="#334155" stroke-width="1"/>
-                                            <polygon points="60,30 86,45 86,75 60,90 34,75 34,45" fill="none" class="radar-mesh"/>
-                                            <polygon points="60,45 73,52.5 73,67.5 60,75 47,67.5 47,52.5" fill="none" stroke="#1e293b" stroke-width="0.8"/>
-                                            <!-- 中心軸線 -->
-                                            <line x1="60" y1="15" x2="60" y2="105" stroke="#1e293b" stroke-width="0.8"/>
-                                            <line x1="21" y1="37.5" x2="99" y2="82.5" stroke="#1e293b" stroke-width="0.8"/>
-                                            <line x1="21" y1="82.5" x2="99" y2="37.5" stroke="#1e293b" stroke-width="0.8"/>
+                                    <!-- 點名即時統計條 -->
+                                    <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/80 text-xs">
+                                        <div class="flex items-center space-x-3">
+                                            <span class="text-emerald-400 font-bold"><i class="fas fa-check-circle mr-1"></i>出席 ${attends.length}</span>
+                                            <span class="text-amber-400 font-bold"><i class="fas fa-exclamation-circle mr-1"></i>請假 ${leaves.length}</span>
+                                            <span class="text-red-400 font-bold"><i class="fas fa-times-circle mr-1"></i>未到 ${absents.length}</span>
+                                        </div>
 
-                                            <!-- 真實數據多邊形 -->
-                                            <polygon points="${pointsString}" fill="url(#radarGlow)" stroke="#fb923c" stroke-width="2.2" class="transition-all duration-700"/>
-
-                                            <!-- 頂點微發光核心 -->
-                                            ${polyPoints.map(p => `
-                                                <circle cx="${p.x}" cy="${p.y}" r="3" fill="#fef08a" stroke="#ea580c" stroke-width="1.5" class="animate-pulse"/>
-                                            `).join('')}
-                                        </svg>
-                                        <!-- 雷達指標標籤 -->
-                                        <span class="absolute top-0 text-[10px] font-bold text-slate-300">進攻</span>
-                                        <span class="absolute top-8 right-1 text-[10px] font-bold text-slate-300">防守</span>
-                                        <span class="absolute bottom-8 right-1 text-[10px] font-bold text-slate-300">體能</span>
-                                        <span class="absolute bottom-0 text-[10px] font-bold text-slate-300">態度</span>
-                                        <span class="absolute bottom-8 left-1 text-[10px] font-bold text-slate-300">敏捷</span>
-                                        <span class="absolute top-8 left-1 text-[10px] font-bold text-slate-300">球商</span>
+                                        <!-- 經理點名入口按鈕 -->
+                                        ${canManageAttendance ? `
+                                            <button onclick="openAttendanceModal(${ev.id}, '${ev.title}')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold flex items-center space-x-1.5 shadow-lg shadow-emerald-600/30 transition active:scale-95">
+                                                <i class="fas fa-user-check"></i><span>現場點名板</span>
+                                            </button>
+                                        ` : `
+                                            <div class="flex space-x-2">
+                                                <button onclick="playerQuickRsvp(${ev.id}, '出席')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold">出席</button>
+                                                <button onclick="playerQuickRsvp(${ev.id}, '請假')" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg">請假</button>
+                                            </div>
+                                        `}
                                     </div>
                                 </div>
+                            `;
+                        }).join('') : '<p class="text-xs text-slate-500 text-center py-6">目前沒有排定戰役或訓練行程</p>'}
+                    </div>
+                </div>
+            `;
+        }
 
-                                <!-- 六維數據光條槽 (右側 3 格) -->
-                                <div class="md:col-span-3 space-y-2.5 text-xs">
-                                    <div>
-                                        <div class="flex justify-between text-slate-300 font-bold mb-1">
-                                            <span>進攻投射</span><span class="font-num text-orange-400">${pData.offense}</span>
-                                        </div>
-                                        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                                            <div class="bg-gradient-to-r from-orange-500 to-amber-400 h-1.5 rounded-full" style="width: ${pData.offense}%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-slate-300 font-bold mb-1">
-                                            <span>防守抗衡</span><span class="font-num text-emerald-400">${pData.defense}</span>
-                                        </div>
-                                        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                                            <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full" style="width: ${pData.defense}%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-slate-300 font-bold mb-1">
-                                            <span>體能耐力</span><span class="font-num text-amber-400">${pData.fitness}</span>
-                                        </div>
-                                        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                                            <div class="bg-gradient-to-r from-amber-500 to-yellow-400 h-1.5 rounded-full" style="width: ${pData.fitness}%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-slate-300 font-bold mb-1">
-                                            <span>態度紀律</span><span class="font-num text-blue-400">${pData.attitude}</span>
-                                        </div>
-                                        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                                            <div class="bg-gradient-to-r from-blue-500 to-cyan-400 h-1.5 rounded-full" style="width: ${pData.attitude}%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-slate-300 font-bold mb-1">
-                                            <span>敏捷反應</span><span class="font-num text-purple-400">${pData.agility}</span>
-                                        </div>
-                                        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                                            <div class="bg-gradient-to-r from-purple-500 to-pink-400 h-1.5 rounded-full" style="width: ${pData.agility}%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-slate-300 font-bold mb-1">
-                                            <span>戰術球商</span><span class="font-num text-indigo-400">${pData.bball_iq}</span>
-                                        </div>
-                                        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                                            <div class="bg-gradient-to-r from-indigo-500 to-sky-400 h-1.5 rounded-full" style="width: ${pData.bball_iq}%"></div>
-                                        </div>
-                                    </div>
+        // =========================================================================
+        // 📋 3. 現場點名名冊彈窗與即時切換邏輯
+        // =========================================================================
+        async function openAttendanceModal(scheduleId, eventTitle) {
+            activeAttendanceScheduleId = scheduleId;
+            document.getElementById('attModalTitle').innerText = `【${eventTitle}】現場點名名冊`;
+            const rosterContainer = document.getElementById('attendanceRosterList');
+            rosterContainer.innerHTML = `<div class="p-6 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-emerald-400 text-xl"></i></div>`;
+            
+            document.getElementById('attendanceModal').classList.remove('hidden');
+            document.getElementById('attendanceModal').classList.add('flex');
+
+            // 平行抓取全隊球員清單與該行程目前的所有 RSVP 紀錄
+            const [playersRes, rsvpsRes] = await Promise.all([
+                sb.from('players').select('*').order('team', { ascending: true }).order('number', { ascending: true }),
+                sb.from('schedule_rsvps').select('*').eq('schedule_id', scheduleId)
+            ]);
+
+            const allPlayers = playersRes.data || [];
+            const rsvps = rsvpsRes.data || [];
+
+            rosterContainer.innerHTML = allPlayers.map(player => {
+                const currentRecord = rsvps.find(r => r.player_name === player.name);
+                const status = currentRecord ? currentRecord.status : '未標記';
+
+                const avatar = player.photo_url 
+                    ? `<img src="${player.photo_url}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">`
+                    : `<div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center font-bold text-xs text-orange-400">#${player.number||7}</div>`;
+
+                return `
+                    <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between text-xs">
+                        <div class="flex items-center space-x-2.5">
+                            ${avatar}
+                            <div>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="font-bold text-slate-100">${player.name}</span>
+                                    <span class="text-[10px] bg-slate-800 px-1.5 py-0.2 rounded text-amber-300 font-mono">#${player.number}</span>
                                 </div>
-
+                                <span class="text-[10px] text-slate-400">${player.team} ｜ ${player.position}</span>
                             </div>
                         </div>
 
-                        <!-- 待辦課表提醒卡 -->
-                        <div class="glass-card rounded-2xl p-5 space-y-3">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-bold text-orange-400 flex items-center space-x-2">
-                                    <span>⚠️</span><span>自主訓練成果待回報</span>
-                                </h3>
-                                <span class="text-xs text-slate-400">尚有 ${uncompletedTasks.length} 項未回報</span>
-                            </div>
-                            ${uncompletedTasks.length > 0 ? uncompletedTasks.map(task => `
-                                <div class="bg-slate-950/80 border border-orange-500/30 rounded-2xl p-4 flex justify-between items-center">
-                                    <div>
-                                        <h4 class="font-bold text-slate-100 text-sm">${task.title}</h4>
-                                        <p class="text-xs text-slate-400 mt-0.5">目標：${task.target_amount} ｜ 期限：${task.deadline}</p>
-                                    </div>
-                                    <button onclick="switchTab('assignments')" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-xs glow-orange active:scale-95 transition">
-                                        前往回報
-                                    </button>
-                                </div>
-                            `).join('') : '<p class="text-xs text-emerald-400 text-center py-4">🎉 目前自主訓練皆已完成！</p>'}
+                        <!-- 經理點名按鈕組 -->
+                        <div class="flex space-x-1.5">
+                            <button onclick="setPlayerAttendance('${player.name}', '出席', this)" class="px-2.5 py-1 rounded-lg font-bold transition ${status === '出席' ? 'bg-emerald-600 text-white shadow' : 'bg-slate-800 text-slate-400 hover:text-white'}">
+                                ✅ 出席
+                            </button>
+                            <button onclick="setPlayerAttendance('${player.name}', '請假', this)" class="px-2.5 py-1 rounded-lg font-bold transition ${status === '請假' ? 'bg-amber-600 text-white shadow' : 'bg-slate-800 text-slate-400 hover:text-white'}">
+                                ⚠️ 請假
+                            </button>
+                            <button onclick="setPlayerAttendance('${player.name}', '未到', this)" class="px-2.5 py-1 rounded-lg font-bold transition ${status === '未到' ? 'bg-red-600 text-white shadow' : 'bg-slate-800 text-slate-400 hover:text-white'}">
+                                ❌ 未到
+                            </button>
                         </div>
                     </div>
                 `;
-            } else {
-                container.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-slate-400">請切換至球員台瀏覽全新戰力卡！</div>`;
-            }
-
-            container.innerHTML = html;
+            }).join('');
         }
 
-        // =========================================================================
-        // 📸 圖片即時壓縮演算法 (將圖片壓縮為 400px 輕量 Base64，省空間且極速)
-        // =========================================================================
-        function previewAndCompressImage(fileInput, previewElemId, hiddenInputId) {
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const maxDim = 400;
-                    let w = img.width, h = img.height;
-                    if (w > h && w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
-                    else if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
-
-                    canvas.width = w;
-                    canvas.height = h;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, w, h);
-
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.88);
-                    document.getElementById(hiddenInputId).value = compressedBase64;
-                    document.getElementById(previewElemId).innerHTML = `<img src="${compressedBase64}" class="w-full h-full object-cover">`;
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+        function closeAttendanceModal() {
+            document.getElementById('attendanceModal').classList.add('hidden');
+            document.getElementById('attendanceModal').classList.remove('flex');
+            activeAttendanceScheduleId = null;
+            loadScheduleTab(); // 重新整理行程卡片出席統計
         }
 
-        // =========================================================================
-        // 👤 球員個人檔案更新
-        // =========================================================================
-        async function openPlayerProfileModal() {
-            const { data: p } = await sb.from('players').select('*').eq('name', currentUser.userName).maybeSingle();
-            if (p) {
-                document.getElementById('editPlayerPos').value = p.position || '控球後衛';
-                document.getElementById('editPlayerNum').value = p.number || 7;
-                document.getElementById('editPlayerHeight').value = p.height || 178;
-                document.getElementById('editPlayerWeight').value = p.weight || 70;
-                if (p.photo_url) {
-                    document.getElementById('playerAvatarPreview').innerHTML = `<img src="${p.photo_url}" class="w-full h-full object-cover">`;
-                    document.getElementById('hiddenPlayerPhotoBase64').value = p.photo_url;
-                }
-            }
-            document.getElementById('playerProfileModal').classList.remove('hidden');
-            document.getElementById('playerProfileModal').classList.add('flex');
+        // 經理點名直接更新狀態
+        async function setPlayerAttendance(playerName, targetStatus, btnElem) {
+            if (!activeAttendanceScheduleId) return;
+
+            // 樂觀更新 UI 顏色
+            const parent = btnElem.parentElement;
+            Array.from(parent.children).forEach(b => {
+                b.className = "px-2.5 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-400 hover:text-white";
+            });
+            if (targetStatus === '出席') btnElem.className = "px-2.5 py-1 rounded-lg font-bold transition bg-emerald-600 text-white shadow";
+            else if (targetStatus === '請假') btnElem.className = "px-2.5 py-1 rounded-lg font-bold transition bg-amber-600 text-white shadow";
+            else if (targetStatus === '未到') btnElem.className = "px-2.5 py-1 rounded-lg font-bold transition bg-red-600 text-white shadow";
+
+            // 寫入 Supabase (Upsert)
+            await sb.from('schedule_rsvps').upsert([{
+                schedule_id: activeAttendanceScheduleId,
+                player_name: playerName,
+                status: targetStatus,
+                updated_at: new Date().toISOString()
+            }], { onConflict: 'schedule_id,player_name' });
         }
 
-        function closePlayerProfileModal() {
-            document.getElementById('playerProfileModal').classList.add('hidden');
-            document.getElementById('playerProfileModal').classList.remove('flex');
+        async function playerQuickRsvp(scheduleId, status) {
+            await sb.from('schedule_rsvps').upsert([{
+                schedule_id: scheduleId,
+                player_name: currentUser.userName,
+                status: status,
+                updated_at: new Date().toISOString()
+            }], { onConflict: 'schedule_id,player_name' });
+            alert(`已登記為：${status}`);
+            loadScheduleTab();
         }
 
-        async function savePlayerProfileFinal() {
-            const pos = document.getElementById('editPlayerPos').value;
-            const num = parseInt(document.getElementById('editPlayerNum').value) || 7;
-            const height = parseFloat(document.getElementById('editPlayerHeight').value) || null;
-            const weight = parseFloat(document.getElementById('editPlayerWeight').value) || null;
-            const photoBase64 = document.getElementById('hiddenPlayerPhotoBase64').value;
+        function openEventModal() {
+            document.getElementById('eventModal').classList.remove('hidden');
+            document.getElementById('eventModal').classList.add('flex');
+        }
 
-            const updatePayload = { position: pos, number: num, height, weight };
-            if (photoBase64) updatePayload.photo_url = photoBase64;
+        function closeEventModal() {
+            document.getElementById('eventModal').classList.add('hidden');
+            document.getElementById('eventModal').classList.remove('flex');
+        }
 
-            const { error } = await sb.from('players').update(updatePayload).eq('name', currentUser.userName);
+        async function saveScheduleEventFinal() {
+            const date = document.getElementById('evDate').value;
+            const time = document.getElementById('evTime').value;
+            const type = document.getElementById('evType').value;
+            const title = document.getElementById('evTitle').value;
+            const location = document.getElementById('evLocation').value;
+
+            if (!date || !title) { alert("請填寫活動日期與標題！"); return; }
+
+            const { error } = await sb.from('schedules').insert([{
+                event_date: date, event_time: time, event_type: type, title, location
+            }]);
+
             if (!error) {
-                alert("🎉 球員戰力卡已同步更新！");
-                closePlayerProfileModal();
-                loadDashboardOverview();
-            } else {
-                alert("更新失敗：" + error.message);
+                alert("🎉 戰役行程發布成功！");
+                closeEventModal();
+                loadScheduleTab();
             }
         }
 
-        // =========================================================================
-        // 其他輔助分頁
-        // =========================================================================
         async function loadAssignmentsTab() {
             const container = document.getElementById('tabContentContainer');
-            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">課表中心</h3><p class="text-xs text-slate-400">課表審核與成果繳交</p></div>`;
+            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">課表中心</h3></div>`;
         }
-        async function loadScheduleTab() {
-            const container = document.getElementById('tabContentContainer');
-            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">戰役行程</h3><p class="text-xs text-slate-400">行程與出缺席點名</p></div>`;
-        }
+
         async function loadDailyStatusTab() {
             const container = document.getElementById('tabContentContainer');
-            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">每日晨報點檢</h3><p class="text-xs text-slate-400">身心體能指數監測</p></div>`;
+            container.innerHTML = `<div class="glass-card rounded-2xl p-5 space-y-4"><h3 class="font-bold text-orange-400">每日晨報點檢</h3></div>`;
         }
     </script>
 </body>
