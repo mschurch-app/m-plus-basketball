@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M+ 籃球隊官方戰情中控台 - Supabase SQL 極速版</title>
+    <title>M+ 籃球隊官方戰情中控台</title>
     <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -44,7 +44,7 @@
                 <div>
                     <div class="flex items-center space-x-2">
                         <h1 class="font-black text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">M+ 戰情中心</h1>
-                        <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">SQL 極速版</span>
+                        <span class="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-bold">PRO</span>
                     </div>
                     <p class="text-xs text-slate-400 font-medium" id="userRoleSubtitle">身分辨識中...</p>
                 </div>
@@ -78,10 +78,10 @@
         <section id="loginSection" class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center space-y-6 my-auto border border-slate-800">
             <div class="text-center space-y-2">
                 <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-orange-500/20 to-amber-500/10 rounded-2xl border border-orange-500/30 flex items-center justify-center text-3xl mb-2 text-orange-400 glow-orange">
-                    ⚡
+                    🛡️
                 </div>
                 <h2 class="text-2xl font-black tracking-wide text-white">M+ 戰情系統驗證</h2>
-                <p class="text-xs text-slate-400">PostgreSQL 極速直連作戰台</p>
+                <p class="text-xs text-slate-400">專屬三權分流中控作戰台</p>
             </div>
             <div class="w-full max-w-sm space-y-4">
                 <button onclick="handleLineLogin()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center space-x-2 border border-emerald-500/30">
@@ -399,7 +399,7 @@
         </div>
     </div>
 
-    <!-- JavaScript 核心 (Supabase 直連) -->
+    <!-- JavaScript 核心 -->
     <script>
         const SUPABASE_URL = "https://ldsedanswynbzymyfwox.supabase.co";
         const SUPABASE_KEY = "sb_publishable_M1akQ21ePT5OVjpjO1kc8A_2GqObjrT";
@@ -442,7 +442,6 @@
                 if (data) {
                     processLoginSuccess(data);
                 } else {
-                    // 若 LINE 查無此人，自動導向註冊頁面並帶入 LINE ID
                     showRegisterSection();
                     document.getElementById('regLineId').value = lineUserId;
                     if (lineName && !document.getElementById('regName').value) {
@@ -475,10 +474,9 @@
 
             const { data, error } = await sb.from('users').select('*').eq('name', acc).maybeSingle();
             
-            if (error) { alert("資料庫連線異常：" + error.message); return; }
+            if (error) { alert("系統連線異常：" + error.message); return; }
 
             if (!data) {
-                // 查無帳號直接導向註冊
                 alert(`查無【${acc}】的資料，為您跳轉至註冊建立檔案！`);
                 showRegisterSection();
                 document.getElementById('regName').value = acc;
@@ -493,9 +491,6 @@
             }
         }
 
-        // ==========================================
-        // 註冊表單切換與送出邏輯
-        // ==========================================
         function showRegisterSection() {
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('registerSection').classList.remove('hidden');
@@ -517,13 +512,11 @@
                 }
             });
 
-            // 隱藏全部身分專屬欄位
             document.getElementById('formFieldsPlayer').classList.add('hidden');
             document.getElementById('formFieldsCoach').classList.add('hidden');
             document.getElementById('formFieldsManager').classList.add('hidden');
             document.getElementById('formFieldsParent').classList.add('hidden');
 
-            // 顯示當前選取身分
             if (role === 'PLAYER') document.getElementById('formFieldsPlayer').classList.remove('hidden');
             else if (role === 'COACH') document.getElementById('formFieldsCoach').classList.remove('hidden');
             else if (role === 'MANAGER') document.getElementById('formFieldsManager').classList.remove('hidden');
@@ -563,7 +556,6 @@
                 extraUserFields = { child_name: childName, relation: relation };
             }
 
-            // 寫入 users 資料表
             const { data: newUser, error: uErr } = await sb.from('users').insert([{
                 name: name,
                 phone: phone,
@@ -579,7 +571,6 @@
                 return;
             }
 
-            // 若為球員，同步寫入 players 名冊
             if (currentRegRole === 'PLAYER') {
                 const pos = document.getElementById('regPlayerPos').value;
                 const num = parseInt(document.getElementById('regPlayerNum').value) || 7;
@@ -821,8 +812,8 @@
                                 <span class="font-num text-2xl font-black text-amber-400 mt-1 block">${schedules.length} 場</span>
                             </div>
                             <div class="glass-card rounded-2xl p-4 text-center border border-slate-800">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">數據庫引擎</span>
-                                <span class="font-num text-xl font-black text-emerald-400 mt-1 block">PostgreSQL</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">系統運作狀態</span>
+                                <span class="font-num text-xl font-black text-emerald-400 mt-1 block">連線正常</span>
                             </div>
                         </div>
 
@@ -920,7 +911,7 @@
                         <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                             <div>
                                 <h3 class="font-bold text-orange-400 text-base">📋 教練課表審核與派發中心</h3>
-                                <p class="text-xs text-slate-400">PostgreSQL 極速審批</p>
+                                <p class="text-xs text-slate-400">審查球員回報進度</p>
                             </div>
                             <button onclick="promptAssignNewTask()" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs rounded-xl glow-orange active:scale-95 transition">
                                 + 發布新課表
@@ -1003,7 +994,7 @@
                                         <span class="text-xs ${mySub ? 'text-emerald-400' : 'text-slate-500'}">
                                             狀態：${mySub ? mySub.review_state : '尚未回報'}
                                         </span>
-                                        <button onclick="openReportModal('${t.id}', '${t.title}')" class="px-4 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold rounded-xl glow-orange active:scale-95 transition">
+                                        <button onclick="openReportModal('${t.id}', '${t.title}')" class="px-4 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl glow-orange active:scale-95 transition">
                                             ${mySub ? '重新回報' : '點擊回報成果'}
                                         </button>
                                     </div>
@@ -1033,7 +1024,7 @@
                     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                         <div>
                             <h3 class="font-bold text-orange-400 text-base flex items-center space-x-2"><span>📅</span><span>球隊賽事與訓練行事曆</span></h3>
-                            <p class="text-xs text-slate-400">依最近活動優先排序 (PostgreSQL 秒開)</p>
+                            <p class="text-xs text-slate-400">依最近活動優先排序</p>
                         </div>
                         ${isManagerOrCoach ? `
                             <button onclick="openEventModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold rounded-xl glow-orange active:scale-95 transition">
@@ -1259,7 +1250,7 @@
 
             if (error) alert("送出失敗: " + error.message);
             else {
-                alert("🎉 晨報點檢秒速完成！");
+                alert("🎉 晨報點檢完成！");
                 switchTab('overview');
             }
         }
