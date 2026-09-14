@@ -68,7 +68,6 @@
             <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-lg active:scale-95 transition">登出</button>
         </div>
 
-        <!-- 身分切換器 -->
         <div id="roleSwitchContainer" class="hidden flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs shadow-inner overflow-x-auto max-w-full">
             <button onclick="switchViewRole('BOSS')" id="btnRoleBoss" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-amber-300 bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500 hover:text-black items-center space-x-1 whitespace-nowrap">
                 <span>👑</span><span>BOSS總控</span>
@@ -212,6 +211,52 @@
             <div class="flex space-x-3 pt-2">
                 <button onclick="closeRegisterModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold">取消</button>
                 <button onclick="submitRegisterApplication()" class="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold glow-orange">送出註冊申請</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📤 球員自主訓練回報 Modal -->
+    <div id="submitAssignmentModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-orange-500/40 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-black text-white flex items-center space-x-2">
+                    <span class="text-orange-400">📤</span><span id="assignModalTitle">自主訓練完成回報</span>
+                </h3>
+                <button onclick="closeSubmitAssignmentModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <input type="hidden" id="currentSubmitAssignmentId">
+                <div>
+                    <label class="text-slate-300 block mb-1 font-semibold">訓練證明檔案 (支援照片或影片)</label>
+                    <input type="file" id="assignMediaInput" accept="image/*,video/*" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:bg-orange-500 file:text-white">
+                    <p class="text-[10px] text-slate-500 mt-1">選填：拍攝投籃影片或練習照片作為成果驗證</p>
+                </div>
+                <div>
+                    <label class="text-slate-300 block mb-1 font-semibold">訓練心得或完成組數備註</label>
+                    <textarea id="assignNotesInput" rows="2" placeholder="例如：左右手各完成150次，出手弧度有加高！" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200"></textarea>
+                </div>
+            </div>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeSubmitAssignmentModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold">取消</button>
+                <button onclick="confirmSubmitAssignment()" id="btnConfirmSubmitAssign" class="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold glow-orange flex items-center justify-center space-x-1">
+                    <span>確認回報</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔍 教練/經理/BOSS 檢視球員課表回報成果名冊 Modal -->
+    <div id="viewSubmissionsModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-3xl w-full max-w-xl p-6 space-y-4 border border-amber-500/40 shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3 flex-shrink-0">
+                <h3 class="text-base font-black text-amber-400 flex items-center space-x-2">
+                    <span>📋</span><span id="viewSubsModalTitle">球員自主訓練回報成果檢視</span>
+                </h3>
+                <button onclick="closeViewSubmissionsModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <div id="submissionsListContainer" class="flex-1 overflow-y-auto space-y-3 pr-1"></div>
+            <div class="pt-2 border-t border-slate-800 flex justify-end flex-shrink-0">
+                <button onclick="closeViewSubmissionsModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition">關閉</button>
             </div>
         </div>
     </div>
@@ -563,7 +608,7 @@
         }
 
         // =========================================================================
-        // ⚡ 1. 完整身分主控台 (含家長台孩子數據卡片、教練晨報監控)
+        // ⚡ 1. 完整身分主控台
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
@@ -668,7 +713,7 @@
             const [pRes, tasksRes, subsRes, checkinsRes, schedRes, allPlayersRes, allParentsRes, pendingMembersRes] = await Promise.all([
                 sb.from('players').select('*').eq('name', targetPlayerName).maybeSingle(),
                 sb.from('assignments').select('*').order('id', { ascending: false }),
-                sb.from('assignment_submissions').select('*').eq('player_name', targetPlayerName),
+                sb.from('assignment_submissions').select('*'),
                 sb.from('daily_checkins').select('*').eq('checkin_date', today),
                 sb.from('schedules').select('*, schedule_rsvps(*)').order('event_date', { ascending: true }),
                 sb.from('players').select('*').order('team', { ascending: true }).order('number', { ascending: true }),
@@ -678,14 +723,15 @@
 
             const pData = pRes.data || { name: targetPlayerName, number: 7, position: '控球後衛', team: '大隊', height: 178, weight: 70, photo_url: null, offense: 86, defense: 90, fitness: 88, attitude: 96, agility: 89, bball_iq: 87 };
             const tasks = tasksRes.data || [];
-            const mySubs = subsRes.data || [];
+            const allSubs = subsRes.data || [];
+            const mySubs = allSubs.filter(s => s.player_name === targetPlayerName);
             const checkins = checkinsRes.data || [];
             const schedules = schedRes.data || [];
             const allPlayers = allPlayersRes.data || [];
             const allParents = allParentsRes.data || [];
             const pendingMembers = pendingMembersRes.data || [];
 
-            // 🏀 球員台視角 (2K 戰神卡)
+            // 🏀 球員台視角
             if (currentUser.role === "PLAYER") {
                 const uncompletedTasks = tasks.filter(t => !mySubs.some(s => s.assignment_id === t.id));
                 const radarValues = [pData.offense, pData.defense, pData.fitness, pData.attitude, pData.agility, pData.bball_iq];
@@ -778,7 +824,7 @@
                 `;
             }
 
-            // 📊 經理台視角 (支援經理審核)
+            // 📊 經理台視角
             else if (currentUser.role === "MANAGER") {
                 container.innerHTML = `
                     <div class="space-y-4">
@@ -834,7 +880,7 @@
                 `;
             }
 
-            // 👨‍👩‍👦 家長台視角 (補齊孩子健康與訓練實質數據)
+            // 👨‍👩‍👦 家長台視角
             else if (currentUser.role === "PARENT") {
                 const childCheckin = checkins.find(c => c.player_name === targetPlayerName);
                 const childSubs = mySubs.filter(s => s.player_name === targetPlayerName);
@@ -1002,7 +1048,7 @@
         }
 
         // =========================================================================
-        // 🎯 3. 課表中心
+        // 🎯 3. 課表中心 (完整整合：教練審閱球員成果與球員回報)
         // =========================================================================
         async function loadAssignmentsTab() {
             const container = document.getElementById('tabContentContainer');
@@ -1010,12 +1056,14 @@
 
             const [tasksRes, subsRes] = await Promise.all([
                 sb.from('assignments').select('*').order('id', { ascending: false }),
-                sb.from('assignment_submissions').select('*').eq('player_name', currentUser.userName)
+                sb.from('assignment_submissions').select('*')
             ]);
 
             const tasks = tasksRes.data || [];
-            const mySubs = subsRes.data || [];
+            const allSubs = subsRes.data || [];
+            const mySubs = allSubs.filter(s => s.player_name === currentUser.userName);
             const isCoachOrBoss = (currentUser.role === "COACH" || currentUser.role === "BOSS");
+            const isManagerOrCoachOrBoss = ["COACH", "MANAGER", "BOSS"].includes(currentUser.role);
 
             container.innerHTML = `
                 <div class="space-y-4">
@@ -1039,6 +1087,7 @@
                         <div class="space-y-3">
                             ${tasks.map(t => {
                                 const submitted = mySubs.find(s => s.assignment_id === t.id);
+                                const totalCompletedForTask = allSubs.filter(s => s.assignment_id === t.id).length;
                                 return `
                                     <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-2xl space-y-2">
                                         <div class="flex justify-between items-start">
@@ -1046,15 +1095,37 @@
                                                 <h4 class="font-bold text-white text-sm">${t.title}</h4>
                                                 <p class="text-xs text-slate-400 mt-0.5">目標：${t.target_amount}</p>
                                             </div>
-                                            <span class="text-xs px-2.5 py-1 rounded-full font-bold ${submitted ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'}">
-                                                ${submitted ? '✓ 已回報' : '進行中'}
-                                            </span>
-                                        </div>
-                                        ${currentUser.role === 'PLAYER' ? `
-                                            <div class="pt-2 border-t border-slate-800 flex justify-end">
-                                                ${submitted ? `<span class="text-xs text-slate-400">您已於 ${new Date(submitted.created_at).toLocaleDateString()} 完成回報！</span>` : `<button onclick="playerSubmitAssignment(${t.id})" class="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-xs glow-orange">點擊回報完成</button>`}
+                                            <div class="text-right space-y-1">
+                                                <span class="text-xs px-2.5 py-1 rounded-full font-bold ${submitted ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'}">
+                                                    ${submitted ? '✓ 您已回報' : '進行中'}
+                                                </span>
                                             </div>
-                                        ` : ''}
+                                        </div>
+
+                                        <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-xs">
+                                            <div>
+                                                ${isManagerOrCoachOrBoss ? `
+                                                    <button onclick="openViewSubmissionsModal(${t.id}, '${t.title}')" class="text-amber-400 font-bold hover:underline flex items-center space-x-1">
+                                                        <i class="fas fa-eye"></i><span>查看球員回報 (${totalCompletedForTask} 人)</span>
+                                                    </button>
+                                                ` : `
+                                                    <span class="text-slate-500 text-[11px]">全隊已完成: ${totalCompletedForTask} 人</span>
+                                                `}
+                                            </div>
+
+                                            ${currentUser.role === 'PLAYER' ? `
+                                                <div>
+                                                    ${submitted ? `
+                                                        <span class="text-slate-400 mr-2">已回報完成</span>
+                                                        ${submitted.media_url ? `<a href="${submitted.media_url}" target="_blank" class="text-orange-400 font-bold hover:underline"><i class="fas fa-paperclip"></i> 查看成果</a>` : ''}
+                                                    ` : `
+                                                        <button onclick="openSubmitAssignmentModal(${t.id}, '${t.title}')" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-xs glow-orange flex items-center space-x-1.5 active:scale-95 transition">
+                                                            <i class="fas fa-check-circle"></i><span>點擊回報完成</span>
+                                                        </button>
+                                                    `}
+                                                </div>
+                                            ` : ''}
+                                        </div>
                                     </div>
                                 `;
                             }).join('')}
@@ -1083,19 +1154,123 @@
             }
         }
 
-        async function playerSubmitAssignment(assignmentId) {
-            const { error } = await sb.from('assignment_submissions').insert([{
-                assignment_id: assignmentId,
-                player_name: currentUser.userName,
-                status: '已完成'
-            }]);
+        function openSubmitAssignmentModal(assignmentId, title) {
+            document.getElementById('currentSubmitAssignmentId').value = assignmentId;
+            document.getElementById('assignModalTitle').innerText = `回報：${title}`;
+            document.getElementById('assignNotesInput').value = '';
+            document.getElementById('assignMediaInput').value = '';
+            document.getElementById('submitAssignmentModal').classList.remove('hidden');
+            document.getElementById('submitAssignmentModal').classList.add('flex');
+        }
 
-            if (error) {
-                alert("回報失敗：" + error.message);
-            } else {
-                alert("🎉 自主訓練回報成功！教練端已同步記錄。");
-                loadAssignmentsTab();
+        function closeSubmitAssignmentModal() {
+            document.getElementById('submitAssignmentModal').classList.add('hidden');
+            document.getElementById('submitAssignmentModal').classList.remove('flex');
+        }
+
+        async function confirmSubmitAssignment() {
+            const assignmentId = document.getElementById('currentSubmitAssignmentId').value;
+            const notes = document.getElementById('assignNotesInput').value.trim();
+            const fileInput = document.getElementById('assignMediaInput');
+            const submitBtn = document.getElementById('btnConfirmSubmitAssign');
+
+            if (!assignmentId) return;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i><span>上傳處理中...</span>`;
+
+            let mediaUrl = null;
+            let mediaType = null;
+
+            try {
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${currentUser.userName}_task.${fileExt}`;
+                    const filePath = `tasks/${fileName}`;
+
+                    mediaType = file.type.startsWith('video') ? 'video' : 'image';
+
+                    const { error: uploadErr } = await sb.storage.from('assignments').upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+
+                    if (uploadErr) {
+                        alert("檔案上傳失敗：" + uploadErr.message);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = `<span>確認回報</span>`;
+                        return;
+                    }
+
+                    const { data: publicUrlData } = sb.storage.from('assignments').getPublicUrl(filePath);
+                    mediaUrl = publicUrlData.publicUrl;
+                }
+
+                const { error: insertErr } = await sb.from('assignment_submissions').insert([{
+                    assignment_id: parseInt(assignmentId),
+                    player_name: currentUser.userName,
+                    status: '已完成',
+                    media_url: mediaUrl,
+                    media_type: mediaType,
+                    notes: notes || null
+                }]);
+
+                if (insertErr) {
+                    alert("回報記錄失敗：" + insertErr.message);
+                } else {
+                    alert("🎉 成果已成功回報並同步！");
+                    closeSubmitAssignmentModal();
+                    loadAssignmentsTab();
+                }
+            } catch (err) {
+                alert("發生未預期錯誤：" + err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<span>確認回報</span>`;
             }
+        }
+
+        // 開啟檢視全隊回報名冊 Modal (教練/經理/BOSS 專屬)
+        async function openViewSubmissionsModal(taskId, taskTitle) {
+            document.getElementById('viewSubsModalTitle').innerText = `【${taskTitle}】回報成果`;
+            const container = document.getElementById('submissionsListContainer');
+            container.innerHTML = `<div class="p-6 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-amber-400 text-xl"></i></div>`;
+            document.getElementById('viewSubmissionsModal').classList.remove('hidden');
+            document.getElementById('viewSubmissionsModal').classList.add('flex');
+
+            const { data: subs } = await sb.from('assignment_submissions').select('*').eq('assignment_id', taskId).order('created_at', { ascending: false });
+
+            if (!subs || subs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-6 text-center">目前尚無球員回報此訓練成果。</p>`;
+                return;
+            }
+
+            container.innerHTML = subs.map(s => `
+                <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl space-y-2 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-white text-sm">${s.player_name}</span>
+                        <span class="text-[11px] text-slate-400">${new Date(s.created_at).toLocaleString('zh-TW', { hour12: false })}</span>
+                    </div>
+                    ${s.notes ? `<p class="text-slate-300 bg-slate-950/60 p-2 rounded-xl">心得備註：${s.notes}</p>` : ''}
+                    ${s.media_url ? `
+                        <div class="pt-1">
+                            ${s.media_type === 'video' ? `
+                                <video src="${s.media_url}" controls class="w-full max-h-56 rounded-xl bg-black"></video>
+                            ` : `
+                                <a href="${s.media_url}" target="_blank">
+                                    <img src="${s.media_url}" class="w-full max-h-56 object-cover rounded-xl border border-slate-800">
+                                </a>
+                            `}
+                        </div>
+                    ` : '<p class="text-[11px] text-slate-500">（純文字回報，無附檔）</p>'}
+                </div>
+            `).join('');
+        }
+
+        function closeViewSubmissionsModal() {
+            document.getElementById('viewSubmissionsModal').classList.add('hidden');
+            document.getElementById('viewSubmissionsModal').classList.remove('flex');
         }
 
         // =========================================================================
