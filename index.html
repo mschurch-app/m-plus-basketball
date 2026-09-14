@@ -52,16 +52,19 @@
             <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-lg active:scale-95 transition">登出</button>
         </div>
 
-        <!-- 多身分切換器 -->
-        <div id="roleSwitchContainer" class="hidden flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs shadow-inner">
-            <button onclick="switchViewRole('PLAYER')" id="btnRolePlayer" class="px-3 py-1.5 rounded-lg transition font-bold text-slate-400 hover:text-white flex items-center space-x-1">
+        <!-- 依權限動態過濾的身分切換器 -->
+        <div id="roleSwitchContainer" class="hidden flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs shadow-inner overflow-x-auto max-w-full">
+            <button onclick="switchViewRole('PLAYER')" id="btnRolePlayer" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-slate-400 hover:text-white items-center space-x-1 whitespace-nowrap">
                 <span>🏀</span><span>球員台</span>
             </button>
-            <button onclick="switchViewRole('COACH')" id="btnRoleCoach" class="px-3 py-1.5 rounded-lg transition font-bold text-slate-400 hover:text-white flex items-center space-x-1">
+            <button onclick="switchViewRole('COACH')" id="btnRoleCoach" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-slate-400 hover:text-white items-center space-x-1 whitespace-nowrap">
                 <span>📋</span><span>教練台</span>
             </button>
-            <button onclick="switchViewRole('MANAGER')" id="btnRoleManager" class="px-3 py-1.5 rounded-lg transition font-bold text-slate-400 hover:text-white flex items-center space-x-1">
+            <button onclick="switchViewRole('MANAGER')" id="btnRoleManager" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-slate-400 hover:text-white items-center space-x-1 whitespace-nowrap">
                 <span>📊</span><span>經理台</span>
+            </button>
+            <button onclick="switchViewRole('PARENT')" id="btnRoleParent" class="hidden px-2.5 py-1.5 rounded-lg transition font-bold text-slate-400 hover:text-white items-center space-x-1 whitespace-nowrap">
+                <span>👨‍👩‍👦</span><span>家長台</span>
             </button>
         </div>
 
@@ -81,7 +84,7 @@
                     🛡️
                 </div>
                 <h2 class="text-2xl font-black tracking-wide text-white">M+ 戰情系統驗證</h2>
-                <p class="text-xs text-slate-400">專屬三權分流中控作戰台</p>
+                <p class="text-xs text-slate-400">專屬多權限分流中控作戰台</p>
             </div>
             <div class="w-full max-w-sm space-y-4">
                 <button onclick="handleLineLogin()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center space-x-2 border border-emerald-500/30">
@@ -310,19 +313,19 @@
     <nav id="floatingNavbar" class="hidden fixed bottom-4 z-40 max-w-md w-[92%] sm:w-[420px] glass-card bg-slate-950/85 backdrop-blur-xl border border-slate-800/90 rounded-3xl px-3 py-2.5 shadow-2xl shadow-black/80 flex justify-around items-center">
         <button onclick="switchTab('overview')" id="tabBtnOverview" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-bold text-orange-400 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-bolt"></i></span>
-            <span class="text-[10px] tracking-wider">主戰情室</span>
+            <span class="text-[10px] tracking-wider" id="navLabelOverview">主戰情室</span>
         </button>
         <button onclick="switchTab('assignments')" id="tabBtnAssignments" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-bullseye"></i></span>
-            <span class="text-[10px] tracking-wider">課表中心</span>
+            <span class="text-[10px] tracking-wider" id="navLabelAssignments">課表中心</span>
         </button>
         <button onclick="switchTab('schedule')" id="tabBtnSchedule" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-calendar-alt"></i></span>
-            <span class="text-[10px] tracking-wider">戰役行程</span>
+            <span class="text-[10px] tracking-wider" id="navLabelSchedule">戰役行程</span>
         </button>
         <button onclick="switchTab('dailystatus')" id="tabBtnDailystatus" class="nav-item flex-1 py-1.5 flex flex-col items-center justify-center text-xs font-medium text-slate-400 hover:text-slate-200 transition active:scale-90">
             <span class="text-lg mb-0.5"><i class="fas fa-heartbeat"></i></span>
-            <span class="text-[10px] tracking-wider">晨報點檢</span>
+            <span class="text-[10px] tracking-wider" id="navLabelDaily">晨報點檢</span>
         </button>
     </nav>
 
@@ -407,9 +410,10 @@
 
         let currentUser = {
             actualRole: null,
-            role: null,      // PLAYER, COACH, MANAGER, ADMIN
+            role: null,      // PLAYER, COACH, MANAGER, PARENT, ADMIN
             userName: null,
-            roleText: null
+            roleText: null,
+            childName: null  // 家長綁定之孩子姓名
         };
 
         let currentActiveTab = 'overview';
@@ -473,7 +477,6 @@
             if (!acc) { alert("請輸入姓名！"); return; }
 
             const { data, error } = await sb.from('users').select('*').eq('name', acc).maybeSingle();
-            
             if (error) { alert("系統連線異常：" + error.message); return; }
 
             if (!data) {
@@ -598,13 +601,15 @@
             let roleCode = "PLAYER";
             if (userRecord.role === "教練") roleCode = "COACH";
             if (userRecord.role === "球隊經理") roleCode = "MANAGER";
+            if (userRecord.role === "家長") roleCode = "PARENT";
             if (userRecord.role.indexOf("BOSS") !== -1 || userRecord.name === "吳俊璋") roleCode = "ADMIN";
 
             currentUser = {
                 actualRole: roleCode,
                 role: roleCode,
                 userName: userRecord.name,
-                roleText: userRecord.role
+                roleText: userRecord.role,
+                childName: userRecord.child_name || null
             };
 
             document.getElementById('loginSection').classList.add('hidden');
@@ -616,14 +621,55 @@
             document.getElementById('logoutBtn').classList.remove('hidden');
             document.getElementById('userRoleSubtitle').innerText = `${currentUser.userName} (${currentUser.roleText})`;
 
-            if (["COACH", "MANAGER", "ADMIN"].includes(currentUser.actualRole)) {
-                document.getElementById('roleSwitchContainer').classList.remove('hidden');
-            } else {
-                document.getElementById('roleSwitchContainer').classList.add('hidden');
-            }
+            // 🎯 核心需求：權限精確控制切換按鈕
+            setupRoleSwitchPermissions(currentUser.actualRole);
 
             updateRoleSwitchButtons();
             switchTab('overview');
+        }
+
+        // 依據身分顯示/隱藏切換按鈕
+        function setupRoleSwitchPermissions(actualRole) {
+            const container = document.getElementById('roleSwitchContainer');
+            const pBtn = document.getElementById('btnRolePlayer');
+            const cBtn = document.getElementById('btnRoleCoach');
+            const mBtn = document.getElementById('btnRoleManager');
+            const parBtn = document.getElementById('btnRoleParent');
+
+            // 先全部隱藏
+            [pBtn, cBtn, mBtn, parBtn].forEach(b => {
+                b.classList.add('hidden');
+                b.classList.remove('flex');
+            });
+
+            // 1. BOSS / 管理員：所有都有
+            if (actualRole === "ADMIN") {
+                container.classList.remove('hidden');
+                [pBtn, cBtn, mBtn, parBtn].forEach(b => {
+                    b.classList.remove('hidden');
+                    b.classList.add('flex');
+                });
+            }
+            // 2. 教練：教練台 + 經理台
+            else if (actualRole === "COACH") {
+                container.classList.remove('hidden');
+                [cBtn, mBtn].forEach(b => {
+                    b.classList.remove('hidden');
+                    b.classList.add('flex');
+                });
+            }
+            // 3. 經理：經理台 + 家長台
+            else if (actualRole === "MANAGER") {
+                container.classList.remove('hidden');
+                [mBtn, parBtn].forEach(b => {
+                    b.classList.remove('hidden');
+                    b.classList.add('flex');
+                });
+            }
+            // 4. 球員或家長：單一權限，不顯示切換選單
+            else {
+                container.classList.add('hidden');
+            }
         }
 
         function switchViewRole(targetRole) {
@@ -636,18 +682,27 @@
             const pBtn = document.getElementById('btnRolePlayer');
             const cBtn = document.getElementById('btnRoleCoach');
             const mBtn = document.getElementById('btnRoleManager');
+            const parBtn = document.getElementById('btnRoleParent');
 
-            [pBtn, cBtn, mBtn].forEach(b => {
-                b.className = "px-3 py-1.5 rounded-lg transition font-bold text-slate-400 hover:text-white flex items-center space-x-1";
+            [pBtn, cBtn, mBtn, parBtn].forEach(b => {
+                b.className = b.className.replace(/bg-orange-500 text-white shadow glow-orange/g, '').trim();
+                if (!b.className.includes('text-slate-400')) b.className += " text-slate-400";
             });
 
-            if (currentUser.role === "PLAYER") pBtn.className = "px-3 py-1.5 rounded-lg transition font-bold bg-orange-500 text-white shadow glow-orange flex items-center space-x-1";
-            else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") cBtn.className = "px-3 py-1.5 rounded-lg transition font-bold bg-orange-500 text-white shadow glow-orange flex items-center space-x-1";
-            else if (currentUser.role === "MANAGER") mBtn.className = "px-3 py-1.5 rounded-lg transition font-bold bg-orange-500 text-white shadow glow-orange flex items-center space-x-1";
+            let activeBtn = null;
+            if (currentUser.role === "PLAYER") activeBtn = pBtn;
+            else if (currentUser.role === "COACH") activeBtn = cBtn;
+            else if (currentUser.role === "MANAGER") activeBtn = mBtn;
+            else if (currentUser.role === "PARENT") activeBtn = parBtn;
+            else if (currentUser.role === "ADMIN") activeBtn = cBtn;
+
+            if (activeBtn) {
+                activeBtn.className = activeBtn.className.replace('text-slate-400', 'bg-orange-500 text-white shadow glow-orange');
+            }
         }
 
         function logout() {
-            currentUser = { actualRole: null, role: null, userName: null, roleText: null };
+            currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null };
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('registerSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
@@ -671,6 +726,18 @@
                     }
                 }
             });
+
+            if (currentUser.role === "PARENT") {
+                document.getElementById('navLabelOverview').innerText = "家長戰情";
+                document.getElementById('navLabelAssignments').innerText = "孩子課表";
+                document.getElementById('navLabelSchedule').innerText = "賽事接送";
+                document.getElementById('navLabelDaily').innerText = "身心指標";
+            } else {
+                document.getElementById('navLabelOverview').innerText = "主戰情室";
+                document.getElementById('navLabelAssignments').innerText = "課表中心";
+                document.getElementById('navLabelSchedule').innerText = "戰役行程";
+                document.getElementById('navLabelDaily').innerText = "晨報點檢";
+            }
 
             if (tabName === 'overview') loadDashboardOverview();
             else if (tabName === 'assignments') loadAssignmentsTab();
@@ -699,15 +766,20 @@
 
             const today = new Date().toISOString().split('T')[0];
 
+            let targetPlayerName = currentUser.userName;
+            if (currentUser.role === "PARENT") {
+                targetPlayerName = currentUser.childName || "吳俊璋";
+            }
+
             const [pRes, tasksRes, subsRes, checkinsRes, schedRes] = await Promise.all([
-                sb.from('players').select('*').eq('name', currentUser.userName).maybeSingle(),
+                sb.from('players').select('*').eq('name', targetPlayerName).maybeSingle(),
                 sb.from('assignments').select('*').order('id', { ascending: false }),
-                sb.from('assignment_submissions').select('*').eq('player_name', currentUser.userName),
+                sb.from('assignment_submissions').select('*').eq('player_name', targetPlayerName),
                 sb.from('daily_checkins').select('*').eq('checkin_date', today),
                 sb.from('schedules').select('*, schedule_rsvps(*)').order('event_date', { ascending: true })
             ]);
 
-            const pData = pRes.data || { offense: 85, defense: 90, fitness: 88, attitude: 96, agility: 89, bball_iq: 87 };
+            const pData = pRes.data || { name: targetPlayerName, offense: 85, defense: 90, fitness: 88, attitude: 96, agility: 89, bball_iq: 87 };
             const tasks = tasksRes.data || [];
             const mySubs = subsRes.data || [];
             const checkins = checkinsRes.data || [];
@@ -715,7 +787,116 @@
 
             let html = "";
 
-            if (currentUser.role === "PLAYER") {
+            // --- 👨‍👩‍👦 家長台主戰情室 ---
+            if (currentUser.role === "PARENT") {
+                const childCheckin = checkins.find(c => c.player_name === targetPlayerName);
+                const nextEv = schedules[0];
+                const uncompletedTasks = tasks.filter(t => !mySubs.some(s => s.assignment_id === t.id));
+
+                html += `
+                    <div class="space-y-4">
+                        <div class="glass-card rounded-3xl p-5 border border-amber-500/30 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-slate-950 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-2xl shadow-lg border border-amber-400 text-white">
+                                    👨‍👩‍👦
+                                </div>
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <h2 class="text-lg font-black text-white">家長關懷中樞</h2>
+                                        <span class="text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full font-bold">安心透明</span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 mt-1">目前鎖定關心孩子：<span class="text-orange-400 font-black text-sm">${targetPlayerName}</span> (${pData.team || '大隊'} #${pData.number || 7})</p>
+                                </div>
+                            </div>
+                            <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-2 text-xs">
+                                <span class="text-slate-400 block font-semibold">訓練平安狀態</span>
+                                <span class="text-emerald-400 font-bold flex items-center space-x-1 mt-0.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>正常在隊 / 訓練平安</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-5 space-y-3">
+                            <h3 class="font-bold text-orange-400 flex items-center space-x-2">
+                                <span>🩺</span><span>今日孩子身心健康回報</span>
+                            </h3>
+                            ${childCheckin ? `
+                                <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-2xl space-y-3">
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                                            <span class="text-slate-400 block text-[10px]">睡眠時數</span>
+                                            <span class="font-num text-lg font-bold text-amber-400">${childCheckin.sleep_hours} hr</span>
+                                        </div>
+                                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                                            <span class="text-slate-400 block text-[10px]">精神狀態</span>
+                                            <span class="font-bold text-slate-200 mt-1 block">${childCheckin.energy}</span>
+                                        </div>
+                                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                                            <span class="text-slate-400 block text-[10px]">痠痛或不適</span>
+                                            <span class="font-bold ${childCheckin.sore_area !== '無' ? 'text-red-400' : 'text-emerald-400'} mt-1 block">${childCheckin.sore_area}</span>
+                                        </div>
+                                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                                            <span class="text-slate-400 block text-[10px]">疲勞指數</span>
+                                            <span class="font-num text-lg font-bold ${childCheckin.fatigue >= 4 ? 'text-red-400' : 'text-emerald-400'}">${childCheckin.fatigue} / 5</span>
+                                        </div>
+                                    </div>
+                                    ${childCheckin.advice ? `
+                                        <div class="bg-blue-950/20 border border-blue-500/30 p-3 rounded-xl text-xs text-slate-300">
+                                            <span class="text-blue-400 font-bold block mb-0.5">💬 教練給孩子的叮嚀與建議：</span>
+                                            <p class="text-slate-200">${childCheckin.advice}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : `
+                                <div class="bg-orange-950/20 border border-orange-500/30 p-4 rounded-xl text-xs text-orange-300">
+                                    <span>⚠️ 孩子今日尚未填寫晨報點檢，您可以提醒孩子填寫以供教練評估體能狀況。</span>
+                                </div>
+                            `}
+                        </div>
+
+                        ${nextEv ? `
+                            <div class="glass-card rounded-2xl p-4 border border-orange-500/30 bg-gradient-to-r from-orange-950/20 via-slate-900 to-slate-950 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-[10px] bg-orange-500 text-white font-bold px-2 py-0.5 rounded">下一場賽事接送</span>
+                                        <h4 class="font-bold text-slate-100 text-sm">${nextEv.title}</h4>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-1">時間：${nextEv.event_date} ${nextEv.event_time} ｜ 地點：${nextEv.location}</p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nextEv.location)}" target="_blank" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                                        <i class="fas fa-location-arrow text-[10px]"></i><span>球場導航</span>
+                                    </a>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="glass-card rounded-2xl p-5 space-y-3">
+                            <h3 class="font-bold text-orange-400 flex items-center space-x-2">
+                                <span>🎯</span><span>孩子的自主課表進度 (${tasks.length - uncompletedTasks.length}/${tasks.length} 完成)</span>
+                            </h3>
+                            ${tasks.length > 0 ? tasks.map(t => {
+                                const sub = mySubs.find(s => s.assignment_id === t.id);
+                                return `
+                                    <div class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl flex justify-between items-center text-xs">
+                                        <div>
+                                            <h4 class="font-bold text-slate-200">${t.title}</h4>
+                                            <p class="text-slate-400 text-[11px] mt-0.5">目標：${t.target_amount} ｜ 期限：${t.deadline}</p>
+                                        </div>
+                                        <span class="px-2.5 py-1 rounded-full font-bold ${sub ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}">
+                                            ${sub ? sub.review_state : '尚未完成'}
+                                        </span>
+                                    </div>
+                                `;
+                            }).join('') : '<p class="text-xs text-slate-500 text-center py-3">目前無指派課表</p>'}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // --- 🏀 球員主戰情室 ---
+            else if (currentUser.role === "PLAYER") {
                 const uncompletedTasks = tasks.filter(t => !mySubs.some(s => s.assignment_id === t.id));
                 const radarValues = [pData.offense, pData.defense, pData.fitness, pData.attitude, pData.agility, pData.bball_iq];
                 const dynamicPolygonPoints = generateDynamicRadarPoints(radarValues);
@@ -787,7 +968,10 @@
                         </div>
                     </div>
                 `;
-            } else if (currentUser.role === "MANAGER") {
+            }
+
+            // --- 📊 經理主戰情室 ---
+            else if (currentUser.role === "MANAGER") {
                 const totalPlayers = 10;
                 const checkedCount = checkins.length;
                 const rate = Math.round((checkedCount / totalPlayers) * 100);
@@ -849,7 +1033,10 @@
                         </div>
                     </div>
                 `;
-            } else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
+            }
+
+            // --- 📋 教練主戰情室 ---
+            else if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
                 html += `
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -904,6 +1091,11 @@
             const allTasks = tasks || [];
             const allPlayers = players || [];
             let html = "";
+
+            let queryPlayerName = currentUser.userName;
+            if (currentUser.role === "PARENT") {
+                queryPlayerName = currentUser.childName || "吳俊璋";
+            }
 
             if (currentUser.role === "COACH" || currentUser.role === "ADMIN") {
                 html += `
@@ -980,9 +1172,9 @@
             } else {
                 html += `
                     <div class="glass-card rounded-2xl p-5 space-y-4">
-                        <h3 class="font-bold text-orange-400 text-base">🎯 我的自主課表與成果回報</h3>
+                        <h3 class="font-bold text-orange-400 text-base">${currentUser.role === 'PARENT' ? '👨‍👩‍👦 孩子的自主課表與回報進度' : '🎯 我的自主課表與成果回報'}</h3>
                         ${allTasks.length > 0 ? allTasks.map(t => {
-                            const mySub = (t.assignment_submissions || []).find(s => s.player_name === currentUser.userName);
+                            const mySub = (t.assignment_submissions || []).find(s => s.player_name === queryPlayerName);
                             return `
                                 <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-2">
                                     <div class="flex justify-between items-center">
@@ -994,9 +1186,13 @@
                                         <span class="text-xs ${mySub ? 'text-emerald-400' : 'text-slate-500'}">
                                             狀態：${mySub ? mySub.review_state : '尚未回報'}
                                         </span>
-                                        <button onclick="openReportModal('${t.id}', '${t.title}')" class="px-4 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl glow-orange active:scale-95 transition">
-                                            ${mySub ? '重新回報' : '點擊回報成果'}
-                                        </button>
+                                        ${currentUser.role !== 'PARENT' ? `
+                                            <button onclick="openReportModal('${t.id}', '${t.title}')" class="px-4 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold rounded-xl glow-orange active:scale-95 transition">
+                                                ${mySub ? '重新回報' : '點擊回報成果'}
+                                            </button>
+                                        ` : `
+                                            <span class="text-xs text-slate-400 italic">${mySub ? '孩子已繳交' : '尚未繳交'}</span>
+                                        `}
                                     </div>
                                 </div>
                             `;
@@ -1047,11 +1243,14 @@
                                 <div class="flex justify-between items-center pt-2 border-t border-slate-800/80">
                                     <span class="text-xs text-emerald-400">出席: ${attends.length} 人 ｜ 請假: ${leaves.length} 人</span>
                                     <div class="flex space-x-2">
+                                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}" target="_blank" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition">導航</a>
                                         ${isManagerOrCoach ? `
                                             <button onclick="deleteScheduleEvent(${ev.id})" class="px-3 py-1 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-xs transition">刪除</button>
                                         ` : ''}
-                                        <button onclick="submitRsvp(${ev.id}, '出席')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition">出席</button>
-                                        <button onclick="promptLeave(${ev.id})" class="px-3 py-1 bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white rounded-lg text-xs transition">請假</button>
+                                        ${currentUser.role !== 'PARENT' ? `
+                                            <button onclick="submitRsvp(${ev.id}, '出席')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition">出席</button>
+                                            <button onclick="promptLeave(${ev.id})" class="px-3 py-1 bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white rounded-lg text-xs transition">請假</button>
+                                        ` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -1119,6 +1318,35 @@
                                     </div>
                                 </div>
                             `).join('') : '<p class="text-xs text-slate-500 text-center py-6">今日尚無球員填寫晨報</p>'}
+                        </div>
+                    </div>
+                `;
+            } else if (currentUser.role === "PARENT") {
+                let child = currentUser.childName || "吳俊璋";
+                const { data: childRecords } = await sb.from('daily_checkins').select('*').eq('player_name', child).order('checkin_date', { ascending: false }).limit(7);
+                const records = childRecords || [];
+
+                container.innerHTML = `
+                    <div class="glass-card rounded-2xl p-5 space-y-4">
+                        <div class="border-b border-slate-800 pb-3">
+                            <h3 class="font-bold text-orange-400 text-base">👨‍👩‍👦 【${child}】近期身心健康與體能紀錄</h3>
+                            <p class="text-xs text-slate-400">家長即時守護孩子運動健康</p>
+                        </div>
+                        <div class="space-y-3">
+                            ${records.length > 0 ? records.map(r => `
+                                <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl space-y-2 text-xs">
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-bold text-slate-200">${r.checkin_date}</span>
+                                        <span class="px-2 py-0.5 rounded font-bold ${r.fatigue >= 4 ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}">疲勞度: ${r.fatigue}/5</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 bg-slate-900/60 p-2 rounded-lg text-slate-300">
+                                        <div>睡眠：<span class="text-amber-400 font-bold">${r.sleep_hours}hr</span></div>
+                                        <div>精神：<span>${r.energy}</span></div>
+                                        <div>痠痛：<span class="${r.sore_area !== '無' ? 'text-red-400 font-bold' : ''}">${r.sore_area}</span></div>
+                                    </div>
+                                    ${r.advice ? `<p class="text-blue-300 text-[11px] pt-1">💬 教練建議：${r.advice}</p>` : ''}
+                                </div>
+                            `).join('') : '<p class="text-xs text-slate-500 text-center py-4">尚無點檢歷史紀錄</p>'}
                         </div>
                     </div>
                 `;
