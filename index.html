@@ -421,6 +421,10 @@
                     document.getElementById('regName').value = acc;
                 }
             } else {
+                if (data.status === '待審核') {
+                    alert("您的申請目前正在審核中，請靜待經理或 BOSS 核准！");
+                    return;
+                }
                 if (data.password && pass && data.password !== pass) {
                     alert("密碼不正確！");
                     return;
@@ -563,7 +567,7 @@
         }
 
         // =========================================================================
-        // ⚡ 1. 完整身分主控台
+        // ⚡ 1. 完整身分主控台 (含經理台審核人員權限)
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
@@ -614,7 +618,7 @@
                                                 <span class="text-slate-400 ml-2">電話: ${u.phone||'無'}</span>
                                             </div>
                                             <div class="flex space-x-2">
-                                                <button onclick="approveMember(${u.id}, '${u.name}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold">核准</button>
+                                                <button onclick="approveMember(${u.id}, '${u.name}', '${u.role}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold">核准</button>
                                                 <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1 bg-red-600 text-white rounded-lg font-bold">拒絕</button>
                                             </div>
                                         </div>
@@ -665,14 +669,15 @@
             let targetPlayerName = currentUser.userName;
             if (currentUser.role === "PARENT") targetPlayerName = currentUser.childName || "吳俊璋";
 
-            const [pRes, tasksRes, subsRes, checkinsRes, schedRes, allPlayersRes, allParentsRes] = await Promise.all([
+            const [pRes, tasksRes, subsRes, checkinsRes, schedRes, allPlayersRes, allParentsRes, pendingMembersRes] = await Promise.all([
                 sb.from('players').select('*').eq('name', targetPlayerName).maybeSingle(),
                 sb.from('assignments').select('*').order('id', { ascending: false }),
                 sb.from('assignment_submissions').select('*').eq('player_name', targetPlayerName),
                 sb.from('daily_checkins').select('*').eq('checkin_date', today),
                 sb.from('schedules').select('*, schedule_rsvps(*)').order('event_date', { ascending: true }),
                 sb.from('players').select('*').order('team', { ascending: true }).order('number', { ascending: true }),
-                sb.from('users').select('*').eq('role', '家長')
+                sb.from('users').select('*').eq('role', '家長'),
+                sb.from('users').select('*').eq('status', '待審核')
             ]);
 
             const pData = pRes.data || { name: targetPlayerName, number: 7, position: '控球後衛', team: '大隊', height: 178, weight: 70, photo_url: null, offense: 86, defense: 90, fitness: 88, attitude: 96, agility: 89, bball_iq: 87 };
@@ -682,6 +687,7 @@
             const schedules = schedRes.data || [];
             const allPlayers = allPlayersRes.data || [];
             const allParents = allParentsRes.data || [];
+            const pendingMembers = pendingMembersRes.data || [];
 
             // 🏀 球員台視角
             if (currentUser.role === "PLAYER") {
@@ -772,10 +778,37 @@
                 `;
             }
 
-            // 📊 經理台視角
+            // 📊 經理台視角 (支援經理審核註冊新成員)
             else if (currentUser.role === "MANAGER") {
                 container.innerHTML = `
                     <div class="space-y-4">
+                        <!-- 經理審核新成員專區 -->
+                        ${pendingMembers.length > 0 ? `
+                            <div class="glass-card rounded-2xl p-4 border border-emerald-500/50 bg-emerald-950/20 space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="font-bold text-emerald-400 text-sm flex items-center space-x-2">
+                                        <span>🔔</span><span>新成員註冊申請待審核 (${pendingMembers.length} 位)</span>
+                                    </h3>
+                                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">經理管理權限</span>
+                                </div>
+                                <div class="space-y-2">
+                                    ${pendingMembers.map(u => `
+                                        <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+                                            <div>
+                                                <span class="font-bold text-white text-sm">${u.name}</span>
+                                                <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded ml-1 font-bold">${u.role}</span>
+                                                <p class="text-slate-400 mt-1">電話: ${u.phone||'未填寫'} ${u.child_name?`｜ 孩子: <span class="text-orange-400 font-bold">${u.child_name}</span>`:''}</p>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button onclick="approveMember(${u.id}, '${u.name}', '${u.role}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition shadow">核准加入</button>
+                                                <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 rounded-xl font-bold transition">拒絕</button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
                         <div class="grid grid-cols-2 gap-3">
                             <button onclick="switchTab('tactics')" class="glass-card p-4 rounded-2xl border border-amber-500/30 flex items-center space-x-3 text-left">
                                 <span class="text-2xl p-2 bg-amber-500/20 text-amber-400 rounded-xl">🏀</span>
@@ -786,6 +819,7 @@
                                 <div><h4 class="font-bold text-white text-sm">現場點名中樞</h4><p class="text-[11px] text-slate-400">登記賽事出席</p></div>
                             </button>
                         </div>
+
                         <div class="glass-card rounded-2xl p-5 space-y-3">
                             <h3 class="font-bold text-emerald-400">📞 球員家長通訊錄 (${allParents.length} 位)</h3>
                             <div class="space-y-2">
@@ -1032,7 +1066,7 @@
         }
 
         // =========================================================================
-        // 📅 4. 戰役行程 (含教練/經理/BOSS 新增行程)
+        // 📅 4. 戰役行程
         // =========================================================================
         async function loadScheduleTab() {
             const container = document.getElementById('tabContentContainer');
@@ -1197,7 +1231,7 @@
         }
 
         // =========================================================================
-        // 🩺 5. 每日晨報點檢 (完整填寫與健康指數監控)
+        // 🩺 5. 每日晨報點檢
         // =========================================================================
         async function loadDailyStatusTab() {
             const container = document.getElementById('tabContentContainer');
@@ -1332,7 +1366,52 @@
 
             const { error } = await sb.from('users').insert([newUserPayload]);
             if (error) alert("註冊申請送出失敗：" + error.message);
-            else { alert("🎉 註冊申請已成功送出！請等待 BOSS 核准。"); closeRegisterModal(); }
+            else { 
+                alert("🎉 註冊申請已成功送出！系統已自動發送 LINE 通知經理與 BOSS，請靜候核准。"); 
+                closeRegisterModal(); 
+            }
+        }
+
+        // 審核成員專用函式 (經理/BOSS 共同使用)
+        async function approveMember(id, name, role) {
+            const { error } = await sb.from('users').update({ status: '已核准' }).eq('id', id);
+            if (error) {
+                alert("核准失敗：" + error.message);
+                return;
+            }
+
+            if (role === '球員') {
+                const { data: existingPlayer } = await sb.from('players').select('*').eq('name', name).maybeSingle();
+                if (!existingPlayer) {
+                    await sb.from('players').insert([{
+                        name: name,
+                        number: 0,
+                        position: '控球後衛',
+                        team: '大隊',
+                        height: 175,
+                        weight: 68,
+                        offense: 80,
+                        defense: 80,
+                        fitness: 80,
+                        attitude: 85,
+                        agility: 80,
+                        bball_iq: 80
+                    }]);
+                }
+            }
+
+            alert(`🎉 已成功核准【${name}】加入球隊系統！`);
+            loadDashboardOverview();
+        }
+
+        async function rejectMember(id, name) {
+            if (!confirm(`確定要拒絕【${name}】的註冊申請嗎？`)) return;
+            const { error } = await sb.from('users').delete().eq('id', id);
+            if (error) alert("操作失敗：" + error.message);
+            else {
+                alert(`已拒絕並移除【${name}】的申請。`);
+                loadDashboardOverview();
+            }
         }
 
         function previewAndCompressImage(input, previewId, hiddenId) {
@@ -1360,8 +1439,6 @@
         }
         function setBossUserFilter(role) { bossSelectedFilterRole = role; loadDashboardOverview(); }
         async function bossDeleteUserDirectly(id, name) { if(!confirm(`除名 ${name}?`))return; await sb.from('users').delete().eq('id', id); loadDashboardOverview(); }
-        async function approveMember(id, name) { await sb.from('users').update({ status: '已核准' }).eq('id', id); loadDashboardOverview(); }
-        async function rejectMember(id, name) { await sb.from('users').delete().eq('id', id); loadDashboardOverview(); }
         async function deletePlayerDirectly(id, name) { if(!confirm(`除名 ${name}?`))return; await sb.from('players').delete().eq('id', id); loadDashboardOverview(); }
     </script>
 </body>
