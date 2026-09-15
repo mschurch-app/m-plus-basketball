@@ -50,7 +50,7 @@
         .player-on-court {
             border: 2px solid #f97316;
             background: linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.15s ease-out;
         }
         .player-on-court.selected {
             border-color: #facc15;
@@ -159,7 +159,7 @@
         </section>
     </main>
 
-    <!-- 底部導航列（新增：紀錄台） -->
+    <!-- 底部導航列 -->
     <nav id="floatingNavbar" class="hidden fixed bottom-4 z-40 max-w-lg w-[95%] sm:w-[480px] glass-card bg-slate-950/90 backdrop-blur-xl border border-slate-800/90 rounded-3xl px-2.5 py-2 shadow-2xl shadow-black/80 flex justify-around items-center">
         <button onclick="switchTab('overview')" id="tabBtnOverview" class="nav-item flex-1 py-1 flex flex-col items-center justify-center text-xs font-bold text-orange-400 transition active:scale-90">
             <span class="text-base mb-0.5"><i class="fas fa-bolt"></i></span>
@@ -198,20 +198,9 @@
             </div>
             <div class="flex-1 overflow-y-auto space-y-3.5 pr-1 text-xs text-slate-300 leading-relaxed">
                 <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
-                    <h4 class="font-bold text-blue-400 text-sm mb-1">📊 紀錄台 (全新功能)</h4>
-                    <p>• <b>現場 5 人輪替極速紀錄</b>：鎖定場上 5 人大按鈕，單手點記得分、籃板、助攻。點擊場上球員再點板凳即可 0.5 秒無痛換人！</p>
-                    <p>• <b>球員與家長即時觀戰</b>：比賽進行中可隨時觀看比分板與全隊攻守表現。</p>
-                </div>
-                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
-                    <h4 class="font-bold text-orange-400 text-sm mb-1">🏀 球員指南</h4>
-                    <p>• <b>2K 球員卡</b>：展示個人六角戰鬥雷達與 OVR 綜合戰力，頂端維度為球隊核心靈魂「品格合一 (CHR)」。</p>
-                    <p>• <b>課表回報</b>：於「課表中心」完成自主特訓後，可上傳照片或投籃影片以累積成長經驗。</p>
-                    <p>• <b>晨報點檢</b>：每天起床填寫睡眠時數與疲勞指數，協助教練調配體能負擔。</p>
-                </div>
-                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
-                    <h4 class="font-bold text-amber-400 text-sm mb-1">📋 教練指南</h4>
-                    <p>• <b>專業課表派發</b>：內建投籃、控球、體能與戰術模組，亦可完全自訂內容。</p>
-                    <p>• <b>賽後覆盤與 MVP 評選</b>：在行程或紀錄台中檢視攻守統計，給予評分、勾選品格標籤，並指定單場 MVP。</p>
+                    <h4 class="font-bold text-blue-400 text-sm mb-1">📊 紀錄台極速模式</h4>
+                    <p>• <b>0 秒極速記分</b>：點擊直接累加數字，無需等待轉圈，背景自動同步。</p>
+                    <p>• <b>對手分數</b>：點擊對手大比分區直接加 1 分，亦可點擊 +2、+3、-1 快捷調整。</p>
                 </div>
             </div>
             <div class="pt-2 border-t border-slate-800 flex justify-end flex-shrink-0">
@@ -457,8 +446,10 @@
         let bossSelectedFilterRole = 'ALL';
         let currentLineUserId = null;
 
-        // 紀錄台全域狀態
+        // 紀錄台極速暫存狀態
         let currentLiveMatchId = null;
+        let liveMatchData = null;
+        let liveRosterStats = [];
         let courtActive5 = [];
         let courtBench = [];
         let selectedCourtPlayer = null;
@@ -758,7 +749,7 @@
         }
 
         // =========================================================================
-        // ⚡ 1. 完整身分主控台 (次世代全息雷達圖 + 全員大頭貼名冊)
+        // ⚡ 1. 完整身分主控台
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
@@ -876,12 +867,11 @@
             let targetPlayerName = currentUser.userName;
             if (currentUser.role === "PARENT") targetPlayerName = currentUser.childName || "吳俊璋";
 
-            const [pRes, tasksRes, subsRes, checkinsRes, schedRes, allPlayersRes, allParentsRes, pendingMembersRes, myGameStatsRes] = await Promise.all([
+            const [pRes, tasksRes, subsRes, checkinsRes, allPlayersRes, allParentsRes, pendingMembersRes, myGameStatsRes] = await Promise.all([
                 sb.from('players').select('*').eq('name', targetPlayerName).maybeSingle(),
                 sb.from('assignments').select('*').order('id', { ascending: false }),
                 sb.from('assignment_submissions').select('*'),
                 sb.from('daily_checkins').select('*').eq('checkin_date', today),
-                sb.from('schedules').select('*, schedule_rsvps(*)').order('event_date', { ascending: true }),
                 sb.from('players').select('*').order('team', { ascending: true }).order('number', { ascending: true }),
                 sb.from('users').select('*').eq('role', '家長'),
                 sb.from('users').select('*').eq('status', '待審核'),
@@ -1233,13 +1223,12 @@
         }
 
         // =========================================================================
-        // 📊 2. 賽事紀錄台 (Game Center) —— 場上 5 人鎖定 + 0.5 秒換人
+        // 📊 2. 賽事紀錄台 (0 秒樂觀更新 + 對手得分直接點記)
         // =========================================================================
         async function loadGameCenterTab() {
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-blue-400 text-2xl"></i></div>`;
 
-            // 抓取所有賽事（比賽/友誼賽）
             const { data: matches } = await sb.from('schedules')
                 .select('*, schedule_rsvps(*)')
                 .in('event_type', ['比賽', '友誼賽'])
@@ -1261,24 +1250,31 @@
                 currentLiveMatchId = matchList[0].id;
             }
 
-            const currentMatch = matchList.find(m => m.id === currentLiveMatchId) || matchList[0];
+            liveMatchData = matchList.find(m => m.id === currentLiveMatchId) || matchList[0];
             const canEdit = ["BOSS", "COACH", "MANAGER"].includes(currentUser.role);
 
-            // 取得登錄球員與數據
             const [playersRes, statsRes] = await Promise.all([
                 sb.from('players').select('*').order('number', { ascending: true }),
-                sb.from('game_player_stats').select('*').eq('schedule_id', currentMatch.id)
+                sb.from('game_player_stats').select('*').eq('schedule_id', liveMatchData.id)
             ]);
 
             const allPlayers = playersRes.data || [];
             const currentStats = statsRes.data || [];
 
-            // 出席名單排在前面
-            const attendingNames = (currentMatch.schedule_rsvps || [])
+            // 建立全域快速對照表
+            liveRosterStats = allPlayers.map(p => {
+                const s = currentStats.find(x => x.player_name === p.name) || {
+                    points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, turnovers: 0, fouls: 0
+                };
+                return { ...p, ...s };
+            });
+
+            // 出席優先排序
+            const attendingNames = (liveMatchData.schedule_rsvps || [])
                 .filter(r => r.status === '出席')
                 .map(r => r.player_name);
 
-            let roster = [...allPlayers];
+            let roster = [...liveRosterStats];
             if (attendingNames.length > 0) {
                 roster.sort((a, b) => {
                     const aAtt = attendingNames.includes(a.name) ? 1 : 0;
@@ -1287,13 +1283,11 @@
                 });
             }
 
-            // 初始化場上 5 人與板凳
             if (courtActive5.length !== 5) {
                 courtActive5 = roster.slice(0, 5).map(p => p.name);
                 courtBench = roster.slice(5).map(p => p.name);
             }
 
-            // 若選擇的球員不在場上，預設選第 1 位
             if (!selectedCourtPlayer || !courtActive5.includes(selectedCourtPlayer)) {
                 selectedCourtPlayer = courtActive5[0];
             }
@@ -1307,7 +1301,7 @@
                                 <span class="text-xs font-bold text-blue-400">目前賽事：</span>
                                 <select onchange="changeLiveMatch(this.value)" class="bg-slate-900 border border-slate-800 text-xs text-white rounded-xl px-3 py-1.5 font-bold flex-1">
                                     ${matchList.map(m => `
-                                        <option value="${m.id}" ${m.id === currentMatch.id ? 'selected' : ''}>
+                                        <option value="${m.id}" ${m.id === liveMatchData.id ? 'selected' : ''}>
                                             ${m.event_date} - ${m.title} (${m.game_result ? m.game_result : '未完賽'})
                                         </option>
                                     `).join('')}
@@ -1315,35 +1309,50 @@
                             </div>
                             ${canEdit ? `
                                 <div class="flex items-center space-x-2">
-                                    <select onchange="updateQuarterStatus('${currentMatch.id}', this.value)" class="bg-slate-900 border border-slate-800 text-[11px] rounded-lg px-2 py-1 text-amber-300 font-bold">
-                                        <option value="Q1" ${currentMatch.current_quarter==='Q1'?'selected':''}>第一節 Q1</option>
-                                        <option value="Q2" ${currentMatch.current_quarter==='Q2'?'selected':''}>第二節 Q2</option>
-                                        <option value="Q3" ${currentMatch.current_quarter==='Q3'?'selected':''}>第三節 Q3</option>
-                                        <option value="Q4" ${currentMatch.current_quarter==='Q4'?'selected':''}>第四節 Q4</option>
-                                        <option value="OT" ${currentMatch.current_quarter==='OT'?'selected':''}>延長賽 OT</option>
+                                    <select onchange="updateQuarterStatus('${liveMatchData.id}', this.value)" class="bg-slate-900 border border-slate-800 text-[11px] rounded-lg px-2 py-1 text-amber-300 font-bold">
+                                        <option value="Q1" ${liveMatchData.current_quarter==='Q1'?'selected':''}>第一節 Q1</option>
+                                        <option value="Q2" ${liveMatchData.current_quarter==='Q2'?'selected':''}>第二節 Q2</option>
+                                        <option value="Q3" ${liveMatchData.current_quarter==='Q3'?'selected':''}>第三節 Q3</option>
+                                        <option value="Q4" ${liveMatchData.current_quarter==='Q4'?'selected':''}>第四節 Q4</option>
+                                        <option value="OT" ${liveMatchData.current_quarter==='OT'?'selected':''}>延長賽 OT</option>
                                     </select>
-                                    <button onclick="finishGameMatch('${currentMatch.id}')" class="px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-xs font-bold shadow">
-                                        ${currentMatch.game_result ? '已完賽(更新)' : '完賽結算'}
+                                    <button onclick="finishGameMatch('${liveMatchData.id}')" class="px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-xs font-bold shadow">
+                                        ${liveMatchData.game_result ? '已完賽(更新)' : '完賽結算'}
                                     </button>
                                 </div>
                             ` : ''}
                         </div>
 
-                        <!-- 2K 大比分抬頭顯示 -->
+                        <!-- 2K 大比分抬頭顯示 (對手分數直接點擊加分) -->
                         <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 flex items-center justify-around">
+                            <!-- 本隊得分 -->
                             <div class="text-center">
                                 <span class="text-xs font-bold text-orange-400 block">Ｍ＋ 藍球隊</span>
-                                <span class="font-num text-4xl sm:text-5xl font-black text-white" id="liveOurScoreText">${currentMatch.our_score || 0}</span>
+                                <span class="font-num text-4xl sm:text-5xl font-black text-white" id="liveOurScoreText">${liveMatchData.our_score || 0}</span>
                             </div>
+
                             <div class="text-center px-3">
                                 <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider block mb-1">
-                                    ${currentMatch.game_result ? 'FINAL' : (currentMatch.current_quarter || 'Q1')}
+                                    ${liveMatchData.game_result ? 'FINAL' : (liveMatchData.current_quarter || 'Q1')}
                                 </span>
                                 <span class="font-black text-slate-600 text-lg">VS</span>
                             </div>
+
+                            <!-- 對手得分（支援直接點擊加分） -->
                             <div class="text-center">
-                                <span class="text-xs font-bold text-slate-300 block truncate max-w-[120px]">${currentMatch.opponent || '對手球隊'}</span>
-                                <span class="font-num text-4xl sm:text-5xl font-black text-slate-300" id="liveOpponentScoreText">${currentMatch.opponent_score || 0}</span>
+                                <span class="text-xs font-bold text-slate-300 block truncate max-w-[120px]">${liveMatchData.opponent || '對手球隊'}</span>
+                                ${canEdit ? `
+                                    <button onclick="quickAddOpponentScore(1)" title="點擊對手得分+1" class="font-num text-4xl sm:text-5xl font-black text-red-400 hover:text-red-300 active:scale-95 transition block mx-auto cursor-pointer focus:outline-none">
+                                        <span id="liveOpponentScoreText">${liveMatchData.opponent_score || 0}</span>
+                                    </button>
+                                    <div class="flex items-center justify-center space-x-1 mt-1">
+                                        <button onclick="quickAddOpponentScore(2)" class="px-1.5 py-0.5 bg-slate-900 hover:bg-slate-800 text-[10px] font-bold text-slate-300 rounded border border-slate-800">+2</button>
+                                        <button onclick="quickAddOpponentScore(3)" class="px-1.5 py-0.5 bg-slate-900 hover:bg-slate-800 text-[10px] font-bold text-slate-300 rounded border border-slate-800">+3</button>
+                                        <button onclick="quickAddOpponentScore(-1)" class="px-1.5 py-0.5 bg-slate-900 hover:bg-slate-800 text-[10px] font-bold text-red-400 rounded border border-slate-800">-1</button>
+                                    </div>
+                                ` : `
+                                    <span class="font-num text-4xl sm:text-5xl font-black text-slate-300" id="liveOpponentScoreText">${liveMatchData.opponent_score || 0}</span>
+                                `}
                             </div>
                         </div>
                     </div>
@@ -1353,57 +1362,56 @@
                         <div class="glass-card rounded-2xl p-4 border border-orange-500/30 space-y-3">
                             <div class="flex justify-between items-center">
                                 <h3 class="font-bold text-orange-400 text-xs sm:text-sm flex items-center space-x-1.5">
-                                    <span>⚡</span><span>場上先發 5 人 (點擊選取記分，或點板凳換人)</span>
+                                    <span>⚡</span><span>場上先發 5 人 (點選球員 ➔ 點下方按鈕極速累加)</span>
                                 </h3>
-                                <button onclick="undoLastAction()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-2.5 py-1 rounded-lg flex items-center space-x-1">
-                                    <i class="fas fa-undo"></i><span>復原上一動作</span>
+                                <button onclick="undoLastAction()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-2.5 py-1 rounded-lg flex items-center space-x-1 active:scale-95 transition">
+                                    <i class="fas fa-undo"></i><span>復原上一動</span>
                                 </button>
                             </div>
 
-                            <!-- 場上 5 人大按鈕 -->
+                            <!-- 場上 5 人按鈕卡片 -->
                             <div class="grid grid-cols-5 gap-1.5 sm:gap-2">
                                 ${courtActive5.map(name => {
-                                    const p = allPlayers.find(x => x.name === name) || { name, number: 0, photo_url: null };
-                                    const stat = currentStats.find(s => s.player_name === name) || { points: 0, rebounds: 0, assists: 0, fouls: 0 };
+                                    const p = liveRosterStats.find(x => x.name === name) || { name, number: 0, photo_url: null, points: 0, rebounds: 0, fouls: 0 };
                                     const isSelected = selectedCourtPlayer === name;
                                     return `
-                                        <div onclick="selectCourtPlayer('${name}')" class="player-on-court ${isSelected ? 'selected' : ''} p-2 rounded-2xl cursor-pointer flex flex-col items-center justify-center text-center relative overflow-hidden">
+                                        <div onclick="selectCourtPlayer('${name}')" id="courtCard_${name}" class="player-on-court ${isSelected ? 'selected' : ''} p-2 rounded-2xl cursor-pointer flex flex-col items-center justify-center text-center relative overflow-hidden">
                                             ${renderAvatarImg(p.photo_url, p.name, "w-10 h-10 sm:w-12 sm:h-12")}
                                             <span class="font-bold text-white text-xs mt-1 truncate w-full">${p.name}</span>
                                             <span class="font-num font-bold text-orange-400 text-[11px]">#${p.number}</span>
                                             <div class="bg-slate-900/90 w-full rounded-lg mt-1 py-0.5 text-[10px] font-num text-slate-300">
-                                                <span>${stat.points}分</span> · <span>${stat.rebounds}板</span>
+                                                <span id="cardPts_${name}">${p.points}分</span> · <span id="cardReb_${name}">${p.rebounds}板</span>
                                             </div>
-                                            ${stat.fouls >= 4 ? `<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>` : ''}
+                                            ${p.fouls >= 4 ? `<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>` : ''}
                                         </div>
                                     `;
                                 }).join('')}
                             </div>
 
-                            <!-- 掌上極速動作按鈕盤 -->
+                            <!-- 掌上極速動作按鈕盤 (0 秒無痛樂觀更新) -->
                             <div class="bg-slate-950/90 p-3 rounded-2xl border border-slate-800 space-y-2">
                                 <div class="flex justify-between items-center text-xs">
-                                    <span class="text-slate-400">目前記錄球員：<b class="text-amber-300 text-sm">${selectedCourtPlayer}</b></span>
-                                    <span class="text-[10px] text-slate-500">點擊按鈕直接累加</span>
+                                    <span class="text-slate-400">目前記錄球員：<b class="text-amber-300 text-sm" id="selectedPlayerNameLabel">${selectedCourtPlayer}</b></span>
+                                    <span class="text-[10px] text-emerald-400 font-bold">● 即按即存</span>
                                 </div>
                                 <div class="grid grid-cols-4 sm:grid-cols-8 gap-1.5 text-xs font-bold">
-                                    <button onclick="logQuickAction('${selectedCourtPlayer}', 'points', 2)" class="py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl shadow glow-orange">+2 分</button>
-                                    <button onclick="logQuickAction('${selectedCourtPlayer}', 'points', 3)" class="py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl shadow glow-gold">+3 分</button>
-                                    <button onclick="logQuickAction('${selectedCourtPlayer}', 'points', 1)" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl">罰球+1</button>
-                                    <button onclick="logQuickAction('${selectedCourtPlayer}', 'rebounds', 1)" class="py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl">籃板+1</button>
-                                    <button onclick="logQuickAction('${selectedCourtPlayer}', 'assists', 1)" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl">助攻+1</button>
-                                    <button onclick="logQuickAction('${selectedCourtPlayer}', 'steals', 1)" class="py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl">抄截+1</button>
-                                    <button onclick="logQuickAction('${selectedCourtPlayer}', 'blocks', 1)" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl">火鍋+1</button>
-                                    <button onclick="logQuickAction('${selectedCourtPlayer}', 'fouls', 1)" class="py-2.5 bg-red-600/30 hover:bg-red-600 text-red-300 rounded-xl">犯規+1</button>
+                                    <button onclick="logQuickActionOptimistic('points', 2)" class="py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl shadow glow-orange active:scale-90 transition">+2 分</button>
+                                    <button onclick="logQuickActionOptimistic('points', 3)" class="py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl shadow glow-gold active:scale-90 transition">+3 分</button>
+                                    <button onclick="logQuickActionOptimistic('points', 1)" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl active:scale-90 transition">罰球+1</button>
+                                    <button onclick="logQuickActionOptimistic('rebounds', 1)" class="py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl active:scale-90 transition">籃板+1</button>
+                                    <button onclick="logQuickActionOptimistic('assists', 1)" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl active:scale-90 transition">助攻+1</button>
+                                    <button onclick="logQuickActionOptimistic('steals', 1)" class="py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl active:scale-90 transition">抄截+1</button>
+                                    <button onclick="logQuickActionOptimistic('blocks', 1)" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl active:scale-90 transition">火鍋+1</button>
+                                    <button onclick="logQuickActionOptimistic('fouls', 1)" class="py-2.5 bg-red-600/30 hover:bg-red-600 text-red-300 rounded-xl active:scale-90 transition">犯規+1</button>
                                 </div>
                             </div>
 
-                            <!-- 🔄 板凳替補席 (點選後與場上已選者對調) -->
+                            <!-- 🔄 板凳替補席 (點選秒換人) -->
                             <div class="space-y-1 pt-1">
-                                <span class="text-[11px] text-slate-400 block font-semibold">🔄 板凳候補席 (點選直接替換場上【${selectedCourtPlayer}】)：</span>
-                                <div class="flex gap-2 overflow-x-auto pb-1">
+                                <span class="text-[11px] text-slate-400 block font-semibold">🔄 板凳候補席 (點擊直接換上場，替換已選球員)：</span>
+                                <div class="flex gap-2 overflow-x-auto pb-1" id="benchContainer">
                                     ${courtBench.map(name => {
-                                        const p = allPlayers.find(x => x.name === name) || { name, number: 0, photo_url: null };
+                                        const p = liveRosterStats.find(x => x.name === name) || { name, number: 0, photo_url: null };
                                         return `
                                             <button onclick="substitutePlayer('${name}')" class="bg-slate-900 border border-slate-800 hover:border-amber-500 p-2 rounded-xl flex items-center space-x-2 flex-shrink-0 text-xs active:scale-95 transition">
                                                 ${renderAvatarImg(p.photo_url, p.name, "w-7 h-7")}
@@ -1425,7 +1433,7 @@
                             <h3 class="font-bold text-white text-sm flex items-center space-x-1.5">
                                 <span>📋</span><span>全隊攻守數據 Box Score</span>
                             </h3>
-                            <span class="text-[11px] text-slate-500">即時更新</span>
+                            <span class="text-[11px] text-slate-500">現場連動</span>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs text-slate-300">
@@ -1441,24 +1449,23 @@
                                         <th class="py-2 px-1 text-center">失誤</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="liveBoxScoreTbody">
                                     ${roster.map(p => {
-                                        const stat = currentStats.find(s => s.player_name === p.name) || { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, fouls: 0, turnovers: 0 };
                                         const isOnCourt = courtActive5.includes(p.name);
                                         return `
-                                            <tr class="border-b border-slate-800/50 hover:bg-slate-900/50">
+                                            <tr class="border-b border-slate-800/50 hover:bg-slate-900/50" id="boxRow_${p.name}">
                                                 <td class="py-2 px-2 flex items-center space-x-2">
                                                     ${renderAvatarImg(p.photo_url, p.name, "w-6 h-6")}
                                                     <span class="font-bold text-white text-[11px]">${p.name}</span>
-                                                    ${isOnCourt ? `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>` : ''}
+                                                    ${isOnCourt ? `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400" id="onCourtDot_${p.name}"></span>` : `<span id="onCourtDot_${p.name}"></span>`}
                                                 </td>
-                                                <td class="py-2 px-1 text-center font-num font-bold text-orange-400">${stat.points}</td>
-                                                <td class="py-2 px-1 text-center font-num text-blue-400">${stat.rebounds}</td>
-                                                <td class="py-2 px-1 text-center font-num text-emerald-400">${stat.assists}</td>
-                                                <td class="py-2 px-1 text-center font-num text-amber-400">${stat.steals}</td>
-                                                <td class="py-2 px-1 text-center font-num text-purple-400">${stat.blocks}</td>
-                                                <td class="py-2 px-1 text-center font-num text-slate-400">${stat.fouls}</td>
-                                                <td class="py-2 px-1 text-center font-num text-red-400">${stat.turnovers}</td>
+                                                <td class="py-2 px-1 text-center font-num font-bold text-orange-400 stat-val-points">${p.points}</td>
+                                                <td class="py-2 px-1 text-center font-num text-blue-400 stat-val-rebounds">${p.rebounds}</td>
+                                                <td class="py-2 px-1 text-center font-num text-emerald-400 stat-val-assists">${p.assists}</td>
+                                                <td class="py-2 px-1 text-center font-num text-amber-400 stat-val-steals">${p.steals}</td>
+                                                <td class="py-2 px-1 text-center font-num text-purple-400 stat-val-blocks">${p.blocks}</td>
+                                                <td class="py-2 px-1 text-center font-num text-slate-400 stat-val-fouls">${p.fouls}</td>
+                                                <td class="py-2 px-1 text-center font-num text-red-400 stat-val-turnovers">${p.turnovers}</td>
                                             </tr>
                                         `;
                                     }).join('')}
@@ -1478,10 +1485,13 @@
 
         function selectCourtPlayer(name) {
             selectedCourtPlayer = name;
-            loadGameCenterTab();
+            document.querySelectorAll('.player-on-court').forEach(c => c.classList.remove('selected'));
+            const activeCard = document.getElementById(`courtCard_${name}`);
+            if (activeCard) activeCard.classList.add('selected');
+            const label = document.getElementById('selectedPlayerNameLabel');
+            if (label) label.innerText = name;
         }
 
-        // 0.5 秒替換球員
         function substitutePlayer(benchPlayerName) {
             if (!selectedCourtPlayer) return;
             const idx = courtActive5.indexOf(selectedCourtPlayer);
@@ -1495,39 +1505,69 @@
             }
         }
 
-        // 極速記分累加
-        async function logQuickAction(playerName, statField, amount) {
-            if (!currentLiveMatchId || !playerName) return;
+        // 🚀 0 秒無痛樂觀記分（Optimistic UI）
+        function logQuickActionOptimistic(statField, amount) {
+            if (!currentLiveMatchId || !selectedCourtPlayer) return;
 
-            // 紀錄歷程以利 Undo
+            const playerName = selectedCourtPlayer;
+            const playerObj = liveRosterStats.find(p => p.name === playerName);
+            if (!playerObj) return;
+
+            // 1. 本地立即累加
+            playerObj[statField] = (playerObj[statField] || 0) + amount;
             liveActionHistory.push({ matchId: currentLiveMatchId, playerName, statField, amount });
 
-            const { data: existing } = await sb.from('game_player_stats')
-                .select('*')
-                .eq('schedule_id', currentLiveMatchId)
-                .eq('player_name', playerName)
-                .maybeSingle();
+            // 2. DOM 節點即時更新，不等待網路與整頁重繪
+            if (statField === 'points') {
+                liveMatchData.our_score = (liveMatchData.our_score || 0) + amount;
+                const ourScoreEl = document.getElementById('liveOurScoreText');
+                if (ourScoreEl) ourScoreEl.innerText = liveMatchData.our_score;
 
-            const currentVal = existing ? (existing[statField] || 0) : 0;
-            const newVal = currentVal + amount;
+                const cardPtsEl = document.getElementById(`cardPts_${playerName}`);
+                if (cardPtsEl) cardPtsEl.innerText = `${playerObj.points}分`;
+            } else if (statField === 'rebounds') {
+                const cardRebEl = document.getElementById(`cardReb_${playerName}`);
+                if (cardRebEl) cardRebEl.innerText = `${playerObj.rebounds}板`;
+            }
 
+            // 更新 Box Score 表格中的數字
+            const boxRow = document.getElementById(`boxRow_${playerName}`);
+            if (boxRow) {
+                const statCell = boxRow.querySelector(`.stat-val-${statField}`);
+                if (statCell) statCell.innerText = playerObj[statField];
+            }
+
+            // 3. 背景非同步寫入 Supabase，絕不卡頓畫面
             const payload = {
                 schedule_id: currentLiveMatchId,
                 player_name: playerName,
-                [statField]: newVal,
+                [statField]: playerObj[statField],
                 updated_at: new Date().toISOString()
             };
 
-            await sb.from('game_player_stats').upsert([payload], { onConflict: 'schedule_id,player_name' });
+            sb.from('game_player_stats').upsert([payload], { onConflict: 'schedule_id,player_name' })
+                .then(() => {
+                    if (statField === 'points') {
+                        return sb.from('schedules').update({ our_score: liveMatchData.our_score }).eq('id', currentLiveMatchId);
+                    }
+                })
+                .catch(err => console.error("背景儲存失敗：", err));
+        }
 
-            // 若為得分，同步累加本隊總分
-            if (statField === 'points') {
-                const { data: m } = await sb.from('schedules').select('our_score').eq('id', currentLiveMatchId).single();
-                const newScore = (m?.our_score || 0) + amount;
-                await sb.from('schedules').update({ our_score: newScore }).eq('id', currentLiveMatchId);
-            }
+        // 🎯 對手分數直接點擊加減分
+        function quickAddOpponentScore(delta) {
+            if (!currentLiveMatchId || !liveMatchData) return;
 
-            loadGameCenterTab();
+            // 樂觀更新
+            const newScore = Math.max(0, (liveMatchData.opponent_score || 0) + delta);
+            liveMatchData.opponent_score = newScore;
+
+            const oppEl = document.getElementById('liveOpponentScoreText');
+            if (oppEl) oppEl.innerText = newScore;
+
+            // 背景寫入
+            sb.from('schedules').update({ opponent_score: newScore }).eq('id', currentLiveMatchId)
+                .catch(err => console.error("對手比分更新失敗：", err));
         }
 
         // 復原上一動作 (Undo)
@@ -1537,29 +1577,42 @@
                 return;
             }
             const last = liveActionHistory.pop();
-            const { data: existing } = await sb.from('game_player_stats')
-                .select('*')
-                .eq('schedule_id', last.matchId)
-                .eq('player_name', last.playerName)
-                .maybeSingle();
-
-            if (existing) {
-                const currentVal = existing[last.statField] || 0;
-                const newVal = Math.max(0, currentVal - last.amount);
-                await sb.from('game_player_stats').update({ [last.statField]: newVal }).eq('id', existing.id);
+            const playerObj = liveRosterStats.find(p => p.name === last.playerName);
+            if (playerObj) {
+                playerObj[last.statField] = Math.max(0, (playerObj[last.statField] || 0) - last.amount);
 
                 if (last.statField === 'points') {
-                    const { data: m } = await sb.from('schedules').select('our_score').eq('id', last.matchId).single();
-                    const newScore = Math.max(0, (m?.our_score || 0) - last.amount);
-                    await sb.from('schedules').update({ our_score: newScore }).eq('id', last.matchId);
+                    liveMatchData.our_score = Math.max(0, (liveMatchData.our_score || 0) - last.amount);
+                    const ourScoreEl = document.getElementById('liveOurScoreText');
+                    if (ourScoreEl) ourScoreEl.innerText = liveMatchData.our_score;
+
+                    const cardPtsEl = document.getElementById(`cardPts_${last.playerName}`);
+                    if (cardPtsEl) cardPtsEl.innerText = `${playerObj.points}分`;
+                } else if (last.statField === 'rebounds') {
+                    const cardRebEl = document.getElementById(`cardReb_${last.playerName}`);
+                    if (cardRebEl) cardRebEl.innerText = `${playerObj.rebounds}板`;
                 }
-                loadGameCenterTab();
+
+                const boxRow = document.getElementById(`boxRow_${last.playerName}`);
+                if (boxRow) {
+                    const statCell = boxRow.querySelector(`.stat-val-${last.statField}`);
+                    if (statCell) statCell.innerText = playerObj[last.statField];
+                }
+
+                // 背景非同步寫回
+                sb.from('game_player_stats').update({ [last.statField]: playerObj[last.statField] })
+                    .eq('schedule_id', last.matchId)
+                    .eq('player_name', last.playerName)
+                    .then(() => {
+                        if (last.statField === 'points') {
+                            return sb.from('schedules').update({ our_score: liveMatchData.our_score }).eq('id', last.matchId);
+                        }
+                    });
             }
         }
 
         async function updateQuarterStatus(matchId, quarter) {
             await sb.from('schedules').update({ current_quarter: quarter }).eq('id', matchId);
-            loadGameCenterTab();
         }
 
         async function finishGameMatch(matchId) {
