@@ -512,7 +512,7 @@
             return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
         }
 
-        // 大頭貼回退產生工具
+        // 大頭貼安全渲染器
         function renderAvatarImg(photoUrl, name, sizeClass = "w-10 h-10") {
             if (photoUrl) {
                 return `<img src="${photoUrl}" class="${sizeClass} rounded-xl object-cover border border-slate-700/80 flex-shrink-0 shadow">`;
@@ -626,7 +626,7 @@
             }
         }
 
-        // 登入成功處理（含自動靜默同步 LINE 大頭貼至 users 與 players 雙表）
+        // 登入成功處理（自動靜默同步 LINE 大頭貼至 users 與 players 雙表）
         async function processLoginSuccess(userRecord) {
             const isBoss = userRecord.name === "吳俊璋" || userRecord.role.indexOf("BOSS") !== -1;
             let roleCode = "PLAYER";
@@ -656,12 +656,8 @@
             setupRoleSwitchPermissions(currentUser.actualRole);
             updateRoleSwitchButtons();
 
-            // 全身分靜默自動同步 LINE 大頭貼至 users 與 players
             silentlySyncLineAvatarAll(userRecord.name, userRecord.role);
-
-            // 首次登入使用說明引導
             checkAndShowFirstTimeGuide();
-
             switchTab('overview');
         }
 
@@ -670,13 +666,11 @@
                 if (typeof liff !== 'undefined' && liff.isLoggedIn()) {
                     const profile = await liff.getProfile();
                     if (profile && profile.pictureUrl) {
-                        // 1. 同步回填 users 表（所有身分）
                         const { data: u } = await sb.from('users').select('photo_url').eq('name', userName).maybeSingle();
                         if (u && (!u.photo_url || u.photo_url.includes('placeholder'))) {
                             await sb.from('users').update({ photo_url: profile.pictureUrl }).eq('name', userName);
                         }
 
-                        // 2. 若為球員，同步回填 players 表
                         if (userRole === '球員') {
                             const { data: p } = await sb.from('players').select('photo_url').eq('name', userName).maybeSingle();
                             if (p && (!p.photo_url || p.photo_url.includes('placeholder'))) {
@@ -796,11 +790,12 @@
             else if (tabName === 'dailystatus') loadDailyStatusTab();
         }
 
-        function calculateRadarPolygon(values, maxVal = 100, center = 60, maxRadius = 45) {
+        // 六角雷達多邊形計算核心（支援任意畫布大小與半徑）
+        function calculateRadarPolygon(values, maxVal = 100, center = 80, maxRadius = 52) {
             const angles = [-90, -30, 30, 90, 150, 210];
             return values.map((val, idx) => {
                 const angleRad = (angles[idx] * Math.PI) / 180;
-                const r = (Math.max(15, Math.min(val, maxVal)) / maxVal) * maxRadius;
+                const r = (Math.max(12, Math.min(val, maxVal)) / maxVal) * maxRadius;
                 return {
                     x: (center + r * Math.cos(angleRad)).toFixed(1),
                     y: (center + r * Math.sin(angleRad)).toFixed(1)
@@ -809,13 +804,12 @@
         }
 
         // =========================================================================
-        // ⚡ 1. 完整身分主控台 (全員名冊皆具備照片/LINE 大頭貼)
+        // ⚡ 1. 完整身分主控台 (次世代全息雷達圖 + 全員大頭貼名冊)
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
 
-            // 先撈取球員表照片快照，方便對照補齊
             const { data: allPlayersPhotos } = await sb.from('players').select('name, photo_url');
             const playerPhotoMap = {};
             (allPlayersPhotos || []).forEach(p => { if (p.photo_url) playerPhotoMap[p.name] = p.photo_url; });
@@ -951,18 +945,21 @@
             const pendingMembers = pendingMembersRes.data || [];
             const myGameStats = myGameStatsRes.data || [];
 
-            // 🏀 球員台視角
+            // 🏀 球員台視角 (電競級彩色頂點與外圍標註 HUD 雷達)
             if (currentUser.role === "PLAYER") {
-                const radarValues = [
-                    pData.chr || pData.attitude || 90,
-                    pData.offense,
-                    pData.agility,
-                    pData.fitness,
-                    pData.defense,
-                    pData.bball_iq
+                const dimensionConfig = [
+                    { label: "品格 CHR", val: pData.chr || pData.attitude || 90, color: "#fbbf24", glow: "#d97706" }, // 正上方
+                    { label: "進攻 OFF", val: pData.offense, color: "#f97316", glow: "#ea580c" },                     // 右上
+                    { label: "敏捷 AGI", val: pData.agility, color: "#c084fc", glow: "#9333ea" },                     // 右下
+                    { label: "體能 FIT", val: pData.fitness, color: "#facc15", glow: "#ca8a04" },                     // 正下方
+                    { label: "防守 DEF", val: pData.defense, color: "#34d399", glow: "#059669" },                     // 左下
+                    { label: "球商 IQ",  val: pData.bball_iq, color: "#38bdf8", glow: "#0284c7" }                     // 左上
                 ];
-                const polyPoints = calculateRadarPolygon(radarValues);
+
+                const radarValues = dimensionConfig.map(d => d.val);
+                const polyPoints = calculateRadarPolygon(radarValues, 100, 80, 52);
                 const pointsString = polyPoints.map(p => `${p.x},${p.y}`).join(' ');
+                const labelPoints = calculateRadarPolygon([100, 100, 100, 100, 100, 100], 100, 80, 68);
                 const dynamicOVR = Math.round(radarValues.reduce((a, b) => a + b, 0) / 6);
 
                 container.innerHTML = `
@@ -1000,27 +997,54 @@
                                     </button>
                                 </div>
 
-                                <div class="md:col-span-4 flex items-center justify-center">
-                                    <div class="w-64 h-64 relative flex items-center justify-center">
-                                        <svg viewBox="0 0 120 120" class="w-full h-full filter drop-shadow-[0_0_18px_rgba(249,115,22,0.4)]">
-                                            <polygon points="60,15 99,37.5 99,82.5 60,105 21,82.5 21,37.5" fill="none" stroke="#334155" stroke-width="1.2"/>
-                                            <polygon points="60,24 91.2,42 91.2,78 60,96 28.8,78 28.8,42" fill="none" class="radar-mesh"/>
-                                            <polygon points="60,33 83.4,46.5 83.4,73.5 60,87 36.6,73.5 36.6,46.5" fill="none" class="radar-mesh"/>
-                                            <polygon points="60,42 75.6,51 75.6,69 60,78 44.4,69 44.4,51" fill="none" class="radar-mesh"/>
-                                            
-                                            <line x1="60" y1="15" x2="60" y2="105" stroke="#334155" stroke-width="0.8"/>
-                                            <line x1="21" y1="37.5" x2="99" y2="82.5" stroke="#334155" stroke-width="0.8"/>
-                                            <line x1="21" y1="82.5" x2="99" y2="37.5" stroke="#334155" stroke-width="0.8"/>
+                                <!-- HUD 次世代全息戰鬥雷達（帶彩色頂點與數據文字） -->
+                                <div class="md:col-span-4 flex items-center justify-center p-2">
+                                    <div class="w-72 h-72 sm:w-80 sm:h-80 relative flex items-center justify-center">
+                                        <svg viewBox="0 0 160 160" class="w-full h-full filter drop-shadow-[0_0_20px_rgba(249,115,22,0.35)] overflow-visible">
+                                            <defs>
+                                                <radialGradient id="radarFillGrad" cx="50%" cy="50%" r="50%">
+                                                    <stop offset="0%" stop-color="#f97316" stop-opacity="0.6"/>
+                                                    <stop offset="70%" stop-color="#ea580c" stop-opacity="0.3"/>
+                                                    <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0.1"/>
+                                                </radialGradient>
+                                            </defs>
 
-                                            <polygon points="${pointsString}" fill="rgba(249, 115, 22, 0.45)" stroke="#fb923c" stroke-width="2"/>
+                                            <!-- 4 層 HUD 刻度網格 -->
+                                            <polygon points="80,28 125,54 125,106 80,132 35,106 35,54" fill="none" stroke="#334155" stroke-width="1.2"/>
+                                            <polygon points="80,38 116,59 116,101 80,122 44,101 44,59" fill="none" class="radar-mesh"/>
+                                            <polygon points="80,48 107,64 107,96 80,112 53,96 53,64" fill="none" class="radar-mesh"/>
+                                            <polygon points="80,58 98,69 98,91 80,102 62,91 62,69" fill="none" class="radar-mesh"/>
                                             
+                                            <!-- 中心軸虛線 -->
+                                            <line x1="80" y1="28" x2="80" y2="132" stroke="#475569" stroke-width="0.8" stroke-dasharray="2 2"/>
+                                            <line x1="35" y1="54" x2="125" y2="106" stroke="#475569" stroke-width="0.8" stroke-dasharray="2 2"/>
+                                            <line x1="35" y1="106" x2="125" y2="54" stroke="#475569" stroke-width="0.8" stroke-dasharray="2 2"/>
+
+                                            <!-- 數據能量力場 -->
+                                            <polygon points="${pointsString}" fill="url(#radarFillGrad)" stroke="#f97316" stroke-width="2.2"/>
+
+                                            <!-- 6 個維度專屬彩色發光頂點 -->
                                             ${polyPoints.map((p, idx) => `
-                                                <circle cx="${p.x}" cy="${p.y}" r="${idx===0 ? 4 : 3}" fill="${idx===0 ? '#fef08a' : '#fb923c'}" stroke="${idx===0 ? '#ea580c' : '#ffffff'}" stroke-width="1.5"/>
+                                                <circle cx="${p.x}" cy="${p.y}" r="6" fill="${dimensionConfig[idx].glow}" opacity="0.35"/>
+                                                <circle cx="${p.x}" cy="${p.y}" r="${idx===0?4.5:3.5}" fill="${dimensionConfig[idx].color}" stroke="#ffffff" stroke-width="1.5"/>
                                             `).join('')}
+
+                                            <!-- 6 個外圍文字標籤 -->
+                                            ${labelPoints.map((lp, idx) => {
+                                                const align = idx === 0 || idx === 3 ? "middle" : (idx === 1 || idx === 2 ? "start" : "end");
+                                                const yOffset = idx === 0 ? -4 : (idx === 3 ? 12 : 4);
+                                                const item = dimensionConfig[idx];
+                                                return `
+                                                    <text x="${lp.x}" y="${parseFloat(lp.y) + yOffset}" text-anchor="${align}" fill="${item.color}" font-size="7" font-weight="900" font-family="'Chakra Petch', sans-serif">
+                                                        ${item.label} <tspan fill="#ffffff" font-size="7.5">${item.val}</tspan>
+                                                    </text>
+                                                `;
+                                            }).join('')}
                                         </svg>
                                     </div>
                                 </div>
 
+                                <!-- 數據清單 -->
                                 <div class="md:col-span-3 space-y-2 text-xs">
                                     <div class="flex justify-between items-center bg-amber-950/40 p-1.5 rounded-lg border border-amber-500/30">
                                         <span class="text-amber-300 font-bold flex items-center space-x-1"><span>✨</span><span>品格合一 (CHR)</span></span>
@@ -1041,7 +1065,7 @@
                             </div>
                         </div>
 
-                        <!-- 賽事與指導評語 -->
+                        <!-- 賽事生涯與教練指導寄語 -->
                         <div class="glass-card rounded-2xl p-5 space-y-3 border border-slate-800">
                             <h3 class="font-bold text-orange-400 text-sm flex items-center space-x-2">
                                 <span>🏆</span><span>賽事攻守紀錄與教練指導寄語 (${myGameStats.length} 場)</span>
@@ -1097,7 +1121,7 @@
                 `;
             }
 
-            // 📋 教練台視角 (教練球員名冊每位均具備大頭貼)
+            // 📋 教練台視角 (名冊附帶照片)
             else if (currentUser.role === "COACH") {
                 const teamDaList = allPlayers.filter(p => p.team === '大隊');
                 container.innerHTML = `
@@ -1136,7 +1160,7 @@
                 `;
             }
 
-            // 📊 經理台視角 (家長通訊錄每位均具備大頭貼)
+            // 📊 經理台視角 (通訊錄附帶照片)
             else if (currentUser.role === "MANAGER") {
                 container.innerHTML = `
                     <div class="space-y-4">
@@ -1971,7 +1995,7 @@
             document.getElementById('coachReviewModal').classList.remove('flex');
         }
 
-        // 行程管理、請假與現場點名 (點名名單附帶照片)
+        // 行程管理、請假與現場點名 (點名名冊附帶照片)
         function openCreateScheduleModal() { document.getElementById('createScheduleModal').classList.remove('hidden'); document.getElementById('createScheduleModal').classList.add('flex'); }
         function closeCreateScheduleModal() { document.getElementById('createScheduleModal').classList.add('hidden'); document.getElementById('createScheduleModal').classList.remove('flex'); }
         async function submitCreateSchedule() {
@@ -2088,7 +2112,7 @@
         }
 
         // =========================================================================
-        // 🩺 7. 每日晨報點檢 (全隊回報清冊附帶照片)
+        // 🩺 7. 每日晨報點檢 (全隊回報名冊附帶照片)
         // =========================================================================
         async function loadDailyStatusTab() {
             const container = document.getElementById('tabContentContainer');
@@ -2319,7 +2343,6 @@
                     const chosenNumber = savedPref ? savedPref.number : 7;
                     const chosenPos = savedPref ? savedPref.position : '控球後衛';
 
-                    // 抓取 users 表可能由 LINE 帶入的照片
                     const { data: uInfo } = await sb.from('users').select('photo_url').eq('id', id).maybeSingle();
 
                     await sb.from('players').insert([{
