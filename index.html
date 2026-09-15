@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ｍ＋籃球隊球員系統</title>
+    <title>Ｍ＋藍球隊球員系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,13 +13,13 @@
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #05070d;
-            background-image: radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.15) 0px, transparent 50%),
-                              radial-gradient(at 100% 100%, rgba(30, 58, 138, 0.18) 0px, transparent 50%);
+            background-image: radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.18) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(30, 58, 138, 0.2) 0px, transparent 50%);
             color: #f1f5f9;
         }
         .font-num { font-family: 'Chakra Petch', sans-serif; }
         .glass-card {
-            background: rgba(13, 19, 33, 0.82);
+            background: rgba(13, 19, 33, 0.85);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -28,10 +28,11 @@
         .glow-gold { box-shadow: 0 6px 30px -3px rgba(234, 179, 8, 0.55); }
         .card-2k-border {
             border: 1.5px solid transparent;
-            background: linear-gradient(rgba(15, 23, 42, 0.94), rgba(11, 15, 25, 0.98)) padding-box,
-                        linear-gradient(135deg, #f59e0b, #ea580c, #475569) border-box;
+            background: linear-gradient(rgba(15, 23, 42, 0.95), rgba(9, 13, 22, 0.98)) padding-box,
+                        linear-gradient(135deg, #f59e0b, #ea580c, #38bdf8, #1e293b) border-box;
+            box-shadow: 0 10px 35px -5px rgba(0, 0, 0, 0.8), 0 0 20px rgba(249, 115, 22, 0.2);
         }
-        .radar-mesh { stroke: rgba(255, 255, 255, 0.12); stroke-dasharray: 2 2; }
+        .radar-mesh { stroke: rgba(255, 255, 255, 0.15); stroke-dasharray: 2 2; }
         .court-board {
             position: relative;
             background: #111827;
@@ -59,13 +60,18 @@
                 </div>
                 <div>
                     <div class="flex items-center space-x-2">
-                        <h1 class="font-black text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">Ｍ＋籃球隊球員系統</h1>
+                        <h1 class="font-black text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">Ｍ＋藍球隊球員系統</h1>
                         <span class="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-bold">PRO</span>
                     </div>
                     <p class="text-xs text-slate-400 font-medium" id="userRoleSubtitle">身分辨識中...</p>
                 </div>
             </div>
-            <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-lg active:scale-95 transition">登出</button>
+            <div class="flex items-center space-x-2">
+                <button onclick="openHelpGuideModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 px-2.5 py-1.5 rounded-lg active:scale-95 transition flex items-center space-x-1">
+                    <i class="fas fa-question-circle"></i><span class="hidden sm:inline">使用說明</span>
+                </button>
+                <button onclick="logout()" id="logoutBtnMobile" class="md:hidden text-xs bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-lg active:scale-95 transition">登出</button>
+            </div>
         </div>
 
         <!-- 多身分切換器 -->
@@ -98,7 +104,7 @@
         <section id="loginSection" class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center space-y-6 my-auto border border-slate-800">
             <div class="text-center space-y-2">
                 <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-orange-500/20 to-amber-500/10 rounded-2xl border border-orange-500/30 flex items-center justify-center text-3xl mb-2 text-orange-400 glow-orange">🛡️</div>
-                <h2 class="text-2xl font-black tracking-wide text-white">Ｍ＋籃球隊球員系統</h2>
+                <h2 class="text-2xl font-black tracking-wide text-white">Ｍ＋藍球隊球員系統</h2>
                 <p class="text-xs text-slate-400">專屬多權限分流中控作戰台</p>
             </div>
             <div class="w-full max-w-sm space-y-4">
@@ -134,7 +140,7 @@
                 </div>
                 <div class="text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800">
                     <span class="text-xs bg-slate-800/80 text-amber-400 px-2.5 py-1 rounded-lg border border-amber-500/20 font-bold flex items-center space-x-1">
-                        <span>🔥</span><span>今日隊魂：合一得勝</span>
+                        <span>🔥</span><span>今日隊魂：合一得勝 榮耀品格</span>
                     </span>
                     <span class="text-[11px] text-slate-500 font-num mt-1" id="currentDateBadge">--/--</span>
                 </div>
@@ -167,6 +173,42 @@
         </button>
     </nav>
 
+    <!-- ❓ 使用說明手冊 Modal -->
+    <div id="helpGuideModal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-3xl w-full max-w-lg p-6 space-y-4 border border-amber-500/40 shadow-2xl max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3 flex-shrink-0">
+                <h3 class="text-base font-black text-amber-300 flex items-center space-x-2">
+                    <i class="fas fa-book-open"></i><span>Ｍ＋藍球隊球員系統 使用指南</span>
+                </h3>
+                <button onclick="closeHelpGuideModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto space-y-3.5 pr-1 text-xs text-slate-300 leading-relaxed">
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-orange-400 text-sm mb-1">🏀 球員指南</h4>
+                    <p>• <b>2K 球員卡</b>：展示個人六角戰鬥雷達與 OVR 綜合戰力，頂端維度為球隊核心靈魂「品格合一 (CHR)」。</p>
+                    <p>• <b>課表回報</b>：於「課表中心」完成自主特訓後，可上傳照片或投籃影片以累積成長經驗。</p>
+                    <p>• <b>晨報點檢</b>：每天起床填寫睡眠時數與疲勞指數，協助教練調配體能負擔。</p>
+                </div>
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-amber-400 text-sm mb-1">📋 教練指南</h4>
+                    <p>• <b>專業課表派發</b>：內建投籃、控球、體能與戰術模組，亦可完全自訂內容。</p>
+                    <p>• <b>賽後覆盤與 MVP 評選</b>：在行程中檢視經理攻守統計，給予評分、勾選戰術與品格標籤，並指定單場 MVP。</p>
+                </div>
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-blue-400 text-sm mb-1">📊 經理指南</h4>
+                    <p>• <b>現場點名與攻守記錄</b>：賽前現場點名，賽事進行或賽後使用「實時攻守計分板」記錄全隊得分、籃板與各項數據。</p>
+                </div>
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-emerald-400 text-sm mb-1">👨‍👩‍👦 家長指南</h4>
+                    <p>• <b>同步關懷</b>：隨時掌握孩子身心點檢狀態、自主課表進度與近期比賽中教練給予的專業鼓勵寄語。</p>
+                </div>
+            </div>
+            <div class="pt-2 border-t border-slate-800 flex justify-end flex-shrink-0">
+                <button onclick="closeHelpGuideModal()" class="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-xs glow-orange">我了解了，開始體驗</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 📊 經理台：賽事實時/賽後攻守計分板 Modal -->
     <div id="gameStatsModal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden items-center justify-center p-3 z-50">
         <div class="glass-card rounded-3xl w-full max-w-2xl p-5 sm:p-6 space-y-4 border border-blue-500/40 shadow-2xl max-h-[92vh] flex flex-col">
@@ -175,12 +217,11 @@
                     <h3 class="text-base font-black text-blue-400 flex items-center space-x-2">
                         <span>📊</span><span id="statsModalGameTitle">賽事實時攻守統計</span>
                     </h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">點擊按鈕快速累加，賽後亦可直接修改數字</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">點擊按鈕快速累加，賽後亦可直接微調修改數字</p>
                 </div>
                 <button onclick="closeGameStatsModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
             </div>
             
-            <!-- 比賽最終比分板 -->
             <div class="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 flex items-center justify-between text-xs flex-shrink-0">
                 <div class="flex items-center space-x-2">
                     <span class="font-bold text-orange-400">本隊 (Ｍ＋)</span>
@@ -192,13 +233,12 @@
                     <input type="number" id="gameOpponentScore" class="w-14 bg-slate-900 border border-slate-700 text-center rounded-lg py-1 text-white font-bold" value="0">
                 </div>
                 <select id="gameFinalResult" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2 py-1 text-slate-200 font-bold">
-                    <option value="">未結束</option>
+                    <option value="">進行中</option>
                     <option value="W">勝利 (WIN)</option>
                     <option value="L">惜敗 (LOSS)</option>
                 </select>
             </div>
 
-            <!-- 球員個人數據列表 -->
             <div id="gameStatsRosterList" class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs"></div>
 
             <div class="pt-3 border-t border-slate-800 flex justify-end space-x-3 flex-shrink-0">
@@ -208,15 +248,15 @@
         </div>
     </div>
 
-    <!-- 📋 教練台：賽後覆盤與指導評語 Modal -->
+    <!-- 📋 教練台：賽後覆盤與指導評審 Modal -->
     <div id="coachReviewModal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden items-center justify-center p-3 z-50">
         <div class="glass-card rounded-3xl w-full max-w-2xl p-5 sm:p-6 space-y-4 border border-amber-500/40 shadow-2xl max-h-[92vh] flex flex-col">
             <div class="flex justify-between items-start border-b border-slate-800 pb-3 flex-shrink-0">
                 <div>
                     <h3 class="text-base font-black text-amber-400 flex items-center space-x-2">
-                        <span>🎖️</span><span id="reviewModalTitle">教練賽後覆盤與專業指導評審</span>
+                        <span>🎖️</span><span id="reviewModalTitle">教練賽後覆盤與指導評審</span>
                     </h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">點選戰術標籤快速給予評價，並指定單場最佳球員 (MVP)</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">勾選戰術與品格標籤給予評語，並選出單場 MVP</p>
                 </div>
                 <button onclick="closeCoachReviewModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
             </div>
@@ -235,7 +275,7 @@
         <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-orange-500/40 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 class="text-base font-black text-white flex items-center space-x-2">
-                    <span class="text-orange-400">✨</span><span>Ｍ＋籃球隊 - 新成員註冊申請</span>
+                    <span class="text-orange-400">✨</span><span>Ｍ＋藍球隊 - 新成員註冊申請</span>
                 </h3>
                 <button onclick="closeRegisterModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
             </div>
@@ -255,7 +295,7 @@
                 </div>
                 <div id="regCoachPhotoContainer" class="hidden p-3 bg-slate-950 rounded-2xl border border-amber-500/40 space-y-2">
                     <label class="text-amber-300 font-bold block flex items-center space-x-1.5">
-                        <i class="fas fa-id-card"></i><span>教練本人或證照照片認證 (必填)</span>
+                        <i class="fas fa-id-card"></i><span>本人或證照照片認證 (必填)</span>
                     </label>
                     <div class="flex items-center space-x-3">
                         <div id="coachPhotoPreview" class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -405,7 +445,7 @@
         <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-amber-500/40 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 class="text-base font-black text-white flex items-center space-x-2">
-                    <span class="text-orange-400">⚡</span><span>編輯球員卡檔案與照片</span>
+                    <span class="text-orange-400">⚡</span><span>編輯球員登錄資料與照片</span>
                 </h3>
                 <button onclick="closePlayerProfileModal()" class="text-slate-400 hover:text-white">&times;</button>
             </div>
@@ -460,7 +500,7 @@
         const SUPABASE_KEY = "sb_publishable_M1akQ21ePT5OVjpjO1kc8A_2GqObjrT";
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null, status: null };
+        let currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null, status: null, photo_url: null };
         let currentActiveTab = 'overview';
         let activeAttendanceScheduleId = null;
         let activeStatsScheduleId = null;
@@ -468,13 +508,28 @@
         let bossSelectedFilterRole = 'ALL';
         let currentLineUserId = null;
 
-        // 教練專業評語標籤庫
+        function getTaiwanTodayStr() {
+            return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
+        }
+
+        // 大頭貼回退產生工具
+        function renderAvatarImg(photoUrl, name, sizeClass = "w-10 h-10") {
+            if (photoUrl) {
+                return `<img src="${photoUrl}" class="${sizeClass} rounded-xl object-cover border border-slate-700/80 flex-shrink-0 shadow">`;
+            }
+            const initial = (name && name.length > 0) ? name.charAt(name.length - 1) : "Ｍ";
+            return `
+                <div class="${sizeClass} rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white font-bold flex items-center justify-center border border-amber-400/30 flex-shrink-0 shadow text-xs">
+                    ${initial}
+                </div>
+            `;
+        }
+
         const coachFeedbackTagList = [
             "衝搶進攻籃板", "無球跑位積極", "轉換快攻意識佳", "防守卡位扎實", "團隊配合默契", 
-            "空檔出手果斷", "退防速度需提升", "減少強行強攻", "傳球視野放寬", "防守避免下手犯規"
+            "主動鼓勵隊友", "服從裁判謙卑", "終場鞠躬感恩", "主動收拾場地", "落後展現堅毅"
         ];
 
-        // 專業訓練課表套版
         const proDrillTemplates = {
             "shooting_1": { title: "外線定點投籃 200 顆（5點位）", target: "底角、45度、弧頂各40顆，進球率需達65%以上" },
             "shooting_2": { title: "急停中距離跳投特訓 100 顆", target: "左右兩翼運球一次急停跳投各50顆" },
@@ -502,8 +557,9 @@
         let currentTacticPieces = JSON.parse(JSON.stringify(defaultTacticPieces));
 
         window.addEventListener("DOMContentLoaded", () => {
-            const todayStr = new Date().toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit', weekday: 'short' });
-            document.getElementById('currentDateBadge').innerText = todayStr;
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei', month: '2-digit', day: '2-digit', weekday: 'short' });
+            document.getElementById('currentDateBadge').innerText = dateStr;
             initializeLiff();
         });
 
@@ -570,7 +626,8 @@
             }
         }
 
-        function processLoginSuccess(userRecord) {
+        // 登入成功處理（含自動靜默同步 LINE 大頭貼至 users 與 players 雙表）
+        async function processLoginSuccess(userRecord) {
             const isBoss = userRecord.name === "吳俊璋" || userRecord.role.indexOf("BOSS") !== -1;
             let roleCode = "PLAYER";
             if (userRecord.role === "教練") roleCode = "COACH";
@@ -584,7 +641,8 @@
                 userName: userRecord.name,
                 roleText: userRecord.role,
                 childName: userRecord.child_name || null,
-                status: userRecord.status
+                status: userRecord.status,
+                photo_url: userRecord.photo_url || null
             };
 
             document.getElementById('loginSection').classList.add('hidden');
@@ -597,7 +655,54 @@
 
             setupRoleSwitchPermissions(currentUser.actualRole);
             updateRoleSwitchButtons();
+
+            // 全身分靜默自動同步 LINE 大頭貼至 users 與 players
+            silentlySyncLineAvatarAll(userRecord.name, userRecord.role);
+
+            // 首次登入使用說明引導
+            checkAndShowFirstTimeGuide();
+
             switchTab('overview');
+        }
+
+        async function silentlySyncLineAvatarAll(userName, userRole) {
+            try {
+                if (typeof liff !== 'undefined' && liff.isLoggedIn()) {
+                    const profile = await liff.getProfile();
+                    if (profile && profile.pictureUrl) {
+                        // 1. 同步回填 users 表（所有身分）
+                        const { data: u } = await sb.from('users').select('photo_url').eq('name', userName).maybeSingle();
+                        if (u && (!u.photo_url || u.photo_url.includes('placeholder'))) {
+                            await sb.from('users').update({ photo_url: profile.pictureUrl }).eq('name', userName);
+                        }
+
+                        // 2. 若為球員，同步回填 players 表
+                        if (userRole === '球員') {
+                            const { data: p } = await sb.from('players').select('photo_url').eq('name', userName).maybeSingle();
+                            if (p && (!p.photo_url || p.photo_url.includes('placeholder'))) {
+                                await sb.from('players').update({ photo_url: profile.pictureUrl }).eq('name', userName);
+                            }
+                        }
+                    }
+                }
+            } catch(e) { console.log("Line Avatar Sync bypassed", e); }
+        }
+
+        function checkAndShowFirstTimeGuide() {
+            if (!localStorage.getItem('mplus_seen_guide_v1')) {
+                openHelpGuideModal();
+            }
+        }
+
+        function openHelpGuideModal() {
+            document.getElementById('helpGuideModal').classList.remove('hidden');
+            document.getElementById('helpGuideModal').classList.add('flex');
+        }
+
+        function closeHelpGuideModal() {
+            localStorage.setItem('mplus_seen_guide_v1', 'true');
+            document.getElementById('helpGuideModal').classList.add('hidden');
+            document.getElementById('helpGuideModal').classList.remove('flex');
         }
 
         function setupRoleSwitchPermissions(actualRole) {
@@ -662,7 +767,7 @@
         }
 
         function logout() {
-            currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null, status: null };
+            currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null, status: null, photo_url: null };
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('floatingNavbar').classList.add('hidden');
@@ -695,7 +800,7 @@
             const angles = [-90, -30, 30, 90, 150, 210];
             return values.map((val, idx) => {
                 const angleRad = (angles[idx] * Math.PI) / 180;
-                const r = (Math.max(12, Math.min(val, maxVal)) / maxVal) * maxRadius;
+                const r = (Math.max(15, Math.min(val, maxVal)) / maxVal) * maxRadius;
                 return {
                     x: (center + r * Math.cos(angleRad)).toFixed(1),
                     y: (center + r * Math.sin(angleRad)).toFixed(1)
@@ -704,11 +809,16 @@
         }
 
         // =========================================================================
-        // ⚡ 1. 完整身分主控台 (含球員賽事生涯與教練寄語)
+        // ⚡ 1. 完整身分主控台 (全員名冊皆具備照片/LINE 大頭貼)
         // =========================================================================
         async function loadDashboardOverview() {
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
+
+            // 先撈取球員表照片快照，方便對照補齊
+            const { data: allPlayersPhotos } = await sb.from('players').select('name, photo_url');
+            const playerPhotoMap = {};
+            (allPlayersPhotos || []).forEach(p => { if (p.photo_url) playerPhotoMap[p.name] = p.photo_url; });
 
             if (currentUser.role === "BOSS") {
                 const [allUsersRes, pendingUsersRes] = await Promise.all([
@@ -735,7 +845,7 @@
                                 <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-2xl shadow-lg border border-amber-300 text-black font-black">👑</div>
                                 <div>
                                     <div class="flex items-center space-x-2">
-                                        <h2 class="text-lg font-black text-white">Ｍ＋籃球隊球員系統 (BOSS 總控中樞)</h2>
+                                        <h2 class="text-lg font-black text-white">Ｍ＋藍球隊球員系統 (BOSS 總控中樞)</h2>
                                         <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold">最高特權</span>
                                     </div>
                                     <p class="text-xs text-slate-400 mt-0.5">全權人員清冊、審核管理與系統指揮</p>
@@ -747,22 +857,25 @@
                             <div class="glass-card rounded-2xl p-4 border border-amber-500/50 bg-amber-950/20 space-y-3">
                                 <h3 class="font-bold text-amber-300 text-sm">🔔 新成員註冊申請待核准 (${pendingUsers.length} 位)</h3>
                                 <div class="space-y-2">
-                                    ${pendingUsers.map(u => `
-                                        <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
-                                            <div class="flex items-center space-x-3">
-                                                ${u.photo_url ? `<img src="${u.photo_url}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">` : ''}
-                                                <div>
-                                                    <span class="font-bold text-white text-sm">${u.name}</span>
-                                                    <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded ml-1 font-bold">${u.role}</span>
-                                                    <p class="text-slate-400 mt-0.5">電話: ${u.phone||'無'} ${u.child_name ? `｜ 孩子: ${u.child_name}` : ''}</p>
+                                    ${pendingUsers.map(u => {
+                                        const avatar = u.photo_url || playerPhotoMap[u.name] || null;
+                                        return `
+                                            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+                                                <div class="flex items-center space-x-3">
+                                                    ${renderAvatarImg(avatar, u.name, "w-10 h-10")}
+                                                    <div>
+                                                        <span class="font-bold text-white text-sm">${u.name}</span>
+                                                        <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded ml-1 font-bold">${u.role}</span>
+                                                        <p class="text-slate-400 mt-0.5">電話: ${u.phone||'無'} ${u.child_name ? `｜ 孩子: ${u.child_name}` : ''}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex space-x-2">
+                                                    <button onclick="approveMember(${u.id}, '${u.name}', '${u.role}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold">核准</button>
+                                                    <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 rounded-xl font-bold">拒絕</button>
                                                 </div>
                                             </div>
-                                            <div class="flex space-x-2">
-                                                <button onclick="approveMember(${u.id}, '${u.name}', '${u.role}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold">核准</button>
-                                                <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 rounded-xl font-bold">拒絕</button>
-                                            </div>
-                                        </div>
-                                    `).join('')}
+                                        `;
+                                    }).join('')}
                                 </div>
                             </div>
                         ` : ''}
@@ -786,21 +899,24 @@
                                 </div>
                             </div>
                             <div class="space-y-2 max-h-[460px] overflow-y-auto pr-1">
-                                ${filteredUsers.map(u => `
-                                    <div class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl flex justify-between items-center text-xs">
-                                        <div class="flex items-center space-x-3">
-                                            ${u.photo_url ? `<img src="${u.photo_url}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">` : ''}
-                                            <div>
-                                                <span class="font-bold text-slate-100 text-sm">${u.name}</span>
-                                                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-400 border border-slate-700 ml-1">${u.role}</span>
-                                                <p class="text-slate-400 mt-1">電話: ${u.phone||'無'} ｜ 梯隊: ${u.team||'大隊'} ${u.child_name?`｜ 孩子: <span class="text-orange-400 font-bold">${u.child_name}</span>`:''}</p>
+                                ${filteredUsers.map(u => {
+                                    const avatar = u.photo_url || playerPhotoMap[u.name] || null;
+                                    return `
+                                        <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+                                            <div class="flex items-center space-x-3">
+                                                ${renderAvatarImg(avatar, u.name, "w-10 h-10")}
+                                                <div>
+                                                    <span class="font-bold text-slate-100 text-sm">${u.name}</span>
+                                                    <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-400 border border-slate-700 ml-1">${u.role}</span>
+                                                    <p class="text-slate-400 mt-0.5">電話: ${u.phone||'無'} ｜ 梯隊: ${u.team||'大隊'} ${u.child_name?`｜ 孩子: <span class="text-orange-400 font-bold">${u.child_name}</span>`:''}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                ${u.name !== '吳俊璋' ? `<button onclick="bossDeleteUserDirectly(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white rounded-xl font-bold transition">除名</button>` : ''}
                                             </div>
                                         </div>
-                                        <div class="flex space-x-2">
-                                            ${u.name !== '吳俊璋' ? `<button onclick="bossDeleteUserDirectly(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white rounded-xl font-bold transition">除名</button>` : ''}
-                                        </div>
-                                    </div>
-                                `).join('')}
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                     </div>
@@ -808,7 +924,7 @@
                 return;
             }
 
-            const today = new Date().toISOString().split('T')[0];
+            const today = getTaiwanTodayStr();
             let targetPlayerName = currentUser.userName;
             if (currentUser.role === "PARENT") targetPlayerName = currentUser.childName || "吳俊璋";
 
@@ -824,7 +940,7 @@
                 sb.from('game_player_stats').select('*, schedules(title, event_date, opponent, our_score, opponent_score, game_result)').eq('player_name', targetPlayerName).order('updated_at', { ascending: false })
             ]);
 
-            const pData = pRes.data || { name: targetPlayerName, number: 7, position: '控球後衛', team: '大隊', height: 178, weight: 70, photo_url: null, offense: 86, defense: 90, fitness: 88, attitude: 96, agility: 89, bball_iq: 87 };
+            const pData = pRes.data || { name: targetPlayerName, number: 7, position: '控球後衛', team: '大隊', height: 178, weight: 70, photo_url: null, offense: 86, defense: 90, fitness: 88, chr: 92, agility: 89, bball_iq: 87 };
             const tasks = tasksRes.data || [];
             const allSubs = subsRes.data || [];
             const mySubs = allSubs.filter(s => s.player_name === targetPlayerName);
@@ -835,10 +951,16 @@
             const pendingMembers = pendingMembersRes.data || [];
             const myGameStats = myGameStatsRes.data || [];
 
-            // 球員台視角 (2K 卡 + 生涯攻守數據與教練評語)
+            // 🏀 球員台視角
             if (currentUser.role === "PLAYER") {
-                const uncompletedTasks = tasks.filter(t => !mySubs.some(s => s.assignment_id === t.id));
-                const radarValues = [pData.offense, pData.defense, pData.fitness, pData.attitude, pData.agility, pData.bball_iq];
+                const radarValues = [
+                    pData.chr || pData.attitude || 90,
+                    pData.offense,
+                    pData.agility,
+                    pData.fitness,
+                    pData.defense,
+                    pData.bball_iq
+                ];
                 const polyPoints = calculateRadarPolygon(radarValues);
                 const pointsString = polyPoints.map(p => `${p.x},${p.y}`).join(' ');
                 const dynamicOVR = Math.round(radarValues.reduce((a, b) => a + b, 0) / 6);
@@ -847,9 +969,13 @@
                     <div class="space-y-4">
                         <div class="card-2k-border rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
                             <div class="absolute -right-6 -bottom-10 font-num text-[180px] font-black text-white/[0.03] select-none pointer-events-none">#${pData.number || 7}</div>
+                            
                             <div class="flex justify-between items-start border-b border-slate-800/80 pb-4 relative z-10">
                                 <div>
-                                    <span class="text-[10px] bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black px-2.5 py-0.5 rounded-full uppercase">ALL-STAR</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-[10px] bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black px-2.5 py-0.5 rounded-full uppercase">ALL-STAR</span>
+                                        ${(pData.chr||90) >= 90 ? `<span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold">👑 品格領袖</span>` : ''}
+                                    </div>
                                     <h2 class="text-2xl sm:text-3xl font-black text-white tracking-wide mt-1.5 flex items-center space-x-2">
                                         <span>${pData.name}</span>
                                         <span class="text-sm font-num text-orange-400 font-bold">#${pData.number || 7}</span>
@@ -866,40 +992,59 @@
                                 <div class="md:col-span-5 flex flex-col items-center justify-center">
                                     <div class="w-48 h-56 sm:w-52 sm:h-60 rounded-3xl p-1 bg-gradient-to-tr from-amber-500 via-orange-600 to-slate-700 shadow-2xl relative group">
                                         <div class="w-full h-full rounded-[22px] bg-slate-950 overflow-hidden relative flex items-center justify-center">
-                                            ${pData.photo_url ? `<img src="${pData.photo_url}" class="w-full h-full object-cover object-top">` : `<div class="flex flex-col items-center text-slate-600"><i class="fas fa-user-astronaut text-5xl text-slate-700 mb-2"></i><span class="text-[11px] font-bold">更換球員照</span></div>`}
+                                            ${pData.photo_url ? `<img src="${pData.photo_url}" class="w-full h-full object-cover object-top">` : `<div class="flex flex-col items-center text-slate-600"><i class="fas fa-user-astronaut text-5xl text-slate-700 mb-2"></i><span class="text-[11px] font-bold">更新照片與球員資料</span></div>`}
                                         </div>
                                     </div>
                                     <button onclick="openPlayerProfileModal()" class="mt-3 px-4 py-1.5 bg-slate-800/90 hover:bg-slate-700 border border-amber-500/30 text-amber-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow">
-                                        <i class="fas fa-camera"></i><span>更新球員卡 / 體測數據</span>
+                                        <i class="fas fa-user-edit"></i><span>更新照片與球員資料</span>
                                     </button>
                                 </div>
 
                                 <div class="md:col-span-4 flex items-center justify-center">
-                                    <div class="w-60 h-60 relative flex items-center justify-center">
-                                        <svg viewBox="0 0 120 120" class="w-full h-full filter drop-shadow-[0_0_15px_rgba(249,115,22,0.35)]">
-                                            <polygon points="60,15 99,37.5 99,82.5 60,105 21,82.5 21,37.5" fill="none" stroke="#334155" stroke-width="1"/>
-                                            <polygon points="60,30 86,45 86,75 60,90 34,75 34,45" fill="none" class="radar-mesh"/>
+                                    <div class="w-64 h-64 relative flex items-center justify-center">
+                                        <svg viewBox="0 0 120 120" class="w-full h-full filter drop-shadow-[0_0_18px_rgba(249,115,22,0.4)]">
+                                            <polygon points="60,15 99,37.5 99,82.5 60,105 21,82.5 21,37.5" fill="none" stroke="#334155" stroke-width="1.2"/>
+                                            <polygon points="60,24 91.2,42 91.2,78 60,96 28.8,78 28.8,42" fill="none" class="radar-mesh"/>
+                                            <polygon points="60,33 83.4,46.5 83.4,73.5 60,87 36.6,73.5 36.6,46.5" fill="none" class="radar-mesh"/>
+                                            <polygon points="60,42 75.6,51 75.6,69 60,78 44.4,69 44.4,51" fill="none" class="radar-mesh"/>
+                                            
+                                            <line x1="60" y1="15" x2="60" y2="105" stroke="#334155" stroke-width="0.8"/>
+                                            <line x1="21" y1="37.5" x2="99" y2="82.5" stroke="#334155" stroke-width="0.8"/>
+                                            <line x1="21" y1="82.5" x2="99" y2="37.5" stroke="#334155" stroke-width="0.8"/>
+
                                             <polygon points="${pointsString}" fill="rgba(249, 115, 22, 0.45)" stroke="#fb923c" stroke-width="2"/>
-                                            ${polyPoints.map(p => `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#fef08a" stroke="#ea580c" stroke-width="1.5"/>`).join('')}
+                                            
+                                            ${polyPoints.map((p, idx) => `
+                                                <circle cx="${p.x}" cy="${p.y}" r="${idx===0 ? 4 : 3}" fill="${idx===0 ? '#fef08a' : '#fb923c'}" stroke="${idx===0 ? '#ea580c' : '#ffffff'}" stroke-width="1.5"/>
+                                            `).join('')}
                                         </svg>
                                     </div>
                                 </div>
 
                                 <div class="md:col-span-3 space-y-2 text-xs">
-                                    <div class="flex justify-between"><span>進攻投射</span><span class="font-num text-orange-400 font-bold">${pData.offense}</span></div>
-                                    <div class="flex justify-between"><span>防守抗衡</span><span class="font-num text-emerald-400 font-bold">${pData.defense}</span></div>
-                                    <div class="flex justify-between"><span>體能耐力</span><span class="font-num text-amber-400 font-bold">${pData.fitness}</span></div>
-                                    <div class="flex justify-between"><span>態度紀律</span><span class="font-num text-blue-400 font-bold">${pData.attitude}</span></div>
-                                    <div class="flex justify-between"><span>敏捷反應</span><span class="font-num text-purple-400 font-bold">${pData.agility}</span></div>
-                                    <div class="flex justify-between"><span>戰術球商</span><span class="font-num text-indigo-400 font-bold">${pData.bball_iq}</span></div>
+                                    <div class="flex justify-between items-center bg-amber-950/40 p-1.5 rounded-lg border border-amber-500/30">
+                                        <span class="text-amber-300 font-bold flex items-center space-x-1"><span>✨</span><span>品格合一 (CHR)</span></span>
+                                        <span class="font-num text-amber-300 font-black text-sm">${pData.chr || pData.attitude || 90}</span>
+                                    </div>
+                                    <div class="flex justify-between"><span>進攻投射 (OFF)</span><span class="font-num text-orange-400 font-bold">${pData.offense}</span></div>
+                                    <div class="flex justify-between"><span>敏捷反應 (AGI)</span><span class="font-num text-purple-400 font-bold">${pData.agility}</span></div>
+                                    <div class="flex justify-between"><span>體能耐力 (FIT)</span><span class="font-num text-amber-400 font-bold">${pData.fitness}</span></div>
+                                    <div class="flex justify-between"><span>防守抗衡 (DEF)</span><span class="font-num text-emerald-400 font-bold">${pData.defense}</span></div>
+                                    <div class="flex justify-between"><span>戰術球商 (IQ)</span><span class="font-num text-indigo-400 font-bold">${pData.bball_iq}</span></div>
                                 </div>
+                            </div>
+
+                            <div class="pt-4 mt-4 border-t border-slate-800/80 flex flex-wrap gap-2 text-[11px] relative z-10">
+                                ${(pData.chr||90) >= 90 ? `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded-xl font-bold flex items-center space-x-1"><span>🛡️</span><span>合一領袖徽章</span></span>` : ''}
+                                <span class="bg-orange-500/20 text-orange-300 border border-orange-500/40 px-2.5 py-1 rounded-xl font-bold flex items-center space-x-1"><span>🎯</span><span>百步穿楊</span></span>
+                                <span class="bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2.5 py-1 rounded-xl font-bold flex items-center space-x-1"><span>⚡</span><span>快攻引擎</span></span>
                             </div>
                         </div>
 
-                        <!-- 球員專屬：賽事實時統計與教練覆盤專區 -->
+                        <!-- 賽事與指導評語 -->
                         <div class="glass-card rounded-2xl p-5 space-y-3 border border-slate-800">
                             <h3 class="font-bold text-orange-400 text-sm flex items-center space-x-2">
-                                <span>🏆</span><span>個人賽事攻守紀錄與教練指導寄語 (${myGameStats.length} 場)</span>
+                                <span>🏆</span><span>賽事攻守紀錄與教練指導寄語 (${myGameStats.length} 場)</span>
                             </h3>
                             ${myGameStats.length > 0 ? `
                                 <div class="space-y-3">
@@ -920,7 +1065,6 @@
                                                     </div>
                                                 </div>
 
-                                                <!-- 攻守數據看板 -->
                                                 <div class="grid grid-cols-7 gap-1 text-center bg-slate-900/90 p-2 rounded-xl border border-slate-800">
                                                     <div><span class="text-[10px] text-slate-400 block">得分</span><span class="font-num text-sm font-black text-orange-400">${stat.points}</span></div>
                                                     <div><span class="text-[10px] text-slate-400 block">籃板</span><span class="font-num text-sm font-black text-blue-400">${stat.rebounds}</span></div>
@@ -931,7 +1075,6 @@
                                                     <div><span class="text-[10px] text-slate-400 block">犯規</span><span class="font-num text-sm font-black text-slate-400">${stat.fouls}</span></div>
                                                 </div>
 
-                                                <!-- 教練評語與標籤 -->
                                                 <div class="bg-amber-950/20 border border-amber-500/20 p-2.5 rounded-xl space-y-1.5">
                                                     <div class="flex justify-between items-center">
                                                         <span class="font-bold text-amber-300 text-[11px]">教練評分：${stat.coach_rating} / 10</span>
@@ -954,7 +1097,7 @@
                 `;
             }
 
-            // 教練台視角
+            // 📋 教練台視角 (教練球員名冊每位均具備大頭貼)
             else if (currentUser.role === "COACH") {
                 const teamDaList = allPlayers.filter(p => p.team === '大隊');
                 container.innerHTML = `
@@ -971,19 +1114,29 @@
                                 <button onclick="switchTab('assignments')" class="text-xs text-amber-400 font-bold hover:underline">前往課表中心派發 ➔</button>
                             </div>
                             <div class="space-y-2">
-                                ${teamDaList.map(pl => `
-                                    <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
-                                        <div><span class="font-bold text-white text-sm">${pl.name}</span> <span class="text-amber-300">#${pl.number} ${pl.position}</span></div>
-                                        <button onclick="deletePlayerDirectly(${pl.id}, '${pl.name}')" class="p-1.5 bg-red-500/20 text-red-400 rounded-lg">除名</button>
-                                    </div>
-                                `).join('')}
+                                ${teamDaList.map(pl => {
+                                    const avatar = pl.photo_url || null;
+                                    return `
+                                        <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-xs">
+                                            <div class="flex items-center space-x-3">
+                                                ${renderAvatarImg(avatar, pl.name, "w-9 h-9")}
+                                                <div>
+                                                    <span class="font-bold text-white text-sm">${pl.name}</span> 
+                                                    <span class="text-amber-300 font-num font-bold">#${pl.number}</span> 
+                                                    <span class="text-slate-400 text-[11px]">${pl.position}</span>
+                                                </div>
+                                            </div>
+                                            <button onclick="deletePlayerDirectly(${pl.id}, '${pl.name}')" class="px-2.5 py-1 bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition font-bold">除名</button>
+                                        </div>
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                     </div>
                 `;
             }
 
-            // 經理台視角
+            // 📊 經理台視角 (家長通訊錄每位均具備大頭貼)
             else if (currentUser.role === "MANAGER") {
                 container.innerHTML = `
                     <div class="space-y-4">
@@ -996,22 +1149,25 @@
                                     <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">經理管理權限</span>
                                 </div>
                                 <div class="space-y-2">
-                                    ${pendingMembers.map(u => `
-                                        <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
-                                            <div class="flex items-center space-x-3">
-                                                ${u.photo_url ? `<img src="${u.photo_url}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">` : ''}
-                                                <div>
-                                                    <span class="font-bold text-white text-sm">${u.name}</span>
-                                                    <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded ml-1 font-bold">${u.role}</span>
-                                                    <p class="text-slate-400 mt-0.5">電話: ${u.phone||'未填寫'} ${u.child_name?`｜ 孩子: <span class="text-orange-400 font-bold">${u.child_name}</span>`:''}</p>
+                                    ${pendingMembers.map(u => {
+                                        const avatar = u.photo_url || playerPhotoMap[u.name] || null;
+                                        return `
+                                            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+                                                <div class="flex items-center space-x-3">
+                                                    ${renderAvatarImg(avatar, u.name, "w-10 h-10")}
+                                                    <div>
+                                                        <span class="font-bold text-white text-sm">${u.name}</span>
+                                                        <span class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded ml-1 font-bold">${u.role}</span>
+                                                        <p class="text-slate-400 mt-0.5">電話: ${u.phone||'未填寫'} ${u.child_name?`｜ 孩子: <span class="text-orange-400 font-bold">${u.child_name}</span>`:''}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex space-x-2">
+                                                    <button onclick="approveMember(${u.id}, '${u.name}', '${u.role}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition shadow">核准加入</button>
+                                                    <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 rounded-xl font-bold transition">拒絕</button>
                                                 </div>
                                             </div>
-                                            <div class="flex space-x-2">
-                                                <button onclick="approveMember(${u.id}, '${u.name}', '${u.role}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition shadow">核准加入</button>
-                                                <button onclick="rejectMember(${u.id}, '${u.name}')" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 rounded-xl font-bold transition">拒絕</button>
-                                            </div>
-                                        </div>
-                                    `).join('')}
+                                        `;
+                                    }).join('')}
                                 </div>
                             </div>
                         ` : ''}
@@ -1030,19 +1186,29 @@
                         <div class="glass-card rounded-2xl p-5 space-y-3">
                             <h3 class="font-bold text-emerald-400">📞 球員家長通訊錄 (${allParents.length} 位)</h3>
                             <div class="space-y-2">
-                                ${allParents.map(par => `
-                                    <div class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl flex justify-between items-center text-xs">
-                                        <div><span class="font-bold text-white text-sm">${par.name}</span> <span class="text-amber-300">(${par.relation||'家長'})</span><p class="text-slate-400 mt-1">孩子: <span class="text-orange-400 font-bold">${par.child_name||'未填'}</span> ｜ 電話: ${par.phone||'無'}</p></div>
-                                        ${par.phone ? `<a href="tel:${par.phone}" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl font-bold">撥打</a>` : ''}
-                                    </div>
-                                `).join('')}
+                                ${allParents.map(par => {
+                                    const avatar = par.photo_url || null;
+                                    return `
+                                        <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+                                            <div class="flex items-center space-x-3">
+                                                ${renderAvatarImg(avatar, par.name, "w-10 h-10")}
+                                                <div>
+                                                    <span class="font-bold text-white text-sm">${par.name}</span> 
+                                                    <span class="text-amber-300">(${par.relation||'家長'})</span>
+                                                    <p class="text-slate-400 mt-0.5">孩子: <span class="text-orange-400 font-bold">${par.child_name||'未填'}</span> ｜ 電話: ${par.phone||'無'}</p>
+                                                </div>
+                                            </div>
+                                            ${par.phone ? `<a href="tel:${par.phone}" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl font-bold">撥打</a>` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                     </div>
                 `;
             }
 
-            // 家長台視角
+            // 👨‍👩‍👦 家長台視角
             else if (currentUser.role === "PARENT") {
                 const childCheckin = checkins.find(c => c.player_name === targetPlayerName);
                 const childSubs = mySubs.filter(s => s.player_name === targetPlayerName);
@@ -1051,9 +1217,12 @@
                     <div class="space-y-4">
                         <div class="glass-card rounded-3xl p-5 border border-amber-500/30 bg-gradient-to-r from-slate-900 to-slate-950">
                             <div class="flex justify-between items-center">
-                                <div>
-                                    <h2 class="text-lg font-black text-white">家長安心關懷中樞</h2>
-                                    <p class="text-xs text-slate-300 mt-1">目前鎖定關心孩子：<span class="text-orange-400 font-black text-sm">${targetPlayerName}</span> (${pData.team} #${pData.number})</p>
+                                <div class="flex items-center space-x-3">
+                                    ${renderAvatarImg(pData.photo_url, targetPlayerName, "w-12 h-12")}
+                                    <div>
+                                        <h2 class="text-lg font-black text-white">家長安心關懷中樞</h2>
+                                        <p class="text-xs text-slate-300 mt-0.5">目前鎖定關心孩子：<span class="text-orange-400 font-black text-sm">${targetPlayerName}</span> (${pData.team} #${pData.number})</p>
+                                    </div>
                                 </div>
                                 <span class="text-xs px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold">即時同步</span>
                             </div>
@@ -1076,7 +1245,6 @@
                             </div>
                         </div>
 
-                        <!-- 家長端同步查看孩子最近賽事與教練寄語 -->
                         ${myGameStats.length > 0 ? `
                             <div class="glass-card rounded-2xl p-4 border border-slate-800 space-y-2.5">
                                 <h4 class="text-xs text-amber-400 font-bold">🏆 孩子近期比賽回顧與教練寄語</h4>
@@ -1217,7 +1385,7 @@
         }
 
         // =========================================================================
-        // 🎯 3. 課表中心 (專業教練派發套版 + 自訂)
+        // 🎯 3. 課表中心
         // =========================================================================
         async function loadAssignmentsTab() {
             const container = document.getElementById('tabContentContainer');
@@ -1483,7 +1651,7 @@
         }
 
         // =========================================================================
-        // 📅 4. 戰役行程 (整合現場點名、經理數據統計、教練賽後評審)
+        // 📅 4. 戰役行程 (點名、實時攻守計分板、教練覆盤)
         // =========================================================================
         async function loadScheduleTab() {
             const container = document.getElementById('tabContentContainer');
@@ -1531,7 +1699,6 @@
                                         </a>
                                     </div>
 
-                                    <!-- 管理操作群 (現場點名、攻守統計、教練覆盤) -->
                                     <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-800/80 items-center justify-between text-xs">
                                         <div class="space-x-2 text-[11px]">
                                             <span class="text-emerald-400 font-bold">出席 ${(ev.schedule_rsvps||[]).filter(r=>r.status==='出席').length}</span>
@@ -1557,7 +1724,7 @@
         }
 
         // =========================================================================
-        // 📊 5. 經理台專屬：賽事實時/賽後攻守計分板邏輯
+        // 📊 5. 經理台專屬：賽事實時/賽後攻守計分板 (附帶大頭貼)
         // =========================================================================
         async function openGameStatsModal(scheduleId, eventTitle) {
             activeStatsScheduleId = scheduleId;
@@ -1589,7 +1756,10 @@
                 return `
                     <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2 player-stat-row" data-name="${p.name}">
                         <div class="flex justify-between items-center">
-                            <span class="font-bold text-white text-sm">${p.name} <span class="text-orange-400 font-num">#${p.number}</span></span>
+                            <div class="flex items-center space-x-2.5">
+                                ${renderAvatarImg(p.photo_url, p.name, "w-8 h-8")}
+                                <span class="font-bold text-white text-sm">${p.name} <span class="text-orange-400 font-num">#${p.number}</span></span>
+                            </div>
                             <div class="flex space-x-1">
                                 <button onclick="quickAddScore('${p.name}', 1)" class="px-2 py-0.5 bg-slate-800 text-amber-300 rounded font-bold">+1</button>
                                 <button onclick="quickAddScore('${p.name}', 2)" class="px-2 py-0.5 bg-orange-600 text-white rounded font-bold">+2</button>
@@ -1626,7 +1796,6 @@
         async function saveAllGameStats() {
             if (!activeStatsScheduleId) return;
 
-            // 1. 更新比分
             await sb.from('schedules').update({
                 our_score: parseInt(document.getElementById('gameOurScore').value) || 0,
                 opponent: document.getElementById('gameOpponentName').value.trim() || null,
@@ -1634,7 +1803,6 @@
                 game_result: document.getElementById('gameFinalResult').value || null
             }).eq('id', activeStatsScheduleId);
 
-            // 2. 批量寫入球員攻守數據
             const rows = document.querySelectorAll('.player-stat-row');
             const upsertPayload = [];
 
@@ -1648,7 +1816,6 @@
                 const to = parseInt(r.querySelector('.stat-to').value) || 0;
                 const pf = parseInt(r.querySelector('.stat-pf').value) || 0;
 
-                // 若有數據才寫入，節省資料庫開銷
                 if (pts > 0 || reb > 0 || ast > 0 || stl > 0 || blk > 0 || to > 0 || pf > 0) {
                     upsertPayload.push({
                         schedule_id: activeStatsScheduleId,
@@ -1681,7 +1848,7 @@
         }
 
         // =========================================================================
-        // 🎖️ 6. 教練台專屬：賽後覆盤與指導評審邏輯
+        // 🎖️ 6. 教練台專屬：賽後覆盤與指導評審 (附帶大頭貼)
         // =========================================================================
         async function openCoachReviewModal(scheduleId, eventTitle) {
             activeReviewScheduleId = scheduleId;
@@ -1691,7 +1858,14 @@
             document.getElementById('coachReviewModal').classList.remove('hidden');
             document.getElementById('coachReviewModal').classList.add('flex');
 
-            const { data: stats } = await sb.from('game_player_stats').select('*').eq('schedule_id', scheduleId);
+            const [statsRes, playersRes] = await Promise.all([
+                sb.from('game_player_stats').select('*').eq('schedule_id', scheduleId),
+                sb.from('players').select('name, photo_url')
+            ]);
+
+            const stats = statsRes.data || [];
+            const photoMap = {};
+            (playersRes.data || []).forEach(p => { photoMap[p.name] = p.photo_url; });
 
             if (!stats || stats.length === 0) {
                 container.innerHTML = `<p class="text-xs text-slate-500 py-6 text-center">經理尚未輸入此場比賽之攻守統計數據，請先由經理完成記錄。</p>`;
@@ -1700,12 +1874,16 @@
 
             container.innerHTML = stats.map(s => {
                 const currentTags = s.tags || [];
+                const avatar = photoMap[s.player_name] || null;
                 return `
                     <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3 coach-review-row" data-name="${s.player_name}">
                         <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                            <div>
-                                <span class="font-bold text-white text-sm">${s.player_name}</span>
-                                <span class="text-slate-400 ml-2 font-num font-bold text-orange-400">${s.points}分 ${s.rebounds}板 ${s.assists}助 ${s.steals}抄 ${s.blocks}鍋</span>
+                            <div class="flex items-center space-x-2.5">
+                                ${renderAvatarImg(avatar, s.player_name, "w-9 h-9")}
+                                <div>
+                                    <span class="font-bold text-white text-sm">${s.player_name}</span>
+                                    <span class="text-slate-400 ml-2 font-num font-bold text-orange-400">${s.points}分 ${s.rebounds}板 ${s.assists}助 ${s.steals}抄 ${s.blocks}鍋</span>
+                                </div>
                             </div>
                             <label class="flex items-center space-x-1.5 cursor-pointer">
                                 <input type="radio" name="gameMvpChoice" value="${s.player_name}" ${s.is_mvp ? 'checked' : ''} class="text-amber-500 focus:ring-0">
@@ -1713,7 +1891,6 @@
                             </label>
                         </div>
 
-                        <!-- 評分滑桿 -->
                         <div class="flex items-center justify-between">
                             <span class="text-slate-400 font-semibold">表現評分 (1~10 分)：</span>
                             <div class="flex items-center space-x-2">
@@ -1722,9 +1899,8 @@
                             </div>
                         </div>
 
-                        <!-- 戰術評語標籤庫 -->
                         <div>
-                            <span class="text-[11px] text-slate-400 block mb-1 font-semibold">快捷戰術評語標籤：</span>
+                            <span class="text-[11px] text-slate-400 block mb-1 font-semibold">戰術與品格合一標籤：</span>
                             <div class="flex flex-wrap gap-1.5">
                                 ${coachFeedbackTagList.map(tag => {
                                     const selected = currentTags.includes(tag);
@@ -1737,9 +1913,8 @@
                             </div>
                         </div>
 
-                        <!-- 個人指導寄語備註 -->
                         <div>
-                            <textarea class="review-notes-input w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-600" rows="2" placeholder="教練手打個別指導與鼓勵（例：快攻走位積極，注意切入不要太快下手...）">${s.coach_notes || ''}</textarea>
+                            <textarea class="review-notes-input w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-600" rows="2" placeholder="教練手打個別指導與鼓勵（例：快攻跑位積極，注意品格服從裁判...）">${s.coach_notes || ''}</textarea>
                         </div>
                     </div>
                 `;
@@ -1796,7 +1971,7 @@
             document.getElementById('coachReviewModal').classList.remove('flex');
         }
 
-        // 行程管理、請假與現場點名
+        // 行程管理、請假與現場點名 (點名名單附帶照片)
         function openCreateScheduleModal() { document.getElementById('createScheduleModal').classList.remove('hidden'); document.getElementById('createScheduleModal').classList.add('flex'); }
         function closeCreateScheduleModal() { document.getElementById('createScheduleModal').classList.add('hidden'); document.getElementById('createScheduleModal').classList.remove('flex'); }
         async function submitCreateSchedule() {
@@ -1873,7 +2048,13 @@
                 const status = currentRecord ? currentRecord.status : '未標記';
                 return `
                     <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-slate-100">${player.name}</span> <span class="text-amber-300">#${player.number}</span></div>
+                        <div class="flex items-center space-x-2.5">
+                            ${renderAvatarImg(player.photo_url, player.name, "w-8 h-8")}
+                            <div>
+                                <span class="font-bold text-slate-100">${player.name}</span> 
+                                <span class="text-amber-300 font-num font-bold">#${player.number}</span>
+                            </div>
+                        </div>
                         <div class="flex space-x-1.5">
                             <button onclick="setPlayerAttendance('${player.name}', '出席', this)" class="px-2.5 py-1 rounded-lg font-bold ${status==='出席'?'bg-emerald-600 text-white':'bg-slate-800 text-slate-400'}">出席</button>
                             <button onclick="setPlayerAttendance('${player.name}', '請假', this)" class="px-2.5 py-1 rounded-lg font-bold ${status==='請假'?'bg-amber-600 text-white':'bg-slate-800 text-slate-400'}">請假</button>
@@ -1907,20 +2088,23 @@
         }
 
         // =========================================================================
-        // 🩺 7. 每日晨報點檢
+        // 🩺 7. 每日晨報點檢 (全隊回報清冊附帶照片)
         // =========================================================================
         async function loadDailyStatusTab() {
             const container = document.getElementById('tabContentContainer');
             container.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-orange-400 text-2xl"></i></div>`;
 
-            const today = new Date().toISOString().split('T')[0];
-            const [myCheckinRes, allCheckinsRes] = await Promise.all([
+            const today = getTaiwanTodayStr();
+            const [myCheckinRes, allCheckinsRes, playersRes] = await Promise.all([
                 sb.from('daily_checkins').select('*').eq('checkin_date', today).eq('player_name', currentUser.userName).maybeSingle(),
-                sb.from('daily_checkins').select('*').eq('checkin_date', today)
+                sb.from('daily_checkins').select('*').eq('checkin_date', today),
+                sb.from('players').select('name, photo_url')
             ]);
 
             const myCheckin = myCheckinRes.data;
             const allCheckins = allCheckinsRes.data || [];
+            const photoMap = {};
+            (playersRes.data || []).forEach(p => { photoMap[p.name] = p.photo_url; });
             const isPlayer = currentUser.role === 'PLAYER';
 
             container.innerHTML = `
@@ -1978,18 +2162,24 @@
                             <h3 class="font-bold text-white text-base">📊 全隊今日晨報監控 (${allCheckins.length} 位已提交)</h3>
                         </div>
                         <div class="space-y-2">
-                            ${allCheckins.length > 0 ? allCheckins.map(c => `
-                                <div class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl flex justify-between items-center text-xs">
-                                    <div>
-                                        <span class="font-bold text-white text-sm">${c.player_name}</span>
-                                        <span class="text-slate-400 ml-2">睡眠: <span class="text-amber-400 font-bold">${c.sleep_hours}hr</span> ｜ 精神: ${c.energy}</span>
+                            ${allCheckins.length > 0 ? allCheckins.map(c => {
+                                const avatar = photoMap[c.player_name] || null;
+                                return `
+                                    <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+                                        <div class="flex items-center space-x-3">
+                                            ${renderAvatarImg(avatar, c.player_name, "w-9 h-9")}
+                                            <div>
+                                                <span class="font-bold text-white text-sm">${c.player_name}</span>
+                                                <span class="text-slate-400 ml-2">睡眠: <span class="text-amber-400 font-bold">${c.sleep_hours}hr</span> ｜ 精神: ${c.energy}</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-[10px] px-2 py-0.5 rounded font-bold ${c.fatigue>=4?'bg-red-500/20 text-red-400':'bg-emerald-500/20 text-emerald-400'}">疲勞 ${c.fatigue}/5</span>
+                                            <span class="text-slate-400 block text-[11px] mt-0.5">痠痛: ${c.sore_area}</span>
+                                        </div>
                                     </div>
-                                    <div class="text-right">
-                                        <span class="text-[10px] px-2 py-0.5 rounded font-bold ${c.fatigue>=4?'bg-red-500/20 text-red-400':'bg-emerald-500/20 text-emerald-400'}">疲勞 ${c.fatigue}/5</span>
-                                        <span class="text-slate-400 block text-[11px] mt-0.5">痠痛: ${c.sore_area}</span>
-                                    </div>
-                                </div>
-                            `).join('') : '<p class="text-xs text-slate-500 py-3 text-center">今日尚無球員回報晨報！</p>'}
+                                `;
+                            }).join('') : '<p class="text-xs text-slate-500 py-3 text-center">今日尚無球員回報晨報！</p>'}
                         </div>
                     </div>
                 </div>
@@ -1997,7 +2187,7 @@
         }
 
         async function submitDailyCheckin() {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getTaiwanTodayStr();
             const sleep = parseFloat(document.getElementById('checkinSleep').value) || 7.0;
             const energy = document.getElementById('checkinEnergy').value;
             const sore = document.getElementById('checkinSore').value.trim() || '無';
@@ -2129,6 +2319,9 @@
                     const chosenNumber = savedPref ? savedPref.number : 7;
                     const chosenPos = savedPref ? savedPref.position : '控球後衛';
 
+                    // 抓取 users 表可能由 LINE 帶入的照片
+                    const { data: uInfo } = await sb.from('users').select('photo_url').eq('id', id).maybeSingle();
+
                     await sb.from('players').insert([{
                         name: name,
                         number: chosenNumber,
@@ -2136,9 +2329,11 @@
                         team: '大隊',
                         height: 175,
                         weight: 68,
+                        photo_url: (uInfo && uInfo.photo_url) ? uInfo.photo_url : null,
                         offense: 80,
                         defense: 80,
                         fitness: 80,
+                        chr: 90,
                         attitude: 85,
                         agility: 80,
                         bball_iq: 80
@@ -2180,8 +2375,13 @@
             const photo = document.getElementById('hiddenPlayerPhotoBase64').value;
             const payload = { position: pos, number: num, height: h, weight: w };
             if (photo) payload.photo_url = photo;
-            await sb.from('players').update(payload).eq('name', currentUser.userName);
-            alert("球員卡已更新！"); closePlayerProfileModal(); loadDashboardOverview();
+            
+            await Promise.all([
+                sb.from('players').update(payload).eq('name', currentUser.userName),
+                photo ? sb.from('users').update({ photo_url: photo }).eq('name', currentUser.userName) : Promise.resolve()
+            ]);
+
+            alert("球員登錄資料與照片已更新！"); closePlayerProfileModal(); loadDashboardOverview();
         }
         function setBossUserFilter(role) { bossSelectedFilterRole = role; loadDashboardOverview(); }
         async function bossDeleteUserDirectly(id, name) { if(!confirm(`除名 ${name}?`))return; await sb.from('users').delete().eq('id', id); loadDashboardOverview(); }
