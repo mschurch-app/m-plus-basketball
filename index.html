@@ -476,9 +476,43 @@
 
     <!-- JavaScript 核心引擎 -->
     <script>
-        const SUPABASE_URL = "https://ldsedanswynbzymyfwox.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_M1akQ21ePT5OVjpjO1kc8A_2GqObjrT";
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const SUPABASE_URL = "https://aqanuwilmvdtlzuqlrau.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_-on9uPxVvSaERBEpkoc_xg_CYuANexJ";
+        const BASKETBALL_API_URL = `${SUPABASE_URL}/functions/v1/basketball-api`;
+        const nativeFetch = window.fetch.bind(window);
+        let currentLineIdToken = null;
+        let basketballSessionToken = localStorage.getItem('mplus_basketball_session') || null;
+
+        async function basketballApiFetch(input, init = {}) {
+            const sourceRequest = input instanceof Request ? input : null;
+            const sourceUrl = new URL(sourceRequest ? sourceRequest.url : String(input));
+            if (!sourceUrl.pathname.startsWith('/rest/v1/')) return nativeFetch(input, init);
+
+            const headers = new Headers(sourceRequest ? sourceRequest.headers : undefined);
+            new Headers(init.headers || {}).forEach((value, key) => headers.set(key, value));
+            headers.set('x-proxy-path', sourceUrl.pathname.slice('/rest/v1'.length) + sourceUrl.search);
+            if (currentLineIdToken) headers.set('x-line-id-token', currentLineIdToken);
+            if (basketballSessionToken) headers.set('x-basketball-session', basketballSessionToken);
+
+            return nativeFetch(BASKETBALL_API_URL, {
+                ...init,
+                method: init.method || sourceRequest?.method || 'GET',
+                headers,
+                body: init.body ?? sourceRequest?.body
+            });
+        }
+
+        async function uploadBasketballFile(file) {
+            const headers = new Headers({ 'content-type': file.type, 'x-file-name': file.name });
+            if (currentLineIdToken) headers.set('x-line-id-token', currentLineIdToken);
+            if (basketballSessionToken) headers.set('x-basketball-session', basketballSessionToken);
+            const response = await nativeFetch(`${BASKETBALL_API_URL}/upload`, { method: 'POST', headers, body: file });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || '檔案上傳失敗');
+            return result.storageRef;
+        }
+
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { fetch: basketballApiFetch } });
 
         let currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null, status: null, photo_url: null };
         let currentActiveTab = 'overview';
@@ -769,6 +803,7 @@
                 if (liff.isLoggedIn()) {
                     const profile = liff.getDecodedIDToken();
                     if (profile && profile.sub) {
+                        currentLineIdToken = liff.getIDToken();
                         currentLineUserId = profile.sub;
                         autoLoginWithLine(profile.sub);
                     }
@@ -780,6 +815,10 @@
             try {
                 const { data } = await sb.from('users').select('*').eq('line_id', lineUserId).maybeSingle();
                 if (data) {
+                    if (data.status === '待審核') {
+                        alert("您的申請目前正在審核中，請靜待經理或 BOSS 核准！");
+                        return;
+                    }
                     processLoginSuccess(data);
                 } else {
                     openRegisterModal();
@@ -792,6 +831,7 @@
                 if (!liff.isLoggedIn()) { liff.login(); return; }
                 const profile = liff.getDecodedIDToken();
                 if (profile && profile.sub) {
+                    currentLineIdToken = liff.getIDToken();
                     currentLineUserId = profile.sub;
                     autoLoginWithLine(profile.sub);
                 }
@@ -805,23 +845,25 @@
             const pass = document.getElementById('loginPassword').value.trim();
             if (!acc) { alert("請輸入姓名！"); return; }
 
-            const { data, error } = await sb.from('users').select('*').eq('name', acc).maybeSingle();
-            if (error) { alert("連線異常：" + error.message); return; }
+            let response;
+            try {
+                response = await nativeFetch(`${BASKETBALL_API_URL}/manual-login`, {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ name: acc, password: pass })
+                });
+            } catch (error) {
+                alert("連線異常：" + error.message);
+                return;
+            }
+            const result = await response.json();
+            const data = result.user || null;
 
             if (!data) {
-                if (confirm(`查無【${acc}】的帳號資料！是否要立即前往填寫「新成員註冊申請」？`)) {
-                    openRegisterModal();
-                    document.getElementById('regName').value = acc;
-                }
+                alert(result.error || "姓名或密碼不正確，請改用 LINE 登入。");
             } else {
-                if (data.status === '待審核') {
-                    alert("您的申請目前正在審核中，請靜待經理或 BOSS 核准！");
-                    return;
-                }
-                if (data.password && pass && data.password !== pass) {
-                    alert("密碼不正確！");
-                    return;
-                }
+                basketballSessionToken = result.session;
+                localStorage.setItem('mplus_basketball_session', basketballSessionToken);
                 processLoginSuccess(data);
             }
         }
@@ -960,6 +1002,8 @@
         }
 
         function logout() {
+            basketballSessionToken = null;
+            localStorage.removeItem('mplus_basketball_session');
             currentUser = { actualRole: null, role: null, userName: null, roleText: null, childName: null, status: null, photo_url: null };
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
@@ -2185,27 +2229,16 @@
             try {
                 if (fileInput.files && fileInput.files[0]) {
                     const file = fileInput.files[0];
-                    const fileExt = file.name.split('.').pop().toLowerCase();
-                    const randomStr = Math.random().toString(36).substring(2, 8);
-                    const safeFileName = `${Date.now()}_${randomStr}.${fileExt}`;
-                    const filePath = `tasks/${safeFileName}`;
-
                     mediaType = file.type.startsWith('video') ? 'video' : 'image';
 
-                    const { error: uploadErr } = await sb.storage.from('assignments').upload(filePath, file, {
-                        cacheControl: '3600',
-                        upsert: true
-                    });
-
-                    if (uploadErr) {
-                        alert("檔案上傳失敗：" + uploadErr.message);
+                    try {
+                        mediaUrl = await uploadBasketballFile(file);
+                    } catch (uploadError) {
+                        alert("檔案上傳失敗：" + uploadError.message);
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = `<span>確認回報</span>`;
                         return;
                     }
-
-                    const { data: publicUrlData } = sb.storage.from('assignments').getPublicUrl(filePath);
-                    mediaUrl = publicUrlData.publicUrl;
                 }
 
                 const { error: insertErr } = await sb.from('assignment_submissions').insert([{
@@ -2785,15 +2818,13 @@
             let coachPhotoUrl = null;
             if (role === '教練' && coachPhotoFile) {
                 try {
-                    const ext = coachPhotoFile.name.split('.').pop().toLowerCase();
-                    const randStr = Math.random().toString(36).substring(2, 8);
-                    const path = `coaches/${Date.now()}_${randStr}.${ext}`;
-                    const { error: upErr } = await sb.storage.from('assignments').upload(path, coachPhotoFile, { upsert: true });
-                    if (!upErr) {
-                        const { data: pubData } = sb.storage.from('assignments').getPublicUrl(path);
-                        coachPhotoUrl = pubData.publicUrl;
-                    }
-                } catch(e) { console.error(e); }
+                    coachPhotoUrl = await uploadBasketballFile(coachPhotoFile);
+                } catch(e) {
+                    alert("照片上傳失敗：" + e.message);
+                    btn.disabled = false;
+                    btn.innerText = "送出註冊申請";
+                    return;
+                }
             }
 
             const newUserPayload = { 
