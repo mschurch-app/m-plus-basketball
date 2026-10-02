@@ -490,6 +490,10 @@
 
             const headers = new Headers(sourceRequest ? sourceRequest.headers : undefined);
             new Headers(init.headers || {}).forEach((value, key) => headers.set(key, value));
+            // The basketball API uses the LINE token or opaque basketball
+            // session. Supabase REST headers are unnecessary and can make
+            // mobile browsers reject the CORS preflight before it reaches us.
+            ['authorization', 'apikey', 'x-client-info', 'accept-profile', 'content-profile'].forEach(name => headers.delete(name));
             headers.set('x-proxy-path', sourceUrl.pathname.slice('/rest/v1'.length) + sourceUrl.search);
             if (currentLineIdToken) headers.set('x-line-id-token', currentLineIdToken);
             if (basketballSessionToken) headers.set('x-basketball-session', basketballSessionToken);
@@ -587,14 +591,15 @@
         ];
         let currentTacticPieces = JSON.parse(JSON.stringify(defaultTacticPieces));
 
-        window.addEventListener("DOMContentLoaded", () => {
+        window.addEventListener("DOMContentLoaded", async () => {
             const today = new Date();
             currentDayOfWeek = today.getDay();
             const dateStr = today.toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei', month: '2-digit', day: '2-digit', weekday: 'short' });
             document.getElementById('currentDateBadge').innerText = dateStr;
             
             initDynamicWeatherAndAtmosphere();
-            initializeLiff();
+            const restored = await restoreBasketballSession();
+            if (!restored) initializeLiff();
         });
 
         // =========================================================================
@@ -809,6 +814,21 @@
                     }
                 }
             }).catch(err => console.log("LIFF Error:", err));
+        }
+
+        async function restoreBasketballSession() {
+            if (!basketballSessionToken) return false;
+            try {
+                const response = await nativeFetch(`${BASKETBALL_API_URL}/session`, { headers: { 'x-basketball-session': basketballSessionToken } });
+                const result = await response.json();
+                if (!response.ok || !result.user) throw new Error(result.error || '工作階段已失效');
+                await processLoginSuccess(result.user);
+                return true;
+            } catch (error) {
+                basketballSessionToken = null;
+                localStorage.removeItem('mplus_basketball_session');
+                return false;
+            }
         }
 
         async function autoLoginWithLine(lineUserId) {
@@ -2041,7 +2061,11 @@
 
         async function deleteTactic(tacticId) {
             if (!confirm("確定刪除？")) return;
-            await sb.from('tactics').delete().eq('id', tacticId);
+            const { error } = await sb.from('tactics').delete().eq('id', tacticId);
+            if (error) {
+                alert("刪除失敗：" + error.message);
+                return;
+            }
             loadTacticsTab();
         }
 
@@ -2562,12 +2586,16 @@
         }
 
         async function playerQuickRsvp(scheduleId, status) {
-            await sb.from('schedule_rsvps').upsert([{
+            const { error } = await sb.from('schedule_rsvps').upsert([{
                 schedule_id: scheduleId,
                 player_name: currentUser.userName,
                 status: status,
                 updated_at: new Date().toISOString()
             }], { onConflict: 'schedule_id,player_name' });
+            if (error) {
+                alert("登記失敗：" + error.message);
+                return;
+            }
             alert(`已登記為：${status}`);
             loadScheduleTab();
         }
@@ -2584,6 +2612,11 @@
                 sb.from('players').select('*').order('team', { ascending: true }).order('number', { ascending: true }),
                 sb.from('schedule_rsvps').select('*').eq('schedule_id', scheduleId)
             ]);
+
+            if (playersRes.error || rsvpsRes.error) {
+                rosterContainer.innerHTML = `<div class="p-6 text-center text-red-300">名冊載入失敗，請稍後再試。</div>`;
+                return;
+            }
 
             const allPlayers = playersRes.data || [];
             const rsvps = rsvpsRes.data || [];
@@ -2619,17 +2652,22 @@
         async function setPlayerAttendance(playerName, targetStatus, btnElem) {
             if (!activeAttendanceScheduleId) return;
             const parent = btnElem.parentElement;
+            const previousClasses = Array.from(parent.children).map(button => button.className);
             Array.from(parent.children).forEach(b => { b.className = "px-2.5 py-1 rounded-lg font-bold bg-slate-800 text-slate-400"; });
             if (targetStatus === '出席') btnElem.className = "px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white";
             else if (targetStatus === '請假') btnElem.className = "px-2.5 py-1 rounded-lg font-bold bg-amber-600 text-white";
             else if (targetStatus === '未到') btnElem.className = "px-2.5 py-1 rounded-lg font-bold bg-red-600 text-white";
 
-            await sb.from('schedule_rsvps').upsert([{
+            const { error } = await sb.from('schedule_rsvps').upsert([{
                 schedule_id: activeAttendanceScheduleId,
                 player_name: playerName,
                 status: targetStatus,
                 updated_at: new Date().toISOString()
             }], { onConflict: 'schedule_id,player_name' });
+            if (error) {
+                Array.from(parent.children).forEach((button, index) => { button.className = previousClasses[index]; });
+                alert("點名儲存失敗：" + error.message);
+            }
         }
 
         // =========================================================================
@@ -2864,7 +2902,7 @@
 
                     const { data: uInfo } = await sb.from('users').select('photo_url').eq('id', id).maybeSingle();
 
-                    await sb.from('players').insert([{
+                    const { error: playerError } = await sb.from('players').insert([{
                         name: name,
                         number: chosenNumber,
                         position: chosenPos,
@@ -2880,6 +2918,10 @@
                         agility: 80,
                         bball_iq: 80
                     }]);
+                    if (playerError) {
+                        alert("帳號已核准，但球員資料建立失敗：" + playerError.message);
+                        return;
+                    }
                 }
             }
 
@@ -2918,16 +2960,32 @@
             const payload = { position: pos, number: num, height: h, weight: w };
             if (photo) payload.photo_url = photo;
             
-            await Promise.all([
+            const [playerResult, userResult] = await Promise.all([
                 sb.from('players').update(payload).eq('name', currentUser.userName),
-                photo ? sb.from('users').update({ photo_url: photo }).eq('name', currentUser.userName) : Promise.resolve()
+                photo ? sb.from('users').update({ photo_url: photo }).eq('name', currentUser.userName) : Promise.resolve({ error: null })
             ]);
+
+            const saveError = playerResult.error || userResult.error;
+            if (saveError) {
+                alert("資料更新失敗：" + saveError.message);
+                return;
+            }
 
             alert("球員登錄資料與照片已更新！"); closePlayerProfileModal(); loadDashboardOverview();
         }
         function setBossUserFilter(role) { bossSelectedFilterRole = role; loadDashboardOverview(); }
-        async function bossDeleteUserDirectly(id, name) { if(!confirm(`除名 ${name}?`))return; await sb.from('users').delete().eq('id', id); loadDashboardOverview(); }
-        async function deletePlayerDirectly(id, name) { if(!confirm(`除名 ${name}?`))return; await sb.from('players').delete().eq('id', id); loadDashboardOverview(); }
+        async function bossDeleteUserDirectly(id, name) {
+            if (!confirm(`除名 ${name}?`)) return;
+            const { error } = await sb.from('users').delete().eq('id', id);
+            if (error) { alert("除名失敗：" + error.message); return; }
+            loadDashboardOverview();
+        }
+        async function deletePlayerDirectly(id, name) {
+            if (!confirm(`除名 ${name}?`)) return;
+            const { error } = await sb.from('players').delete().eq('id', id);
+            if (error) { alert("球員移除失敗：" + error.message); return; }
+            loadDashboardOverview();
+        }
     </script>
 </body>
 </html>
