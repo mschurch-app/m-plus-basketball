@@ -494,6 +494,13 @@
         let courtBench = [];
         let selectedCourtPlayer = null;
         let liveActionHistory = [];
+        let scoreboardWriteQueue = Promise.resolve();
+
+        function enqueueScoreboardWrite(task) {
+            const operation = scoreboardWriteQueue.then(task, task);
+            scoreboardWriteQueue = operation.catch(() => {});
+            return operation;
+        }
 
         let currentWeatherType = "CLEAR";
         let currentDayOfWeek = 1;
@@ -1747,15 +1754,16 @@
             }
         }
 
-        function logQuickActionOptimistic(statField, amount) {
+        async function logQuickActionOptimistic(statField, amount) {
             if (!currentLiveMatchId || !selectedCourtPlayer) return;
 
+            const matchId = currentLiveMatchId;
             const playerName = selectedCourtPlayer;
             const playerObj = liveRosterStats.find(p => p.name === playerName);
             if (!playerObj) return;
 
             playerObj[statField] = (playerObj[statField] || 0) + amount;
-            liveActionHistory.push({ matchId: currentLiveMatchId, playerName, statField, amount });
+            liveActionHistory.push({ matchId, playerName, statField, amount });
 
             if (statField === 'points') {
                 liveMatchData.our_score = (liveMatchData.our_score || 0) + amount;
@@ -1775,33 +1783,42 @@
                 if (statCell) statCell.innerText = playerObj[statField];
             }
 
-            const payload = {
-                schedule_id: currentLiveMatchId,
-                player_name: playerName,
-                [statField]: playerObj[statField],
-                updated_at: new Date().toISOString()
-            };
+            const { error } = await enqueueScoreboardWrite(() => sb.rpc('record_game_stat_action', {
+                p_schedule_id: matchId,
+                p_player_name: playerName,
+                p_stat_field: statField,
+                p_amount: amount
+            }));
 
-            sb.from('game_player_stats').upsert([payload], { onConflict: 'schedule_id,player_name' })
-                .then(() => {
-                    if (statField === 'points') {
-                        return sb.from('schedules').update({ our_score: liveMatchData.our_score }).eq('id', currentLiveMatchId);
-                    }
-                })
-                .catch(err => console.error("背景儲存失敗：", err));
+            if (error) {
+                console.error("紀錄儲存失敗：", error);
+                alert("這筆紀錄沒有存入，畫面將重新載入。\n" + error.message);
+                await loadGameCenterTab();
+            }
         }
 
-        function quickAddOpponentScore(delta) {
+        async function quickAddOpponentScore(delta) {
             if (!currentLiveMatchId || !liveMatchData) return;
 
+            const matchId = currentLiveMatchId;
             const newScore = Math.max(0, (liveMatchData.opponent_score || 0) + delta);
             liveMatchData.opponent_score = newScore;
 
             const oppEl = document.getElementById('liveOpponentScoreText');
             if (oppEl) oppEl.innerText = newScore;
 
-            sb.from('schedules').update({ opponent_score: newScore }).eq('id', currentLiveMatchId)
-                .catch(err => console.error("對手比分更新失敗：", err));
+            const { data, error } = await enqueueScoreboardWrite(() => sb.rpc('record_opponent_score_action', {
+                p_schedule_id: matchId,
+                p_amount: delta
+            }));
+            if (error) {
+                console.error("對手比分更新失敗：", error);
+                alert("對手比分沒有存入，畫面將重新載入。\n" + error.message);
+                await loadGameCenterTab();
+            } else {
+                liveMatchData.opponent_score = data;
+                if (oppEl) oppEl.innerText = data;
+            }
         }
 
         async function undoLastAction() {
@@ -1832,28 +1849,38 @@
                     if (statCell) statCell.innerText = playerObj[last.statField];
                 }
 
-                sb.from('game_player_stats').update({ [last.statField]: playerObj[last.statField] })
-                    .eq('schedule_id', last.matchId)
-                    .eq('player_name', last.playerName)
-                    .then(() => {
-                        if (last.statField === 'points') {
-                            return sb.from('schedules').update({ our_score: liveMatchData.our_score }).eq('id', last.matchId);
-                        }
-                    });
+                const { error } = await enqueueScoreboardWrite(() => sb.rpc('record_game_stat_action', {
+                    p_schedule_id: last.matchId,
+                    p_player_name: last.playerName,
+                    p_stat_field: last.statField,
+                    p_amount: -last.amount
+                }));
+                if (error) {
+                    console.error("復原紀錄失敗：", error);
+                    alert("復原沒有存入，畫面將重新載入。\n" + error.message);
+                    await loadGameCenterTab();
+                }
             }
         }
 
         async function updateQuarterStatus(matchId, quarter) {
-            await sb.from('schedules').update({ current_quarter: quarter }).eq('id', matchId);
+            await scoreboardWriteQueue;
+            const { error } = await sb.from('schedules').update({ current_quarter: quarter }).eq('id', matchId);
+            if (error) alert("節次更新失敗：" + error.message);
         }
 
         async function finishGameMatch(matchId) {
             const result = prompt("請輸入比賽結果 (W 為勝利，L 為惜敗)：", "W");
             if (!result) return;
-            await sb.from('schedules').update({ 
+            await scoreboardWriteQueue;
+            const { error } = await sb.from('schedules').update({
                 game_result: result.toUpperCase(),
                 match_status: 'FINISHED'
             }).eq('id', matchId);
+            if (error) {
+                alert("比賽結算失敗：" + error.message);
+                return;
+            }
             alert("🎉 比賽已結算封存！");
             loadGameCenterTab();
         }
