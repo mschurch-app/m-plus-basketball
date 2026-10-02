@@ -590,6 +590,11 @@
             { id: "BALL", label: "🏀", type: "ball", x: 50, y: 84 }
         ];
         let currentTacticPieces = JSON.parse(JSON.stringify(defaultTacticPieces));
+        const requestedEntryTab = (() => {
+            const match = String(location.search || '').match(/(?:^\?|&)tab=([^&]*)/);
+            const value = match ? decodeURIComponent(match[1]) : '';
+            return ['overview', 'gamecenter', 'tactics', 'assignments', 'schedule', 'dailystatus'].includes(value) ? value : 'overview';
+        })();
 
         window.addEventListener("DOMContentLoaded", async () => {
             const today = new Date();
@@ -919,7 +924,7 @@
 
             silentlySyncLineAvatarAll(userRecord.name, userRecord.role);
             checkAndShowFirstTimeGuide();
-            switchTab('overview');
+            switchTab(requestedEntryTab);
         }
 
         async function silentlySyncLineAvatarAll(userName, userRole) {
