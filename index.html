@@ -2593,7 +2593,7 @@
                 ? await sb.from('schedules').update(payload).eq('id', editingScheduleId)
                 : await sb.from('schedules').insert([payload]);
 
-            if (error) alert((editingScheduleId ? '修改' : '發布') + '失敗：' + error.message);
+            if (error) alert((editingScheduleId ? '修改' : '發布') + '失敗：' + (error.message || error.error || '請稍後再試'));
             else {
                 alert(editingScheduleId ? '✅ 行程已更新！' : '🎉 行程已成功發布！');
                 closeCreateScheduleModal();
@@ -2607,7 +2607,7 @@
             const warning = `確定刪除「${event.title}」？${related ? `\n這筆行程已有 ${related} 筆出席／請假紀錄，也會一併刪除。` : ''}\n若為比賽，比分與球員數據也會一併移除。`;
             if (!confirm(warning)) return;
             const { error } = await sb.from('schedules').delete().eq('id', scheduleId);
-            if (error) { alert('刪除失敗：' + error.message); return; }
+            if (error) { alert('刪除失敗：' + (error.message || error.error || '請稍後再試')); return; }
             if (currentLiveMatchId === scheduleId) currentLiveMatchId = null;
             alert('行程已刪除。');
             loadScheduleTab();
