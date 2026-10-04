@@ -364,7 +364,7 @@
         <div class="glass-card rounded-3xl w-full max-w-md p-6 space-y-4 border border-orange-500/40 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 class="text-base font-black text-white flex items-center space-x-2">
-                    <span class="text-orange-400">📅</span><span>發布新賽事/訓練行程</span>
+                    <span class="text-orange-400">📅</span><span id="scheduleModalTitle">發布新賽事／訓練行程</span>
                 </h3>
                 <button onclick="closeCreateScheduleModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
             </div>
@@ -399,7 +399,7 @@
             </div>
             <div class="flex space-x-3 pt-2">
                 <button onclick="closeCreateScheduleModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold">取消</button>
-                <button onclick="submitCreateSchedule()" class="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold glow-orange">立即發布</button>
+                <button onclick="submitCreateSchedule()" class="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold glow-orange"><span id="scheduleSubmitLabel">立即發布</span></button>
             </div>
         </div>
     </div>
@@ -522,6 +522,8 @@
         let currentActiveTab = 'overview';
         let activeAttendanceScheduleId = null;
         let activeReviewScheduleId = null;
+        let editingScheduleId = null;
+        let loadedSchedules = [];
         let bossSelectedFilterRole = 'ALL';
         let currentLineUserId = null;
 
@@ -2344,6 +2346,7 @@
 
             const { data: list } = await sb.from('schedules').select('*, schedule_rsvps(*)').order('event_date', { ascending: true });
             const schedules = list || [];
+            loadedSchedules = schedules;
             const canManage = ["MANAGER", "COACH", "BOSS"].includes(currentUser.role);
             const isCoachOrBoss = ["COACH", "BOSS"].includes(currentUser.role);
 
@@ -2391,6 +2394,8 @@
                                         </div>
 
                                         <div class="flex flex-wrap gap-1.5">
+                                            ${canManage ? `<button onclick="openEditScheduleModal(${ev.id})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-blue-300 rounded-lg font-bold">✏️ 編輯</button>` : ''}
+                                            ${canManage ? `<button onclick="deleteSchedule(${ev.id})" class="px-2.5 py-1 bg-red-950/70 hover:bg-red-700 text-red-300 hover:text-white border border-red-800/60 rounded-lg font-bold">🗑️ 刪除</button>` : ''}
                                             ${canManage ? `<button onclick="openAttendanceModal(${ev.id}, '${ev.title}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-bold">📋 點名</button>` : ''}
                                             ${isGame ? `<button onclick="goToGameCenterMatch(${ev.id})" class="px-2.5 py-1 bg-blue-600/30 text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-500/40 rounded-lg font-bold">📊 進入紀錄台</button>` : ''}
                                             ${isGame && isCoachOrBoss ? `<button onclick="openCoachReviewModal(${ev.id}, '${ev.title}')" class="px-2.5 py-1 bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-black border border-amber-500/40 rounded-lg font-bold">🎖️ 賽後評審</button>` : ''}
@@ -2546,8 +2551,34 @@
         }
 
         // 行程管理、請假與現場點名
-        function openCreateScheduleModal() { document.getElementById('createScheduleModal').classList.remove('hidden'); document.getElementById('createScheduleModal').classList.add('flex'); }
-        function closeCreateScheduleModal() { document.getElementById('createScheduleModal').classList.add('hidden'); document.getElementById('createScheduleModal').classList.remove('flex'); }
+        function openCreateScheduleModal() {
+            editingScheduleId = null;
+            document.getElementById('scheduleModalTitle').innerText = '發布新賽事／訓練行程';
+            document.getElementById('scheduleSubmitLabel').innerText = '立即發布';
+            for (const id of ['newSchedTitle','newSchedDate','newSchedTime','newSchedLocation']) document.getElementById(id).value = '';
+            document.getElementById('newSchedType').value = '比賽';
+            document.getElementById('createScheduleModal').classList.remove('hidden');
+            document.getElementById('createScheduleModal').classList.add('flex');
+        }
+        function openEditScheduleModal(scheduleId) {
+            const event = loadedSchedules.find(item => item.id === scheduleId);
+            if (!event) { alert('找不到這筆行程，請重新整理後再試。'); return; }
+            editingScheduleId = scheduleId;
+            document.getElementById('scheduleModalTitle').innerText = '編輯賽事／訓練行程';
+            document.getElementById('scheduleSubmitLabel').innerText = '儲存修改';
+            document.getElementById('newSchedTitle').value = event.title || '';
+            document.getElementById('newSchedType').value = event.event_type || '比賽';
+            document.getElementById('newSchedDate').value = event.event_date || '';
+            document.getElementById('newSchedTime').value = event.event_time || '';
+            document.getElementById('newSchedLocation').value = event.location || '';
+            document.getElementById('createScheduleModal').classList.remove('hidden');
+            document.getElementById('createScheduleModal').classList.add('flex');
+        }
+        function closeCreateScheduleModal() {
+            editingScheduleId = null;
+            document.getElementById('createScheduleModal').classList.add('hidden');
+            document.getElementById('createScheduleModal').classList.remove('flex');
+        }
         async function submitCreateSchedule() {
             const title = document.getElementById('newSchedTitle').value.trim();
             const type = document.getElementById('newSchedType').value;
@@ -2557,16 +2588,29 @@
 
             if (!title || !date || !time) { alert("請填寫完整的行程名稱、日期與時間！"); return; }
 
-            const { error } = await sb.from('schedules').insert([{
-                title, event_type: type, event_date: date, event_time: time, location: loc || '未填地點'
-            }]);
+            const payload = {title, event_type: type, event_date: date, event_time: time, location: loc || '未填地點'};
+            const { error } = editingScheduleId
+                ? await sb.from('schedules').update(payload).eq('id', editingScheduleId)
+                : await sb.from('schedules').insert([payload]);
 
-            if (error) alert("發布失敗：" + error.message);
+            if (error) alert((editingScheduleId ? '修改' : '發布') + '失敗：' + error.message);
             else {
-                alert("🎉 行程已成功發布！");
+                alert(editingScheduleId ? '✅ 行程已更新！' : '🎉 行程已成功發布！');
                 closeCreateScheduleModal();
                 loadScheduleTab();
             }
+        }
+        async function deleteSchedule(scheduleId) {
+            const event = loadedSchedules.find(item => item.id === scheduleId);
+            if (!event) { alert('找不到這筆行程，請重新整理後再試。'); return; }
+            const related = (event.schedule_rsvps || []).length;
+            const warning = `確定刪除「${event.title}」？${related ? `\n這筆行程已有 ${related} 筆出席／請假紀錄，也會一併刪除。` : ''}\n若為比賽，比分與球員數據也會一併移除。`;
+            if (!confirm(warning)) return;
+            const { error } = await sb.from('schedules').delete().eq('id', scheduleId);
+            if (error) { alert('刪除失敗：' + error.message); return; }
+            if (currentLiveMatchId === scheduleId) currentLiveMatchId = null;
+            alert('行程已刪除。');
+            loadScheduleTab();
         }
 
         async function promptPlayerLeave(scheduleId) {
